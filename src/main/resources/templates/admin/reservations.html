@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Reservations')}"></head>
+<body class="bg-mist text-asphalt min-h-screen font-sans">
+<div th:replace="~{layout/app :: sidebar('ADMIN', 'reservations')}"></div>
+<div class="md:pl-64 min-h-screen flex flex-col"><div th:replace="~{layout/app :: topbar('Reservations', 'ADMIN')}"></div>
+<main class="p-6 lg:p-8 space-y-6"><div th:replace="~{ui/flash :: flash}"></div>
+  <header class="pg-heading"><div><span class="eyebrow">NETWORK OPERATIONS</span><h1>Reservations</h1><p>Review bookings across all facilities and narrow the live list by date, status, facility, or reference.</p></div></header>
+  
+  <form id="reservationsFilterForm" method="get" class="pg-panel flex flex-col lg:flex-row lg:items-end gap-3 w-full">
+    <!-- Search with Live Dropdown -->
+    <div class="field flex-1 min-w-[220px] relative">
+      <label class="label" for="reservationSearchInput">Search</label>
+      <div class="relative">
+        <input class="input pr-8" id="reservationSearchInput" name="q" th:value="${filterQ}" placeholder="Code, plate, or booking ID" autocomplete="off">
+        <button type="button" id="clearSearchBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs w-5 h-5 flex items-center justify-center rounded-full hover:bg-slate-200 transition" title="Clear search">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <!-- Autocomplete Dropdown List -->
+        <div id="reservationDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 max-h-72 overflow-y-auto rounded-xl bg-white border border-line-200 shadow-2xl z-50 divide-y divide-line-100">
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Filter -->
+    <div class="field w-full lg:w-48 shrink-0">
+      <label class="label" for="statusSelect">Status</label>
+      <select id="statusSelect" class="select" name="status">
+        <option value="">All statuses</option>
+        <option th:each="s : ${T(com.example.parkngo.reservation.Reservation.ReservationStatus).values()}" th:value="${s}" th:selected="${s.name() == filterStatus}" th:text="${s}">CONFIRMED</option>
+      </select>
+    </div>
+
+    <!-- Facility Filter -->
+    <div class="field w-full lg:w-52 shrink-0">
+      <label class="label" for="facilitySelect">Facility</label>
+      <select id="facilitySelect" class="select" name="facilityId">
+        <option value="">All facilities</option>
+        <option th:each="facility : ${facilities}" th:value="${facility.id}" th:selected="${facility.id == filterFacilityId}" th:text="${facility.name}">Facility</option>
+      </select>
+    </div>
+
+    <!-- Arrival Date Filter -->
+    <div class="field w-full lg:w-44 shrink-0">
+      <label class="label" for="dateInput">Arrival date</label>
+      <input id="dateInput" class="input" type="date" name="date" th:value="${filterDate}">
+    </div>
+
+    <!-- Actions (Straight in line) -->
+    <div class="flex items-center gap-2 pt-2 lg:pt-0 shrink-0">
+      <button class="btn btn-primary btn-md whitespace-nowrap" type="submit">Apply filters</button>
+      <a class="btn btn-secondary btn-md whitespace-nowrap" href="/admin/reservations">Reset</a>
+    </div>
+  </form>
+
+  <section class="pg-panel p-0 overflow-hidden"><div class="overflow-x-auto"><table class="min-w-full text-left text-sm"><thead><tr><th>Reference</th><th>Customer / vehicle</th><th>Facility &amp; bay</th><th>Arrival</th><th>Total</th><th>Status</th></tr></thead><tbody>
+    <tr th:each="reservation : ${reservations}"><td class="font-mono font-semibold" th:text="${reservation.reservationCode != null ? reservation.reservationCode : 'RES-' + reservation.id}">RES-001</td><td><strong th:text="${reservation.customer != null ? reservation.customer.fullName : 'Guest'}">Customer</strong><small th:text="${reservation.vehicle != null ? reservation.vehicle.registrationNumber : 'Vehicle pending'}">ABC-123</small></td><td><strong th:text="${reservation.parkingSpace != null and reservation.parkingSpace.facility != null ? reservation.parkingSpace.facility.name : 'Unassigned'}">Facility</strong><small th:text="${reservation.parkingSpace != null ? 'Bay ' + reservation.parkingSpace.spaceNumber : 'Bay pending'}">Bay</small></td><td th:text="${reservation.arrivalTime != null ? #temporals.format(reservation.arrivalTime, 'dd MMM yyyy · HH:mm') : 'Not scheduled'}">Date</td><td th:text="${reservation.totalAmount != null ? 'LKR ' + #numbers.formatDecimal(reservation.totalAmount, 1, 2) : '—'}">LKR 0.00</td><td><div th:replace="~{ui/status :: reservation(${reservation.status}, false)}"></div></td></tr>
+    <tr th:if="${reservations == null or reservations.isEmpty()}"><td colspan="6" class="text-center py-12 text-slate-500">No reservations match the selected filters.</td></tr>
+  </tbody></table></div></section>
+</main></div>
+
+<script>
+(function() {
+    const searchInput = document.getElementById('reservationSearchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    const dropdown = document.getElementById('reservationDropdown');
+    const filterForm = document.getElementById('reservationsFilterForm');
+    let highlightedIndex = -1;
+    let debounceTimer = null;
+
+    if (!searchInput || !dropdown) return;
+
+    function updateClearBtn() {
+        if (clearBtn) {
+            clearBtn.classList.toggle('hidden', !searchInput.value);
+        }
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function highlightMatch(text, query) {
+        if (!text || !query) return escapeHtml(text || '');
+        const escapedText = escapeHtml(text);
+        const escapedQuery = escapeHtml(query);
+        const regex = new RegExp(`(${escapedQuery.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')})`, 'gi');
+        return escapedText.replace(regex, '<span class="bg-amber-200 text-amber-950 font-bold px-0.5 rounded">$1</span>');
+    }
+
+    function getStatusBadge(status) {
+        const s = (status || '').toUpperCase();
+        if (s === 'ACTIVE') return '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-go-100 text-go-700">Active</span>';
+        if (s === 'CONFIRMED') return '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700">Confirmed</span>';
+        if (s === 'COMPLETED') return '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">Completed</span>';
+        if (s === 'CANCELLED') return '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stop-100 text-stop-700">Cancelled</span>';
+        if (s === 'EXPIRED') return '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-caution-100 text-caution-700">Expired</span>';
+        if (s === 'PENDING') return '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">Pending</span>';
+        return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">${escapeHtml(status)}</span>`;
+    }
+
+    function renderDropdown(items, query) {
+        dropdown.innerHTML = '';
+        highlightedIndex = -1;
+
+        if (!items || items.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'px-4 py-3 text-xs text-slate-500 text-center italic';
+            empty.innerHTML = `<i class="fa-solid fa-circle-question mr-1.5 text-slate-400"></i> No reservation matching "<span class="font-bold text-slate-700">${escapeHtml(query)}</span>"`;
+            dropdown.appendChild(empty);
+            dropdown.classList.remove('hidden');
+            return;
+        }
+
+        items.forEach((item, index) => {
+            const row = document.createElement('div');
+            row.className = 'px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-amber-50/80 transition-colors text-xs border-b border-line-100 last:border-b-0 res-item-row';
+            row.dataset.code = item.plate || item.code;
+            row.dataset.index = index;
+
+            const codeHigh = highlightMatch(item.code, query);
+            const plateHigh = highlightMatch(item.plate || 'No plate', query);
+            const custHigh = highlightMatch(item.customer, query);
+            const bayHigh = highlightMatch(item.bay, query);
+
+            row.innerHTML = `
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs shrink-0">
+                        <i class="fa-solid fa-car"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono font-bold text-sm text-asphalt">${plateHigh}</span>
+                            <span class="text-[11px] font-semibold text-slate-500 font-mono">(${codeHigh})</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 truncate mt-0.5">
+                            <span class="font-medium text-slate-700">${custHigh}</span> · ${escapeHtml(item.facility)} · ${bayHigh}
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0 ml-3">
+                    ${getStatusBadge(item.status)}
+                    <i class="fa-solid fa-arrow-turn-down -rotate-90 text-[10px] text-slate-300"></i>
+                </div>
+            `;
+
+            row.addEventListener('click', function(e) {
+                e.preventDefault();
+                selectItem(item.plate || item.code);
+            });
+
+            dropdown.appendChild(row);
+        });
+
+        dropdown.classList.remove('hidden');
+    }
+
+    function selectItem(val) {
+        searchInput.value = val;
+        dropdown.classList.add('hidden');
+        updateClearBtn();
+        if (filterForm) {
+            filterForm.submit();
+        }
+    }
+
+    function fetchSuggestions(query) {
+        if (!query) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+        fetch('/admin/reservations/suggest?q=' + encodeURIComponent(query))
+            .then(res => res.json())
+            .then(data => renderDropdown(data, query))
+            .catch(() => renderDropdown([], query));
+    }
+
+    searchInput.addEventListener('input', function() {
+        updateClearBtn();
+        clearTimeout(debounceTimer);
+        const q = this.value.trim();
+        if (!q) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+        debounceTimer = setTimeout(() => fetchSuggestions(q), 150);
+    });
+
+    searchInput.addEventListener('focus', function() {
+        const q = this.value.trim();
+        if (q) fetchSuggestions(q);
+    });
+
+    searchInput.addEventListener('keydown', function(e) {
+        const rows = dropdown.querySelectorAll('.res-item-row');
+        if (!rows || rows.length === 0 || dropdown.classList.contains('hidden')) {
+            if (e.key === 'Escape') dropdown.classList.add('hidden');
+            return;
+        }
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            highlightedIndex = (highlightedIndex + 1) % rows.length;
+            updateHighlight(rows);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            highlightedIndex = (highlightedIndex - 1 + rows.length) % rows.length;
+            updateHighlight(rows);
+        } else if (e.key === 'Enter') {
+            if (highlightedIndex >= 0 && highlightedIndex < rows.length) {
+                e.preventDefault();
+                const code = rows[highlightedIndex].dataset.code;
+                selectItem(code);
+            }
+        } else if (e.key === 'Escape') {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    function updateHighlight(rows) {
+        rows.forEach((r, idx) => {
+            if (idx === highlightedIndex) {
+                r.classList.add('bg-amber-100/80');
+                r.scrollIntoView({ block: 'nearest' });
+            } else {
+                r.classList.remove('bg-amber-100/80');
+            }
+        });
+    }
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            updateClearBtn();
+            dropdown.classList.add('hidden');
+            searchInput.focus();
+        });
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target) && (!clearBtn || !clearBtn.contains(e.target))) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    updateClearBtn();
+})();
+</script>
+</body></html>

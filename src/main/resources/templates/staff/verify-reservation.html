@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Gate Verification')}">
+    <title>Gate Arrival Verification &mdash; ParkNGo Console</title>
+</head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex flex-col">
+
+    <div class="flex flex-1 min-h-screen">
+        <!-- Staff Operations Sidebar -->
+        <div th:replace="~{layout/app :: sidebar('STAFF', 'verify')}"></div>
+
+        <!-- Main Console Layout -->
+        <div class="flex-1 md:pl-64 flex flex-col min-w-0 min-h-screen">
+            <div th:replace="~{layout/app :: topbar('Gate Arrival Verification', 'STAFF')}"></div>
+
+            <main class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div th:replace="~{ui/flash :: flash}"></div>
+
+                <!-- Page Header Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-line-200 shadow-1">
+                    <div>
+                        <h1 class="text-2xl font-bold font-heading text-asphalt flex items-center gap-2">
+                            <i class="fa-solid fa-id-card-clip text-primary-hover"></i>
+                            <span>Gate Arrival Verification &amp; Check-In</span>
+                        </h1>
+                        <p class="text-xs text-slate-500 mt-0.5">Lookup arriving vehicles by license plate (e.g. WP CA-1234, CAB-5678) or pass code (RES-XXXXXX).</p>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <a href="/staff/active-reservations" class="btn btn-secondary btn-md gap-2">
+                            <i class="fa-solid fa-list-check text-xs"></i>
+                            <span>Parked Queue</span>
+                        </a>
+                        <a href="/staff/walk-in" class="btn btn-primary btn-md gap-2">
+                            <i class="fa-solid fa-car-side text-xs"></i>
+                            <span>Issue Walk-In Pass</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Fast Plate / Pass Code Lookup Box with Live Autocomplete -->
+                <div class="bg-white p-6 rounded-2xl border border-line-200 shadow-1">
+                    <form id="verifySearchForm" action="/staff/verify-reservation" method="get" class="space-y-3 relative">
+                        <label for="plateSearchInput" class="label label-required">
+                            <i class="fa-solid fa-magnifying-glass text-primary-hover mr-1"></i> Look Up Arriving Vehicle
+                        </label>
+                        <div class="flex flex-col sm:flex-row gap-3 relative">
+                            <div class="relative flex-1">
+                                <i class="fa-solid fa-car absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
+                                <input type="text" id="plateSearchInput" name="search" th:value="${searchTerm}" autofocus
+                                       autocomplete="off"
+                                       placeholder="Type plate (e.g. CAB-8999, WP CA-1234) or Pass Code (RES-8B622C)..."
+                                       class="input pl-10 pr-10 py-3 font-mono uppercase font-bold text-sm">
+                                
+                                <div id="searchSpinner" class="hidden absolute right-3.5 top-3.5 text-primary-hover">
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                                </div>
+
+                                <!-- Live Autocomplete Dropdown -->
+                                <div id="autocompleteDropdown"
+                                     class="hidden absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border-2 border-info-600 overflow-hidden z-50 divide-y divide-line-100 max-h-96 overflow-y-auto">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-md gap-2 shrink-0">
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                                <span>Lookup Pass</span>
+                            </button>
+                            <a th:if="${searchTerm != null and !searchTerm.isEmpty()}" href="/staff/verify-reservation" class="btn btn-secondary btn-md">
+                                Clear
+                            </a>
+                        </div>
+                        <p class="hint">
+                            <i class="fa-solid fa-magnifying-glass text-primary-100 mr-1"></i> <strong>Live Autocomplete:</strong> Start typing plate number, customer name, or booking code for live suggestion results.
+                        </p>
+                    </form>
+                </div>
+
+                <!-- SEARCH RESULTS SECTION -->
+                <div th:if="${searchResults != null}" class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-base font-bold font-heading text-asphalt flex items-center gap-2">
+                            <i class="fa-solid fa-clipboard-check text-primary-hover"></i> Verification Check Results
+                            <span class="pill pill-info text-xs tnum" th:text="${searchResults.size() + ' found'}">1 found</span>
+                        </h2>
+                    </div>
+
+                    <!-- Empty Search Results -->
+                    <div th:if="${searchResults.isEmpty()}" class="bg-white rounded-2xl border border-line-200 p-8 shadow-1 text-center">
+                        <div th:replace="~{ui/empty :: state('fa-car-side', 'No matching reservation found', 'No active or advance booking found matching the search query.', 'Issue Drive-Up Walk-In Pass', '/staff/walk-in')}"></div>
+                    </div>
+
+                    <!-- Verified Result Cards -->
+                    <div th:each="res : ${searchResults}" class="bg-white rounded-2xl p-6 shadow-1 border-2 border-info-600 space-y-6">
+                        <!-- Top Badge & Customer -->
+                        <div class="flex flex-wrap items-start justify-between gap-4 border-b border-line-100 pb-4">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="pill pill-info font-mono font-bold" th:text="${res.reservationCode != null ? res.reservationCode : 'RES-#' + res.id}">RES-104829</span>
+                                    <span th:if="${res.isWalkIn}" class="pill pill-caution font-bold">Walk-In Guest</span>
+                                </div>
+                                <h3 class="text-xl font-bold font-heading text-asphalt mt-1" th:text="${res.customer != null ? res.customer.fullName : 'Drive-Up Customer'}">
+                                    Customer Name
+                                </h3>
+                                <p class="text-xs text-slate-500" th:text="${(res.customer != null ? (res.customer.email + ' · ' + (res.customer.phone != null ? res.customer.phone : 'No phone')) : (res.contactPhone != null ? res.contactPhone : 'Gate Registration'))}">email@example.com</p>
+                            </div>
+
+                            <!-- Status Pill -->
+                            <div>
+                                <div th:replace="~{ui/status :: reservation(${res.status}, true)}"></div>
+                            </div>
+                        </div>
+
+                        <!-- 4-Point Verification Checklist Card -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                            <!-- 1. Vehicle Plate -->
+                            <div class="bg-asphalt text-white p-4 rounded-[10px] space-y-2 flex flex-col justify-between">
+                                <span class="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">1. Vehicle Plate</span>
+                                <div>
+                                    <div th:replace="~{ui/plate :: plate(${res.vehicle.registrationNumber}, 'md')}"></div>
+                                </div>
+                                <div class="text-[11px] text-[#DDE3EA] pt-2 border-t border-[#1A2B42]" th:text="${res.vehicle.brand + ' ' + res.vehicle.model + ' (' + res.vehicle.vehicleType + ')'}">
+                                    Toyota Prius
+                                </div>
+                            </div>
+
+                            <!-- 2. Bay Assignment -->
+                            <div class="bg-primary/10 border border-primary/30 p-4 rounded-[10px] space-y-2 flex flex-col justify-between">
+                                <span class="text-[10px] uppercase font-bold text-primary-hover tracking-wider block">2. Bay Assignment</span>
+                                <div class="text-2xl font-bold font-num text-asphalt" th:text="${'Bay ' + res.parkingSpace.spaceNumber}">Bay A01</div>
+                                <div class="text-[11px] text-primary-hover pt-2 border-t border-primary/30" th:text="${'Floor ' + res.parkingSpace.floor + ' · ' + (res.parkingSpace.facility != null ? res.parkingSpace.facility.name : 'Main Complex')}">
+                                    Floor 1 · Downtown Garage
+                                </div>
+                            </div>
+
+                            <!-- 3. Schedule Window -->
+                            <div class="bg-mist border border-line-200 p-4 rounded-[10px] space-y-2 flex flex-col justify-between">
+                                <span class="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">3. Schedule Window</span>
+                                <div>
+                                    <div class="font-bold text-asphalt tnum" th:text="${#temporals.format(res.arrivalTime, 'dd MMM, HH:mm')}">Arrival</div>
+                                    <div class="text-[11px] text-slate-500 tnum" th:text="${'Until ' + #temporals.format(res.departureTime, 'dd MMM, HH:mm')}">Departure</div>
+                                </div>
+                                <div class="pt-2 border-t border-line-200">
+                                    <span class="pill pill-go text-[10px]">Gate Window Valid</span>
+                                </div>
+                            </div>
+
+                            <!-- 4. Payment Status -->
+                            <div class="p-4 rounded-[10px] border flex flex-col justify-between space-y-2 bg-mist border-line-200">
+                                <span class="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">4. Total Amount</span>
+                                <div class="text-xl font-bold text-asphalt tnum">
+                                    <span th:replace="~{ui/money :: lkr(${res.totalAmount})}"></span>
+                                </div>
+                                <div class="pt-2 border-t border-line-200">
+                                    <div th:replace="~{ui/status :: payment(${res.status})}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Big Action Controls: Check-In or Check-Out -->
+                        <div class="pt-4 border-t border-line-100 flex flex-wrap items-center justify-end gap-3">
+                            <form th:if="${res.status.name() == 'CONFIRMED' or res.status.name() == 'PENDING'}"
+                                  th:action="@{/staff/verify-reservation/check-in}" method="post">
+                                <input type="hidden" name="reservationId" th:value="${res.id}" />
+                                <button type="submit" class="btn btn-primary btn-lg gap-2 text-base px-8 h-12">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <span>GRANT GATE ENTRY &amp; CHECK-IN</span>
+                                </button>
+                            </form>
+
+                            <form th:if="${res.status.name() == 'ACTIVE'}"
+                                  th:action="@{/staff/verify-reservation/check-out}" method="post">
+                                <input type="hidden" name="reservationId" th:value="${res.id}" />
+                                <button type="submit" class="btn btn-secondary btn-lg gap-2 text-base px-8 h-12">
+                                    <i class="fa-solid fa-right-from-bracket"></i>
+                                    <span>RECORD EXIT &amp; CHECK-OUT</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EXPECTED TODAY ARRIVALS TABLE -->
+                <div class="bg-white rounded-2xl border border-line-200 shadow-1 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-line-100 flex items-center justify-between">
+                        <h2 class="text-base font-bold font-heading text-asphalt">Expected Upcoming Arrivals Today</h2>
+                        <span class="text-xs text-slate-500 tnum" th:text="${expectedArrivals != null ? expectedArrivals.size() + ' Expected' : '0 Expected'}">Top 20</span>
+                    </div>
+
+                    <div th:if="${expectedArrivals == null or expectedArrivals.isEmpty()}" class="p-8 text-center text-slate-500 text-xs">
+                        <p>No upcoming arrivals expected for today.</p>
+                    </div>
+
+                    <div th:if="${expectedArrivals != null and !expectedArrivals.isEmpty()}" class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-line-100 text-left text-xs">
+                            <thead class="bg-mist text-slate-500 font-semibold uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-3">Vehicle Plate</th>
+                                    <th class="px-6 py-3">Booking Code</th>
+                                    <th class="px-6 py-3">Space</th>
+                                    <th class="px-6 py-3">Arrival Window</th>
+                                    <th class="px-6 py-3">Status</th>
+                                    <th class="px-6 py-3 text-right">Gate Check-In</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-line-100 text-asphalt font-medium">
+                                <tr th:each="r : ${expectedArrivals}" class="hover:bg-mist/60 transition-colors">
+                                    <td class="px-6 py-3">
+                                        <div th:replace="~{ui/plate :: plate(${r.vehicle.registrationNumber}, 'sm')}"></div>
+                                    </td>
+                                    <td class="px-6 py-3 font-mono font-bold text-primary-hover" th:text="${r.reservationCode != null ? r.reservationCode : 'RES-#' + r.id}">RES-104829</td>
+                                    <td class="px-6 py-3 font-bold font-num text-sm" th:text="${'Bay ' + r.parkingSpace.spaceNumber}">Bay A01</td>
+                                    <td class="px-6 py-3 text-slate-500 tnum" th:text="${#temporals.format(r.arrivalTime, 'HH:mm') + ' – ' + #temporals.format(r.departureTime, 'HH:mm')}">14:00 – 16:00</td>
+                                    <td class="px-6 py-3">
+                                        <div th:replace="~{ui/status :: reservation(${r.status}, false)}"></div>
+                                    </td>
+                                    <td class="px-6 py-3 text-right">
+                                        <form th:action="@{/staff/verify-reservation/check-in}" method="post" class="inline">
+                                            <input type="hidden" name="reservationId" th:value="${r.id}" />
+                                            <button type="submit" class="btn btn-primary btn-sm">
+                                                Check In &rarr;
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Autocomplete JS for live vehicle plate lookup
+        const searchInput = document.getElementById('plateSearchInput');
+        const dropdown = document.getElementById('autocompleteDropdown');
+        const spinner = document.getElementById('searchSpinner');
+        let autoDebounce = null;
+
+        if (searchInput && dropdown) {
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                if (query.length < 2) {
+                    dropdown.classList.add('hidden');
+                    return;
+                }
+
+                if (spinner) spinner.classList.remove('hidden');
+
+                clearTimeout(autoDebounce);
+                autoDebounce = setTimeout(() => {
+                    fetch('/staff/verify-reservation/suggest?q=' + encodeURIComponent(query))
+                        .then(res => res.json())
+                        .then(data => {
+                            if (spinner) spinner.classList.add('hidden');
+                            if (!data || data.length === 0) {
+                                dropdown.classList.add('hidden');
+                                return;
+                            }
+
+                            dropdown.innerHTML = '';
+                            data.forEach(item => {
+                                const row = document.createElement('a');
+                                row.href = '/staff/verify-reservation?search=' + encodeURIComponent(item.plate || item.code);
+                                row.className = 'p-3 flex items-center justify-between hover:bg-primary/10 transition text-xs font-medium cursor-pointer border-b border-line-100 last:border-b-0';
+                                row.innerHTML = `
+                                    <div class="flex items-center gap-3">
+                                        <span class="font-mono font-bold bg-asphalt text-primary-100 px-2 py-0.5 rounded">${item.plate || 'NO-PLATE'}</span>
+                                        <div>
+                                            <div class="font-bold text-asphalt">${item.customer || 'Guest'} — ${item.bay || 'Bay'}</div>
+                                            <div class="text-[10px] text-slate-500 font-mono">${item.code || ''}</div>
+                                        </div>
+                                    </div>
+                                    <span class="btn btn-secondary btn-sm">Verify &rarr;</span>
+                                `;
+                                dropdown.appendChild(row);
+                            });
+
+                            dropdown.classList.remove('hidden');
+                        })
+                        .catch(err => {
+                            if (spinner) spinner.classList.add('hidden');
+                            console.warn('Autocomplete fetch failed', err);
+                        });
+                }, 200);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

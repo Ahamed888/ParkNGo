@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Staff reports')}"><title>Staff reports - ParkNGo</title></head>
+<body class="font-sans min-h-screen">
+<div th:replace="~{layout/app :: sidebar('STAFF', 'reports')}"></div>
+<div class="md:pl-64 min-h-screen">
+    <div th:replace="~{layout/app :: topbar('Staff reports', 'STAFF')}"></div>
+    <main class="pg-page">
+        <div th:replace="~{ui/flash :: flash}"></div>
+        <div class="pg-heading"><div><span class="eyebrow">REPORTING / TODAY</span><h1>Operations summary.</h1><p>Activity and walk-in revenue for your assigned facility.</p></div></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+            <div class="stat-card"><span>Arrivals</span><strong th:text="${todayArrivals}">0</strong></div>
+            <div class="stat-card"><span>Departures</span><strong th:text="${todayDepartures}">0</strong></div>
+            <div class="stat-card"><span>Walk-ins</span><strong th:text="${walkInsIssued}">0</strong></div>
+            <div class="stat-card"><span>Walk-in revenue</span><strong th:text="${'LKR ' + walkInRevenue}">LKR 0</strong></div>
+            <div class="stat-card"><span>Currently active</span><strong th:text="${activeCount}">0</strong></div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

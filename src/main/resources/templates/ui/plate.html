@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- AUTHENTIC SRI LANKAN VEHICLE PLATE BADGE -->
+    <!-- Usage: th:replace="~{ui/plate :: plate('WP CAA-1234', 'md')}" -->
+    <span th:fragment="plate(number, size)" 
+          class="plate font-num uppercase font-bold tracking-wider"
+          th:classappend="${size == 'lg' ? 'plate-lg' : (size == 'sm' ? 'plate-sm' : '')}"
+          th:text="${number}">
+        WP CAA-1234
+    </span>
+
+    <span th:fragment="plateDefault(number)" 
+          class="plate font-num uppercase font-bold tracking-wider"
+          th:text="${number}">
+        WP CAA-1234
+    </span>
+
+</body>
+</html>

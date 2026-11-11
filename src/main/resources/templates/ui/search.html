@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- REUSABLE SEARCH WIDGET (Hero & Bar variants) -->
+    <!-- Usage: th:replace="~{ui/search :: widget('hero')}" or 'bar' -->
+    <div th:fragment="widget(variant)" 
+         th:class="${variant == 'hero' ? 'w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-line-200 p-5 md:p-6 text-left relative z-20' : 'w-full bg-white rounded-xl shadow-xs border border-line-200 p-4 text-left'}">
+        
+        <form th:action="@{/customer/parking-search}" method="get" id="searchWidgetForm" class="space-y-4">
+            
+            <!-- Grid: Where, Date, Arrive, Duration -->
+            <div th:class="${variant == 'hero' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'}">
+                
+                <!-- 1. Where / Location Combobox -->
+                <div class="relative" id="whereContainer">
+                    <label for="searchWhere" class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 font-num mb-1">
+                        Where
+                    </label>
+                    <div class="relative">
+                        <i class="fa-solid fa-location-dot absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                        <input type="text" id="searchWhere" name="keyword" th:value="${keyword}" 
+                               list="wherePlacesList"
+                               placeholder="Complex or area..."
+                               autocomplete="off"
+                               class="w-full pl-8 pr-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#F5B800]">
+                    </div>
+
+                    <!-- Native HTML datalist for immediate browser dropdown -->
+                    <datalist id="wherePlacesList">
+                        <th:block th:if="${allFacilities != null}">
+                            <option th:each="f : ${allFacilities}" th:value="${f.name}" th:data-city="${f.city}" th:data-address="${f.address}" th:label="${f.name + (f.city != null ? ' - ' + f.city : '')}"></option>
+                        </th:block>
+                        <th:block th:if="${facilities != null and allFacilities == null}">
+                            <option th:each="f : ${facilities}" th:value="${f.name}" th:data-city="${f.city}" th:data-address="${f.address}" th:label="${f.name + (f.city != null ? ' - ' + f.city : '')}"></option>
+                        </th:block>
+                        <option value="Colombo Central Multi-Storey" data-city="Colombo" data-address="123 Galle Road, Colombo 00300">Colombo Central Multi-Storey</option>
+                        <option value="Kandy City Centre Car Park" data-city="Kandy" data-address="55 Dalada Veediya, Kandy 20000">Kandy City Centre Car Park</option>
+                        <option value="Galle Fort Parking Garage" data-city="Galle" data-address="12 Rampart Street, Galle">Galle Fort Parking Garage</option>
+                        <option value="Negombo Beach Road Parking" data-city="Negombo" data-address="45 Porutota Road, Negombo">Negombo Beach Road Parking</option>
+                        <option value="Colombo">Colombo</option>
+                        <option value="Kandy">Kandy</option>
+                        <option value="Galle">Galle</option>
+                        <option value="Negombo">Negombo</option>
+                    </datalist>
+
+                    <!-- Stored Places Dropdown Menu -->
+                    <div id="whereDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-64 overflow-y-auto divide-y divide-slate-100">
+                    </div>
+                </div>
+
+                <!-- 2. Date -->
+                <div>
+                    <label for="searchDate" class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 font-num mb-1">
+                        Date
+                    </label>
+                    <div class="relative">
+                        <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="date" id="searchDate" 
+                               class="w-full pl-8 pr-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#F5B800]">
+                    </div>
+                </div>
+
+                <!-- 3. Arrive Time (15-min intervals) -->
+                <div>
+                    <label for="searchTime" class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 font-num mb-1">
+                        Arrive
+                    </label>
+                    <div class="relative">
+                        <i class="fa-regular fa-clock absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <select id="searchTime" class="w-full pl-8 pr-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#F5B800]">
+                            <option value="06:00">06:00 AM</option>
+                            <option value="06:30">06:30 AM</option>
+                            <option value="07:00">07:00 AM</option>
+                            <option value="07:30">07:30 AM</option>
+                            <option value="08:00">08:00 AM</option>
+                            <option value="08:30">08:30 AM</option>
+                            <option value="09:00" selected>09:00 AM</option>
+                            <option value="09:30">09:30 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="10:30">10:30 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="11:30">11:30 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="13:00">01:00 PM</option>
+                            <option value="14:00">02:00 PM</option>
+                            <option value="15:00">03:00 PM</option>
+                            <option value="16:00">04:00 PM</option>
+                            <option value="17:00">05:00 PM</option>
+                            <option value="18:00">06:00 PM</option>
+                            <option value="19:00">07:00 PM</option>
+                            <option value="20:00">08:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 4. Duration Presets -->
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 font-num mb-1">
+                        Duration
+                    </label>
+                    <div class="flex items-center gap-1" id="durationChips">
+                        <button type="button" data-duration="1" class="flex-1 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700">1h</button>
+                        <button type="button" data-duration="2" class="flex-1 py-2 text-xs font-bold rounded-lg border border-[#E5AC00] bg-primary text-asphalt">2h</button>
+                        <button type="button" data-duration="4" class="flex-1 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700">4h</button>
+                        <button type="button" data-duration="8" class="flex-1 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700">8h</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bottom Row: CTA & Trust Reassurance -->
+            <div class="pt-3 border-t border-line-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-center gap-2 text-[11px] text-slate-500 font-medium">
+                    <i class="fa-solid fa-clock-rotate-left text-caution-700"></i>
+                    <span>Includes 15-minute turnover buffer &middot; Free cancellation</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="submit" 
+                            class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-hover text-asphalt font-bold text-xs shadow-xs transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass text-[11px]"></i>
+                        <span>Find Your Parking Spot</span>
+                    </button>
+                </div>
+            </div>
+
+        </form>
+
+        <script>
+            (function() {
+                const dateInput = document.getElementById('searchDate');
+                if (dateInput && !dateInput.value) {
+                    const today = new Date().toISOString().split('T')[0];
+                    dateInput.min = today;
+                    dateInput.value = today;
+                }
+
+                // Duration chips toggle
+                const chips = document.querySelectorAll('#durationChips button');
+                chips.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        chips.forEach(b => {
+                            b.className = 'flex-1 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700';
+                        });
+                        btn.className = 'flex-1 py-2 text-xs font-bold rounded-lg border border-[#E5AC00] bg-primary text-asphalt';
+                    });
+                });
+
+                // Where Stored Places Autocomplete Dropdown
+                const whereInput = document.getElementById('searchWhere');
+                const whereDropdown = document.getElementById('whereDropdown');
+                const whereContainer = document.getElementById('whereContainer');
+                if (whereInput && whereDropdown && whereContainer) {
+                    let places = [];
+
+                    function loadPlacesFromDOM() {
+                        const datalist = document.getElementById('wherePlacesList');
+                        if (datalist) {
+                            const seen = new Set();
+                            datalist.querySelectorAll('option').forEach(opt => {
+                                const name = opt.value || opt.textContent;
+                                if (name && !seen.has(name.toLowerCase())) {
+                                    seen.add(name.toLowerCase());
+                                    places.push({
+                                        name: name,
+                                        city: opt.getAttribute('data-city') || '',
+                                        address: opt.getAttribute('data-address') || opt.getAttribute('label') || ''
+                                    });
+                                }
+                            });
+                        }
+                    }
+
+                    function loadPlacesFromAPI() {
+                        fetch('/customer/facilities/suggest')
+                            .then(res => res.ok ? res.json() : [])
+                            .then(data => {
+                                if (data && data.length > 0) {
+                                    places = data;
+                                }
+                            })
+                            .catch(() => {});
+                    }
+
+                    loadPlacesFromDOM();
+                    loadPlacesFromAPI();
+
+                    function renderDropdown(filterText = '') {
+                        if (places.length === 0) loadPlacesFromDOM();
+                        const query = (filterText || '').trim().toLowerCase();
+                        const matches = places.filter(p => 
+                            !query || 
+                            (p.name && p.name.toLowerCase().includes(query)) ||
+                            (p.city && p.city.toLowerCase().includes(query)) ||
+                            (p.address && p.address.toLowerCase().includes(query))
+                        );
+
+                        if (matches.length === 0) {
+                            whereDropdown.innerHTML = '<div class="p-3 text-xs text-slate-400 text-center"><i class="fa-solid fa-map-pin mr-1"></i> No matching stored places</div>';
+                            whereDropdown.classList.remove('hidden');
+                            return;
+                        }
+
+                        whereDropdown.innerHTML = matches.map(p => `
+                            <div class="where-item px-3 py-2.5 hover:bg-amber-50 cursor-pointer transition flex items-center gap-2.5 text-left" data-name="${p.name}">
+                                <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs shrink-0 font-bold">
+                                    <i class="fa-solid fa-square-parking"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xs font-bold text-slate-900 truncate">${p.name}</div>
+                                    <div class="text-[11px] text-slate-500 truncate">${p.address || p.city || ''}</div>
+                                </div>
+                            </div>
+                        `).join('');
+
+                        whereDropdown.querySelectorAll('.where-item').forEach(item => {
+                            item.addEventListener('mousedown', (e) => {
+                                e.preventDefault();
+                                whereInput.value = item.getAttribute('data-name');
+                                whereDropdown.classList.add('hidden');
+                            });
+                        });
+
+                        whereDropdown.classList.remove('hidden');
+                    }
+
+                    whereInput.addEventListener('focus', () => {
+                        renderDropdown(whereInput.value);
+                    });
+
+                    whereInput.addEventListener('click', () => {
+                        renderDropdown(whereInput.value);
+                    });
+
+                    whereInput.addEventListener('input', () => {
+                        renderDropdown(whereInput.value);
+                    });
+
+                    document.addEventListener('click', (e) => {
+                        if (!whereContainer.contains(e.target)) {
+                            whereDropdown.classList.add('hidden');
+                        }
+                    });
+                }
+            })();
+        </script>
+    </div>
+
+</body>
+</html>

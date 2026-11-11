@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+            <!-- CHECKOUT HEADER -->
+    <header th:fragment="header(step)" class="sticky top-0 z-40 bg-asphalt border-b border-line-200 text-white shadow-1">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand with exit prompt -->
+                <a href="/customer/parking-search" 
+                   data-confirm="Leave reservation in progress? Any temporary space hold will be released."
+                   data-confirm-btn="Leave Checkout"
+                   class="flex items-center space-x-3 group min-w-0">
+                    <span th:replace="~{ui/brand :: mark('w-10 h-10 shrink-0')}"></span>
+                    <span class="text-base font-bold tracking-tight font-heading text-white truncate">
+                        Park<span class="parkngo-brand-n">N</span>Go <span class="text-xs font-normal text-slate-400 ml-1 hidden sm:inline">Checkout</span>
+                    </span>
+                </a>
+
+                <!-- Step progress label on desktop - Enterprise Parking Stepper -->
+                <div class="hidden lg:flex flex-1 max-w-3xl mx-8 items-center justify-between relative">
+                    <div class="absolute left-0 right-0 top-1/2 h-0.5 bg-asphalt-800 -translate-y-1/2 z-0"></div>
+                    
+                    <div class="checkout-progress-step is-current relative z-10 flex flex-col items-center gap-1.5" data-checkout-progress-step="1">
+                        <div class="checkout-progress-icon w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-primary text-asphalt"><i class="fa-solid fa-building"></i></div>
+                        <span class="checkout-progress-label text-[10px] font-semibold uppercase tracking-wider text-primary">Facility</span>
+                    </div>
+                    
+                    <div class="checkout-progress-step relative z-10 flex flex-col items-center gap-1.5" data-checkout-progress-step="2">
+                        <div class="checkout-progress-icon w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-asphalt-800 text-slate-500"><i class="fa-solid fa-car"></i></div>
+                        <span class="checkout-progress-label text-[10px] font-semibold uppercase tracking-wider text-slate-500">Vehicle</span>
+                    </div>
+
+                    <div class="checkout-progress-step relative z-10 flex flex-col items-center gap-1.5" data-checkout-progress-step="3">
+                        <div class="checkout-progress-icon w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-asphalt-800 text-slate-500"><i class="fa-regular fa-clock"></i></div>
+                        <span class="checkout-progress-label text-[10px] font-semibold uppercase tracking-wider text-slate-500">Time</span>
+                    </div>
+                    
+                    <div class="checkout-progress-step relative z-10 flex flex-col items-center gap-1.5" data-checkout-progress-step="4">
+                        <div class="checkout-progress-icon w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-asphalt-800 text-slate-500"><i class="fa-solid fa-square-parking"></i></div>
+                        <span class="checkout-progress-label text-[10px] font-semibold uppercase tracking-wider text-slate-500">Bay</span>
+                    </div>
+                    
+                    <div class="checkout-progress-step relative z-10 flex flex-col items-center gap-1.5" data-checkout-progress-step="5">
+                        <div class="checkout-progress-icon w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-asphalt-800 text-slate-500"><i class="fa-solid fa-check"></i></div>
+                        <span class="checkout-progress-label text-[10px] font-semibold uppercase tracking-wider text-slate-500">Confirm</span>
+                    </div>
+                </div>
+
+                <!-- Right: Lock icon & Exit button -->
+                <div class="flex items-center space-x-3 sm:space-x-4 flex-shrink-0">
+                    <div class="hidden sm:flex items-center space-x-1.5 text-xs text-slate-400">
+                        <i class="fa-solid fa-lock text-slate-400"></i>
+                        <span>Secure</span>
+                    </div>
+
+                    <a href="/customer/parking-search" 
+                       data-confirm="Leave reservation in progress? Any temporary space hold will be released."
+                       data-confirm-btn="Leave"
+                       class="text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white px-3 py-1.5 rounded bg-asphalt-800 hover:bg-slate-700 transition">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- CHECKOUT COMPACT FOOTER -->
+    <footer th:fragment="footer" class="bg-[#EEF0ED] border-t border-line-200 py-6 text-center text-xs text-slate-500 mt-12">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div>
+                &copy; 2026 ParkNGo Sri Lanka. Official parking reservation gateway.
+            </div>
+            <div class="flex items-center space-x-3 text-slate-400 text-[11px]">
+                <span>15-min turnover buffer</span>
+                <span>&bull;</span>
+                <span>Free cancellation before arrival</span>
+                <span>&bull;</span>
+                <span>Full refund guaranteed</span>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

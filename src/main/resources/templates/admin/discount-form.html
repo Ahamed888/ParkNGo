@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head(${isEdit ? 'Edit Discount Code - ParkNGo Admin' : 'Create Discount Code - ParkNGo Admin'})}"></head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex">
+
+    <!-- Console Sidebar -->
+    <aside th:replace="~{layout/app :: sidebar('ADMIN', 'discounts')}"></aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen bg-mist">
+        
+        <!-- Console Topbar -->
+        <header th:replace="~{layout/app :: topbar(${isEdit ? 'Edit Discount Code' : 'Create Discount Code'}, 'ADMIN')}"></header>
+
+        <!-- Main Body -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-3xl w-full mx-auto">
+            
+            <!-- Flash Alerts -->
+            <div th:replace="~{ui/flash :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="space-y-3 rounded-2xl border border-line-200 bg-white p-6 sm:p-8 shadow-1">
+                <a href="/admin/discounts" class="inline-flex items-center text-xs font-bold text-slate-600 hover:text-asphalt">
+                    <i class="fa-solid fa-arrow-left mr-1.5"></i>Back to Discounts
+                </a>
+                <h1 class="text-2xl font-black text-asphalt font-heading tracking-tight" th:text="${isEdit ? 'Edit Discount Code' : 'Create New Discount Code'}">Discount Form</h1>
+                <p class="text-sm text-slate-500">Configure promo voucher parameters, start and expiry dates, and percentage or fixed value deductions.</p>
+            </div>
+
+            <!-- Form Card -->
+            <div class="p-6 sm:p-8 rounded-2xl bg-white border border-line-200 shadow-xs">
+                <form th:action="@{/admin/discounts/save}" th:object="${discount}" method="post" class="space-y-5">
+                    <input type="hidden" name="id" th:value="${discount.id}" />
+
+                    <div th:if="${#fields.hasGlobalErrors()}" class="rounded-lg border border-stop-200 bg-stop-50 p-3 text-xs text-stop-700">
+                        <p th:each="error : ${#fields.globalErrors()}" th:text="${error}">Please correct the highlighted fields.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Discount Code *</label>
+                            <input type="text" name="couponCode" th:value="${discount.couponCode}" placeholder="e.g. SUMMER2026" required
+                                   pattern="[A-Za-z0-9_-]+" title="Letters, numbers, underscores and hyphens only"
+                                   class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 font-mono text-sm uppercase font-bold text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary">
+                            <span class="text-[11px] text-slate-500 mt-1 block">Normalized to uppercase automatically</span>
+                            <p th:if="${#fields.hasErrors('couponCode')}" th:errors="*{couponCode}" class="mt-1 text-xs text-stop-600">Discount code error</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Discount Type *</label>
+                            <select name="discountType" class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 text-sm text-asphalt focus:outline-none focus:border-primary">
+                                <option value="PERCENTAGE" th:selected="${discount.discountType != null and discount.discountType.name() == 'PERCENTAGE'}">PERCENTAGE (%)</option>
+                                <option value="FIXED_AMOUNT" th:selected="${discount.discountType != null and discount.discountType.name() == 'FIXED_AMOUNT'}">FIXED AMOUNT (LKR)</option>
+                            </select>
+                            <p th:if="${#fields.hasErrors('discountType')}" th:errors="*{discountType}" class="field-error"></p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Discount Value *</label>
+                            <input type="number" step="5" min="0" name="value" th:value="${discount.value != null ? #numbers.formatDecimal(discount.value, 1, 0) : ''}" placeholder="15" required
+                                   class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary">
+                            <p th:if="${#fields.hasErrors('value')}" th:errors="*{value}" class="mt-1 text-xs text-stop-600">Discount value error</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Start Date *</label>
+                            <input type="date" name="startDate" th:value="${discount.startDate}" required
+                                   class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 text-sm text-asphalt focus:outline-none focus:border-primary">
+                            <p th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}" class="mt-1 text-xs text-stop-600">Start date error</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Expiry Date *</label>
+                            <input type="date" name="expiryDate" th:value="${discount.expiryDate}" required
+                                   class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 text-sm text-asphalt focus:outline-none focus:border-primary">
+                            <p th:if="${#fields.hasErrors('expiryDate')}" th:errors="*{expiryDate}" class="mt-1 text-xs text-stop-600">Expiry date error</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Global Usage Cap <span class="text-slate-400 normal-case font-normal">(optional)</span></label>
+                            <input type="number" min="1" name="maxUses" th:value="${discount.maxUses}" placeholder="Unlimited if blank"
+                                   class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary">
+                            <p th:if="${#fields.hasErrors('maxUses')}" th:errors="*{maxUses}" class="mt-1 text-xs text-stop-600">Usage cap error</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Per-Customer Cap</label>
+                            <input type="number" min="1" name="maxUsesPerCustomer" th:value="${discount.maxUsesPerCustomer}" placeholder="1"
+                                   class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary">
+                            <span class="text-[11px] text-slate-500 mt-1 block">Limits redemptions per user</span>
+                            <p th:if="${#fields.hasErrors('maxUsesPerCustomer')}" th:errors="*{maxUsesPerCustomer}" class="mt-1 text-xs text-stop-600">Per-customer cap error</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Applies To</label>
+                            <select id="appliesTo" name="appliesTo" class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 text-sm text-asphalt focus:outline-none focus:border-primary">
+                                <option value="ALL" th:selected="${discount.appliesTo == null or discount.appliesTo.name() == 'ALL'}">All Bookings</option>
+                                <option value="OFF_PEAK_ONLY" th:selected="${discount.appliesTo != null and discount.appliesTo.name() == 'OFF_PEAK_ONLY'}">Off-Peak Bookings Only</option>
+                            </select>
+                            <p th:if="${#fields.hasErrors('appliesTo')}" th:errors="*{appliesTo}" class="field-error"></p>
+                        </div>
+                    </div>
+
+                    <div id="offPeakFields" class="grid grid-cols-1 sm:grid-cols-2 gap-4 hidden">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Off-Peak Start Hour (0-23)</label>
+                            <input type="number" min="0" max="23" name="offPeakStartHour" th:value="${discount.offPeakStartHour}" placeholder="e.g. 22"
+                                   class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary">
+                            <p th:if="${#fields.hasErrors('offPeakStartHour')}" th:errors="*{offPeakStartHour}" class="mt-1 text-xs text-stop-600">Off-peak start hour error</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Off-Peak End Hour (0-23)</label>
+                            <input type="number" min="0" max="23" name="offPeakEndHour" th:value="${discount.offPeakEndHour}" placeholder="e.g. 6"
+                                   class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary">
+                            <p th:if="${#fields.hasErrors('offPeakEndHour')}" th:errors="*{offPeakEndHour}" class="mt-1 text-xs text-stop-600">Off-peak end hour error</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Campaign Description</label>
+                        <textarea name="description" th:text="${discount.description}" rows="3" placeholder="Terms and conditions, target audience, or promotion campaign notes..."
+                                  class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary resize-none"></textarea>
+                        <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="field-error"></p>
+                    </div>
+
+                    <div class="flex items-center gap-3 bg-slate-50 p-4 rounded-xl border border-line-200">
+                        <input type="checkbox" name="active" id="discountActiveCheckbox" th:checked="${discount.active}" class="w-4 h-4 text-primary bg-white border-line-300 rounded focus:ring-1 focus:ring-primary">
+                        <label for="discountActiveCheckbox" class="text-xs font-bold text-asphalt cursor-pointer">
+                            Active Discount Code (Can be validated and redeemed at checkout)
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-line-100">
+                        <a th:href="@{/admin/discounts}" class="discount-cancel px-4 py-2 rounded-lg bg-white border border-line-200 text-slate-600 font-bold text-xs shadow-xs">Cancel</a>
+                        <button type="submit" class="px-5 py-2 rounded-lg bg-primary hover:bg-primary-hover text-asphalt font-bold text-xs transition flex items-center gap-2 shadow-xs">
+                            <i class="fa-solid fa-check"></i>
+                            <span>Save Discount Code</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const appliesTo = document.getElementById('appliesTo');
+            const offPeakFields = document.getElementById('offPeakFields');
+
+            function toggleOffPeakFields() {
+                offPeakFields.classList.toggle('hidden', appliesTo.value !== 'OFF_PEAK_ONLY');
+            }
+
+            appliesTo.addEventListener('change', toggleOffPeakFields);
+            toggleOffPeakFields();
+        });
+    </script>
+</body>
+</html>

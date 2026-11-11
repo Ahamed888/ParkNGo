@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="header(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title != null ? title + ' — ParkNGo' : 'ParkNGo — Smart Parking & Automated Bay Management'}">ParkNGo</title>
+
+    <!-- Typography: Barlow, Barlow Semi Condensed & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700;800&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome 6.5.1 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- ParkNGo Road & Marking Design System Primitives -->
+    <link rel="stylesheet" th:href="@{/css/parkngo.css}">
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        const tokenCookie = document.cookie.split("; ").find(row => row.startsWith("XSRF-TOKEN="));
+        if (!tokenCookie) return;
+        const token = decodeURIComponent(tokenCookie.substring("XSRF-TOKEN=".length));
+        document.querySelectorAll("form[method='post'], form[method='POST']").forEach(function(form) {
+          if (form.querySelector("input[name='_csrf']")) return;
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = "_csrf";
+          input.value = token;
+          form.appendChild(input);
+        });
+      });
+    </script>
+
+    <!-- Core UI Interaction & Datetime Scripts -->
+    <script defer th:src="@{/js/ui.js}"></script>
+    <script defer th:src="@{/js/datetime.js}"></script>
+    <script defer th:src="@{/js/form-validation.js}"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col justify-between font-sans">
+
+    <!-- COMPATIBILITY GLOBAL NAVBAR (Road & Marking Design System) -->
+    <nav th:fragment="navbar" class="sticky top-0 z-40 bg-asphalt text-white border-b border-[#1A2B42] shadow-1">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand -->
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="flex items-center space-x-3 group">
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded bg-info-600 text-white font-extrabold text-lg font-num border border-info-400/30 group-hover:bg-[#1238BD] transition shadow-xs">
+                            P
+                        </span>
+                        <div class="flex flex-col">
+                            <span class="text-lg font-bold tracking-tight font-heading text-white group-hover:text-line-200 transition leading-none">
+                                Park<span class="parkngo-brand-n">N</span>Go
+                            </span>
+                            <span class="text-[10px] tracking-wider text-slate-400 uppercase font-medium mt-0.5">
+                                Sri Lanka
+                            </span>
+                        </div>
+                    </a>
+
+                    <!-- Customer Nav -->
+                    <div class="hidden md:flex items-center space-x-1" sec:authorize="hasRole('CUSTOMER')">
+                        <a href="/customer/dashboard" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Dashboard</a>
+                        <a href="/customer/reservation/create" class="px-3 py-1.5 rounded-md text-sm font-semibold bg-info-600 hover:bg-[#1238BD] text-white transition flex items-center gap-1.5 shadow-xs border border-info-400/20">
+                            <span>Book Space</span>
+                        </a>
+                        <a href="/customer/parking-search" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Parking Complexes</a>
+                        <a href="/customer/vehicles" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">My Vehicles</a>
+                        <a href="/customer/reservations" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">My Bookings</a>
+                        <a href="/customer/packages" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Packages</a>
+                        <a href="/customer/subscriptions" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">My Passes</a>
+                        <a href="/customer/payments" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Payments</a>
+                    </div>
+
+                    <!-- Staff Nav -->
+                    <div class="hidden md:flex items-center space-x-1" sec:authorize="hasRole('STAFF')">
+                        <a href="/staff/dashboard" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Operations</a>
+                        <a href="/staff/verify-reservation" class="px-3 py-1.5 rounded-md text-sm font-semibold bg-go-600 hover:bg-emerald-700 text-white transition flex items-center gap-1.5 shadow-xs">
+                            <i class="fa-solid fa-qrcode text-xs"></i>
+                            <span>Verify Arrival</span>
+                        </a>
+                        <a href="/staff/active-reservations" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Active Queue</a>
+                        <a href="/staff/occupancy" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Occupancy</a>
+                        <a href="/staff/parking-spaces" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Spaces</a>
+                    </div>
+
+                    <!-- Admin Nav -->
+                    <div class="hidden md:flex items-center space-x-1" sec:authorize="hasRole('ADMIN')">
+                        <a href="/admin/dashboard" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Dashboard</a>
+                        <a href="/admin/users" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Users</a>
+                        <a href="/admin/facilities" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Complexes</a>
+                        <a href="/admin/spaces" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Spaces</a>
+                        <a href="/admin/packages" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Packages</a>
+                        <a href="/admin/discounts" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Discounts</a>
+                        <a href="/admin/payments" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Payments</a>
+                        <a href="/admin/feedback" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Feedback</a>
+                        <a href="/admin/reports" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Reports</a>
+                    </div>
+                </div>
+
+                <!-- Right Profile / Login -->
+                <div class="flex items-center space-x-3">
+                    <!-- Guest -->
+                    <div sec:authorize="!isAuthenticated()" class="flex items-center space-x-2">
+                        <a href="/login" class="text-sm font-medium text-slate-300 hover:text-white px-3 py-1.5 transition">Sign In</a>
+                        <a href="/register" class="bg-white hover:bg-slate-100 text-asphalt px-3.5 py-1.5 rounded-md font-semibold text-sm transition shadow-xs">Register</a>
+                    </div>
+
+                    <!-- Authenticated -->
+                    <div sec:authorize="isAuthenticated()" class="flex items-center space-x-3">
+                        <span class="text-xs bg-asphalt-800 text-slate-200 border border-slate-700/60 px-2.5 py-1 rounded-full font-medium" sec:authentication="name">User</span>
+                        <form th:action="@{/logout}" method="post" class="inline">
+                            <button type="submit" class="text-xs bg-asphalt-800 hover:bg-stop-600 border border-slate-700/60 hover:border-stop-600 text-white px-3 py-1.5 rounded transition cursor-pointer">
+                                Sign Out
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Mobile Menu Button -->
+                    <button id="mobileBtn" class="md:hidden text-slate-300 hover:text-white p-2 rounded-lg hover:bg-asphalt-800 transition" aria-label="Toggle navigation">
+                        <i class="fa-solid fa-bars text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Drawer Menu -->
+        <div id="mobileMenu" class="hidden md:hidden bg-asphalt-800 border-t border-slate-700/60 px-4 py-3 space-y-1 text-sm">
+            <div sec:authorize="hasRole('CUSTOMER')" class="space-y-1">
+                <a href="/customer/dashboard" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Dashboard</a>
+                <a href="/customer/reservation/create" class="block px-3 py-2 rounded-lg font-semibold bg-info-600 text-white">Book Space</a>
+                <a href="/customer/parking-search" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Parking Complexes</a>
+                <a href="/customer/vehicles" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">My Vehicles</a>
+                <a href="/customer/reservations" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">My Bookings</a>
+                <a href="/customer/packages" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Packages</a>
+                <a href="/customer/subscriptions" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">My Passes</a>
+                <a href="/customer/payments" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Payments</a>
+            </div>
+            <div sec:authorize="hasRole('STAFF')" class="space-y-1">
+                <a href="/staff/dashboard" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Operations</a>
+                <a href="/staff/verify-reservation" class="block px-3 py-2 rounded-lg font-semibold bg-go-600 text-white">Verify Arrival</a>
+                <a href="/staff/active-reservations" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Active Queue</a>
+                <a href="/staff/occupancy" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Occupancy</a>
+                <a href="/staff/parking-spaces" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Spaces</a>
+            </div>
+            <div sec:authorize="hasRole('ADMIN')" class="space-y-1">
+                <a href="/admin/dashboard" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Dashboard</a>
+                <a href="/admin/users" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Users</a>
+                <a href="/admin/facilities" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Parking Complexes</a>
+                <a href="/admin/spaces" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Spaces</a>
+                <a href="/admin/packages" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Packages</a>
+                <a href="/admin/discounts" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Discounts</a>
+                <a href="/admin/payments" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Payments</a>
+                <a href="/admin/feedback" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Feedback</a>
+                <a href="/admin/reports" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Reports</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- BREADCRUMBS -->
+    <div th:fragment="breadcrumbs(section, sectionUrl, page)" class="bg-white border-b border-line-200 px-4 sm:px-6 lg:px-8 py-2.5">
+        <div class="max-w-7xl mx-auto flex items-center space-x-2 text-xs text-slate-500 font-medium">
+            <a href="/" class="hover:text-slate-900 flex items-center gap-1">
+                <i class="fa-solid fa-house text-[10px] text-slate-400"></i>
+                <span>Home</span>
+            </a>
+            <span class="text-slate-300">/</span>
+            <span th:if="${section != null}" class="flex items-center space-x-2">
+                <a th:if="${sectionUrl != null}" th:href="${sectionUrl}" class="hover:text-slate-900" th:text="${section}">Section</a>
+                <span th:if="${sectionUrl == null}" class="text-slate-700" th:text="${section}">Section</span>
+                <span class="text-slate-300">/</span>
+            </span>
+            <span class="text-slate-900 font-bold font-num tracking-wide" th:text="${page}">Current Page</span>
+        </div>
+    </div>
+
+    <!-- COMPREHENSIVE ALERTS (Delegates to ui/flash with full message coverage) -->
+    <div th:fragment="alerts">
+        <div th:replace="~{ui/flash :: flash}"></div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer th:fragment="footer" class="bg-asphalt text-slate-400 text-xs py-8 mt-16 border-t border-[#1A2B42]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded bg-info-600 text-white font-extrabold text-xs font-num">
+                    P
+                </span>
+                <span class="font-bold text-white text-sm font-heading">Park<span class="parkngo-brand-n">N</span>Go Sri Lanka</span>
+                <span class="text-slate-400">— Smart Parking & Automated Bay Management Network</span>
+            </div>
+            <div class="flex space-x-6 text-slate-400 text-xs">
+                <a href="/" class="hover:text-white transition">Home</a>
+                <a href="/login" class="hover:text-white transition">Sign In</a>
+                <a href="/register" class="hover:text-white transition">Register</a>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-400 mt-4 text-[11px]">
+            &copy; 2026 ParkNGo Sri Lanka. Colombo • Kandy • Galle. Free cancellation until arrival. All rights reserved.
+        </div>
+    </footer>
+
+</body>
+</html>

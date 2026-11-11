@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('My Passes')}"></head>
+<body class="bg-mist text-asphalt min-h-screen flex font-sans antialiased">
+<div th:replace="~{layout/app :: sidebar('CUSTOMER', 'packages')}"></div>
+<div class="flex-1 md:pl-64 min-w-0">
+  <div th:replace="~{layout/app :: topbar('', 'CUSTOMER')}"></div>
+  <main class="p-6 max-w-7xl mx-auto space-y-6">
+    <div th:replace="~{ui/flash :: flash}"></div>
+    <div class="flex flex-wrap justify-between items-center gap-4"><div><h1 class="text-2xl font-bold font-heading">My Memberships</h1><p class="text-sm text-slate-500">Your active benefits, participating complexes, and allowance progress.</p></div><a th:href="@{/customer/packages}" class="btn btn-primary btn-md">Explore memberships</a></div>
+    <div th:if="${#lists.isEmpty(subscriptions)}" class="bg-white rounded-2xl border border-line-200 p-8"><div th:replace="~{ui/empty :: state('fa-id-card', 'No active passes', 'Choose a parking package to start your first pass.', 'Explore packages', '/customer/packages')}"></div></div>
+    <div th:unless="${#lists.isEmpty(subscriptions)}" class="package-grid">
+      <article th:each="sub : ${subscriptions}" class="bg-white rounded-2xl border border-line-200 p-6 shadow-1 flex flex-col justify-between gap-5" th:with="pkg=${sub.membershipPackage}">
+        <div class="space-y-4">
+          <div class="flex items-start justify-between gap-3"><h2 class="text-xl font-bold font-heading" th:text="${sub.packageNameSnap != null ? sub.packageNameSnap : (pkg != null ? pkg.name : 'Parking pass')}">Pass</h2><span th:replace="~{ui/status :: subscription(${sub.status})}"></span></div>
+          <div class="bg-asphalt text-primary-100 rounded-lg p-3 text-center"><p class="text-xs uppercase" th:text="${sub.status.name() == 'PENDING' ? 'Pending payment reference' : 'Gate access PIN'}">Gate access PIN</p><p class="font-mono font-bold text-lg select-all" th:text="${sub.gateAccessPin}">PIN</p></div>
+          <p th:if="${sub.status.name() == 'PENDING'}" class="text-sm text-caution-700">This unpaid request cannot be completed at the gate. Cancel it and purchase the package by card.</p>
+          <dl class="grid grid-cols-2 gap-3 text-sm">
+            <div><dt class="text-slate-500">Start date</dt><dd class="font-semibold" th:text="${sub.startDate}">Date</dd></div>
+            <div><dt class="text-slate-500">Expiry date</dt><dd class="font-semibold" th:text="${sub.endDate}">Date</dd></div>
+            <div th:if="${sub.status.name() == 'ACTIVE'}"><dt class="text-slate-500">Days remaining</dt><dd class="font-semibold" th:text="${sub.daysRemaining}">Days</dd></div>
+            <div><dt class="text-slate-500">Visits remaining</dt><dd class="font-semibold" th:text="${sub.visitsRemaining == null ? 'Unlimited' : sub.visitsRemaining}">Remaining</dd></div>
+            <div><dt class="text-slate-500">Parking discount</dt><dd class="font-semibold" th:text="${pkg != null ? pkg.parkingDiscountPercentage + '%' : '—'}">Discount</dd></div>
+          </dl>
+          <div class="text-sm"><h3 class="font-semibold">Applicable parking complexes</h3><p th:if="${pkg != null and pkg.allFacilities}" class="text-slate-600">All parking complexes</p><p th:if="${pkg != null and !pkg.allFacilities}" class="text-slate-600" th:text="${#strings.listJoin(pkg.facilities.![name], ', ')}">Complexes</p></div>
+          <div class="text-sm" th:if="${pkg != null and !pkg.includedServiceItems.isEmpty()}"><h3 class="font-semibold">Included services</h3><p class="text-slate-600" th:text="${#strings.listJoin(pkg.includedServiceItems.![name], ', ')}">Services</p></div>
+          <div class="text-sm" th:if="${pkg != null and !pkg.benefits.isEmpty()}"><h3 class="font-semibold">Membership benefits</h3><ul class="mt-1 space-y-1 text-slate-600"><li th:each="benefit : ${pkg.benefits}"><span th:text="${benefit.displayDescription}">Benefit</span><span class="text-slate-500" th:text="${' — ' + benefitProgress.get(benefit.id)}"> — Available</span></li></ul></div>
+        </div>
+        <div class="flex items-center gap-2 border-t border-line-200 pt-4"><a th:href="@{/customer/subscription/receipt/{id}(id=${sub.id})}" class="btn btn-secondary btn-sm flex-1 justify-center" th:text="${sub.status.name() == 'PENDING' ? 'Payment details' : 'Digital pass'}">Digital pass</a><form th:if="${sub.status.name() == 'ACTIVE' or sub.status.name() == 'PENDING'}" th:action="@{/customer/subscription/cancel/{id}(id=${sub.id})}" method="post" data-confirm="Cancel this membership pass?" data-confirm-btn="Cancel pass" data-confirm-tone="danger"><button type="submit" class="btn btn-danger btn-sm">Cancel</button></form></div>
+      </article>
+    </div>
+  </main>
+</div>
+</body>
+</html>

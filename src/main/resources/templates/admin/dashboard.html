@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head('Admin Dashboard - ParkNGo')}">
+    <title>Admin Dashboard &mdash; ParkNGo</title>
+</head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex">
+
+    <!-- Console Sidebar -->
+    <aside th:replace="~{layout/app :: sidebar('ADMIN', 'dashboard')}"></aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen bg-mist">
+        
+        <!-- Console Topbar -->
+        <header th:replace="~{layout/app :: topbar('Administrator Command Hub', 'ADMIN')}"></header>
+
+        <!-- Main Body -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+            
+            <!-- Flash Alerts -->
+            <div th:replace="~{ui/flash :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-line-200">
+                <div>
+                    <h2 class="text-2xl font-black text-asphalt font-heading tracking-tight">System Command Center</h2>
+                    <p class="text-sm text-slate-500 mt-1">Platform overview, system occupancy, registered facilities, and financial analytics.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="/admin/facility/add" class="px-4 py-2 rounded-lg text-sm font-bold bg-primary hover:bg-primary-hover text-asphalt transition shadow-xs flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Add Facility</span>
+                    </a>
+                    <a href="/admin/reports" class="px-4 py-2 rounded-lg text-sm font-bold bg-white border border-line-200 hover:bg-slate-50 text-asphalt transition shadow-xs flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-blue-600"></i>
+                        <span>Financial Reports</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 4 KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <div class="p-5 rounded-xl bg-white border border-line-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-1">Total Revenue</span>
+                        <h3 class="text-3xl font-black text-go-600 font-num">
+                            LKR <span th:text="${#numbers.formatDecimal(totalRevenue != null ? totalRevenue : 0, 1, 2)}">0.00</span>
+                        </h3>
+                        <span class="text-xs text-go-600 font-bold mt-1 inline-block">Settled Bookings</span>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-go-50 text-go-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-money-bill-wave"></i>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-xl bg-white border border-line-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-1">Registered Users</span>
+                        <h3 class="text-3xl font-black text-asphalt font-num" th:text="${totalUsers != null ? totalUsers : 0}">0</h3>
+                        <a href="/admin/users" class="text-xs text-blue-600 font-bold hover:underline mt-1 inline-block">Manage Accounts &rarr;</a>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-xl bg-white border border-line-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-1">Total Bookings</span>
+                        <h3 class="text-3xl font-black text-asphalt font-num" th:text="${totalReservations != null ? totalReservations : 0}">0</h3>
+                        <span class="text-xs text-slate-500 font-medium mt-1 inline-block" th:text="${(completedReservations != null ? completedReservations : 0) + ' completed'}">0 completed</span>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-xl bg-white border border-line-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-1">Live Occupancy</span>
+                        <h3 class="text-3xl font-black text-blue-600 font-num" th:text="${(occupancyPercentage != null ? occupancyPercentage : 0) + '%'}">0%</h3>
+                        <span class="text-xs text-slate-500 font-medium mt-1 inline-block">
+                            <strong class="text-go-600 font-bold" th:text="${availableSpaces != null ? availableSpaces : 0}">0</strong> free / <span th:text="${totalSpaces != null ? totalSpaces : 0}">0</span> total
+                        </span>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-square-parking"></i>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Management Sections Grid -->
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-bold text-asphalt font-heading">Management Modules</h3>
+                    <span class="text-xs text-slate-400">Quick access to all administration consoles</span>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    
+                    <a href="/admin/facilities" class="p-5 rounded-xl bg-white border border-line-200 hover:border-slate-400 hover:shadow-md transition flex items-center gap-4 group">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 group-hover:bg-indigo-600 text-indigo-600 group-hover:text-white transition flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-building"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-asphalt group-hover:text-indigo-600 transition">Facilities</h4>
+                            <p class="text-xs text-slate-500 mt-0.5">Complexes &amp; capacities</p>
+                        </div>
+                    </a>
+
+                    <a href="/admin/spaces" class="p-5 rounded-xl bg-white border border-line-200 hover:border-slate-400 hover:shadow-md transition flex items-center gap-4 group">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 group-hover:bg-emerald-600 text-emerald-600 group-hover:text-white transition flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-square-parking"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-asphalt group-hover:text-emerald-600 transition">Parking Spaces</h4>
+                            <p class="text-xs text-slate-500 mt-0.5">Bays, floors &amp; zones</p>
+                        </div>
+                    </a>
+
+                    <a href="/admin/reservations" class="p-5 rounded-xl bg-white border border-line-200 hover:border-slate-400 hover:shadow-md transition flex items-center gap-4 group">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white transition flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-calendar-days"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-asphalt group-hover:text-blue-600 transition">Reservations</h4>
+                            <p class="text-xs text-slate-500 mt-0.5">Live booking registry</p>
+                        </div>
+                    </a>
+
+                    <a href="/admin/payments" class="p-5 rounded-xl bg-white border border-line-200 hover:border-slate-400 hover:shadow-md transition flex items-center gap-4 group">
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 group-hover:bg-amber-600 text-amber-600 group-hover:text-white transition flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-credit-card"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-asphalt group-hover:text-amber-600 transition">Payment Ledger</h4>
+                            <p class="text-xs text-slate-500 mt-0.5">Transactions &amp; refunds</p>
+                        </div>
+                    </a>
+
+                    <a href="/admin/users" class="p-5 rounded-xl bg-white border border-line-200 hover:border-slate-400 hover:shadow-md transition flex items-center gap-4 group">
+                        <div class="w-12 h-12 rounded-xl bg-purple-50 group-hover:bg-purple-600 text-purple-600 group-hover:text-white transition flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-asphalt group-hover:text-purple-600 transition">Users &amp; Roles</h4>
+                            <p class="text-xs text-slate-500 mt-0.5">Customers, staff &amp; admin</p>
+                        </div>
+                    </a>
+
+                    <a href="/admin/services" class="p-5 rounded-xl bg-white border border-line-200 hover:border-slate-400 hover:shadow-md transition flex items-center gap-4 group">
+                        <div class="w-12 h-12 rounded-xl bg-teal-50 group-hover:bg-teal-600 text-teal-600 group-hover:text-white transition flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-wrench"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-asphalt group-hover:text-teal-600 transition">Services</h4>
+                            <p class="text-xs text-slate-500 mt-0.5">Wash, EV &amp; valets</p>
+                        </div>
+                    </a>
+
+                    <a href="/admin/discounts" class="p-5 rounded-xl bg-white border border-line-200 hover:border-slate-400 hover:shadow-md transition flex items-center gap-4 group">
+                        <div class="w-12 h-12 rounded-xl bg-yellow-50 group-hover:bg-yellow-600 text-yellow-600 group-hover:text-white transition flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-tags"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-asphalt group-hover:text-yellow-600 transition">Discount Management</h4>
+                            <p class="text-xs text-slate-500 mt-0.5">Discount codes</p>
+                        </div>
+                    </a>
+
+                    <a href="/admin/packages" class="p-5 rounded-xl bg-white border border-line-200 hover:border-slate-400 hover:shadow-md transition flex items-center gap-4 group">
+                        <div class="w-12 h-12 rounded-xl bg-rose-50 group-hover:bg-rose-600 text-rose-600 group-hover:text-white transition flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-box"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-asphalt group-hover:text-rose-600 transition">Packages</h4>
+                            <p class="text-xs text-slate-500 mt-0.5">Memberships &amp; passes</p>
+                        </div>
+                    </a>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ParkNGo - Enterprise Parking Management">
+
+    <title th:text="${title != null ? title + ' - ParkNGo' : 'ParkNGo - Enterprise Parking Management'}">ParkNGo</title>
+
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
+
+    <!-- Typography: a compact sans for interface copy and a numeric face for operational data -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome 6.5.1 — DB-stored service icons only -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script th:src="@{/js/tailwind-config.js}"></script>
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+
+    <link rel="stylesheet" th:href="@{/css/parkngo.css}">
+
+    <link rel="stylesheet" th:href="@{/css/redesign.css}">
+    <script defer th:src="@{/js/parking-map.js}"></script>
+    <script defer th:src="@{/js/ui.js}"></script>
+    <script defer th:src="@{/js/datetime.js}"></script>
+    <script defer th:src="@{/js/form-validation.js}"></script>
+
+    <script>
+      window.syncCsrfTokens = function() {
+        const tokenCookie = document.cookie.split("; ").find(row => row.startsWith("XSRF-TOKEN="));
+        if (!tokenCookie) return;
+        const token = decodeURIComponent(tokenCookie.substring("XSRF-TOKEN=".length));
+        document.querySelectorAll("form[method='post'], form[method='POST']").forEach(function(form) {
+          let input = form.querySelector("input[name='_csrf']");
+          if (!input) {
+            input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "_csrf";
+            form.appendChild(input);
+          }
+          input.value = token;
+        });
+      };
+      document.addEventListener("DOMContentLoaded", window.syncCsrfTokens);
+      window.addEventListener("pageshow", window.syncCsrfTokens);
+      document.addEventListener("submit", window.syncCsrfTokens, true);
+    </script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+      });
+    </script>
+</head>
+<body></body>
+</html>

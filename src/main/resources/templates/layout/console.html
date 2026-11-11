@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- CONSOLE SIDEBAR FRAGMENT -->
+    <aside th:fragment="sidebar(role, active)" 
+           class="fixed inset-y-0 left-0 z-40 w-64 bg-navy text-slate-300 flex flex-col transition-transform transform -translate-x-full md:translate-x-0"
+           id="consoleSidebar">
+        
+        <!-- Sidebar Brand & Role Badge -->
+        <div class="h-20 flex items-center justify-start px-6 border-b border-navy-light/30">
+            <a href="/" class="flex items-center space-x-3 group">
+                <span th:replace="~{ui/brand :: mark('w-10 h-10 shrink-0')}"></span>
+                <div class="flex flex-col">
+                    <span class="text-xl font-bold tracking-tight text-white">
+                        Park<span class="parkngo-brand-n">N</span>Go
+                    </span>
+                </div>
+            </a>
+            <!-- Mobile close button -->
+            <button type="button" data-mobile-menu-toggle="consoleSidebar" class="md:hidden ml-auto text-slate-400 hover:text-white p-1">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- User Profile (Top of sidebar in some designs, bottom in others. Requirement says bottom, but image shows a user at the top in staff ops?) Wait, the Staff Operations image shows the user at the top left of the sidebar! Let's put it here. -->
+        <div class="p-6 pb-2">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-navy-light flex items-center justify-center text-white overflow-hidden">
+                    <i data-lucide="user" class="w-5 h-5"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-sm font-semibold text-white" sec:authentication="name">Ruwan Silva</span>
+                    <span class="text-xs text-slate-400" th:text="${role == 'STAFF' ? 'Parking Attendant' : (role == 'ADMIN' ? 'Admin' : role)}">Parking Attendant</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <div class="flex-1 overflow-y-auto py-4 px-4 space-y-1">
+            
+            <!-- STAFF MENU -->
+            <div th:if="${role == 'STAFF'}" class="space-y-1">
+                <a href="/staff/dashboard" 
+                   th:class="${active == 'dashboard' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="/staff/verify-reservation" 
+                   th:class="${active == 'verify' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="check-square" class="w-5 h-5"></i>
+                    <span>Check-in / Check-out</span>
+                </a>
+
+                <a href="/staff/walk-in" 
+                   th:class="${active == 'walk-in' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="user-plus" class="w-5 h-5"></i>
+                    <span>Walk-in</span>
+                </a>
+
+                <a href="/staff/active-reservations" 
+                   th:class="${active == 'queue' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                    <span>Active Reservations</span>
+                </a>
+
+                <a href="/staff/occupancy" 
+                   th:class="${active == 'occupancy' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="pie-chart" class="w-5 h-5"></i>
+                    <span>Occupancy</span>
+                </a>
+
+                <a href="/staff/parking-spaces" 
+                   th:class="${active == 'spaces' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="grid" class="w-5 h-5"></i>
+                    <span>Parking Spaces</span>
+                </a>
+
+                <a href="#" 
+                   th:class="${active == 'vehicles' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="car" class="w-5 h-5"></i>
+                    <span>Vehicles</span>
+                </a>
+
+                <a href="#" 
+                   th:class="${active == 'reports' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                    <span>Reports</span>
+                </a>
+            </div>
+
+            <!-- ADMIN MENU -->
+            <div th:if="${role == 'ADMIN'}" class="space-y-1">
+                <a href="/admin/dashboard" 
+                   th:class="${active == 'dashboard' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="/admin/facilities" 
+                   th:class="${active == 'facilities' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="building" class="w-5 h-5"></i>
+                    <span>Facilities</span>
+                </a>
+
+                <a href="/admin/spaces" 
+                   th:class="${active == 'spaces' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="grid" class="w-5 h-5"></i>
+                    <span>Parking Spaces</span>
+                </a>
+
+                <a href="/admin/users" 
+                   th:class="${active == 'users' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span>Users</span>
+                </a>
+                
+                <a href="#" 
+                   th:class="${active == 'reservations' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                    <span>Reservations</span>
+                </a>
+
+                <a href="/admin/services" 
+                   th:class="${active == 'services' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="briefcase" class="w-5 h-5"></i>
+                    <span>Services</span>
+                </a>
+
+                <a href="/admin/packages" 
+                   th:class="${active == 'packages' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="package" class="w-5 h-5"></i>
+                    <span>Packages</span>
+                </a>
+
+                <a href="/admin/discounts" 
+                   th:class="${active == 'discounts' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="tag" class="w-5 h-5"></i>
+                    <span>Discounts</span>
+                </a>
+
+                <a href="/admin/payments" 
+                   th:class="${active == 'payments' ? 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-navy' : 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-navy-light hover:text-white transition'}">
+                    <i data-lucide="credit-card" class="w-5 h-5"></i>
+                    <span>Payments</span>
+                </a>
+
+
+            </div>
+
+        </div>
+
+        <!-- Sidebar User Footer -->
+        <div class="p-4 mt-auto">
+            <div class="bg-navy-light rounded-xl p-3 flex flex-col gap-2">
+                 <div class="flex items-center justify-between">
+                     <span class="text-xs text-slate-300">Shift</span>
+                     <form th:action="@{/logout}" method="post">
+                        <button type="submit" class="text-slate-400 hover:text-white p-1 rounded transition" title="Sign Out">
+                            <i data-lucide="log-out" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+                 </div>
+                 <div class="text-xs text-white font-medium">08:00 AM - 04:00 PM</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CONSOLE TOPBAR FRAGMENT -->
+    <header th:fragment="topbar(title, role)" class="sticky top-0 z-30 h-20 bg-bg border-b border-border flex items-center justify-between px-6 lg:px-8">
+        <div class="flex items-center space-x-3">
+            <!-- Sidebar toggle on mobile -->
+            <button type="button" data-mobile-menu-toggle="consoleSidebar" class="md:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+
+            <!-- Page Title -->
+            <div class="flex flex-col">
+                <h1 class="text-2xl font-bold text-navy" th:text="${title}">Operations</h1>
+                <!-- Subtitle mock for now, can be updated per page -->
+                <span th:if="${role == 'STAFF'}" class="text-sm text-text-muted">Real-time view of parking activity</span>
+                <span th:if="${role == 'ADMIN'}" class="text-sm text-text-muted">Complete view of all parking complexes</span>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-6">
+            <!-- Universal Staff Plate / Code Lookup Form (Staff Only) -->
+            <div th:if="${role == 'STAFF'}" class="hidden sm:block">
+                <!-- Removed old search styling to keep header clean like reference -->
+            </div>
+
+            <!-- Live Colombo Time Stencil & Status-->
+            <div class="flex items-center gap-4">
+                <div class="flex items-center space-x-2 text-sm font-medium text-text-muted">
+                    <span class="hidden md:inline">Tue, 24 Sep 2025</span>
+                    <span data-live-clock class="ml-2 font-medium text-navy">10:24 AM</span>
+                </div>
+                
+                <!-- Status Badge -->
+                <div th:if="${role == 'STAFF'}" class="flex items-center space-x-1.5 px-3 py-1.5 bg-status-available/10 border border-status-available/20 rounded-full text-status-available text-xs font-semibold">
+                    <div class="w-2 h-2 rounded-full bg-status-available"></div>
+                    <span>On Duty</span>
+                </div>
+                
+                <div th:if="${role == 'ADMIN'}" class="flex items-center gap-2">
+                    <select class="text-sm border border-border rounded-lg px-3 py-2 bg-white text-navy font-medium outline-none focus:ring-1 focus:ring-primary">
+                        <option>All Complexes</option>
+                        <option>City Centre</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </header>
+
+</body>
+</html>

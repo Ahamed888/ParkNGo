@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- PAGE HEADER COMPONENT -->
+    <div th:fragment="header(title, subtitle)" class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-heading" th:text="${title}">
+                Page Title
+            </h1>
+            <p th:if="${subtitle != null}" class="text-sm text-slate-500 mt-1 leading-relaxed" th:text="${subtitle}">
+                Page description and details.
+            </p>
+        </div>
+    </div>
+
+    <!-- BREADCRUMBS COMPONENT -->
+    <nav th:fragment="breadcrumbs(section, sectionUrl, page)" class="bg-white border-b border-line-200 px-4 sm:px-6 lg:px-8 py-2.5" aria-label="Breadcrumb">
+        <div class="max-w-7xl mx-auto flex items-center space-x-2 text-xs text-slate-500 font-medium">
+            <a href="/" class="hover:text-slate-900 flex items-center gap-1">
+                <i class="fa-solid fa-house text-[10px] text-slate-400"></i>
+                <span>Home</span>
+            </a>
+            <span class="text-slate-300">/</span>
+            
+            <span th:if="${section != null}" class="flex items-center space-x-2">
+                <a th:if="${sectionUrl != null}" th:href="${sectionUrl}" class="hover:text-slate-900" th:text="${section}">Section</a>
+                <span th:if="${sectionUrl == null}" class="text-slate-600" th:text="${section}">Section</span>
+                <span class="text-slate-300">/</span>
+            </span>
+
+            <span class="text-slate-900 font-bold font-num tracking-wide" th:text="${page}">Current Page</span>
+        </div>
+    </nav>
+
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Active Parked Queue')}">
+    <title>Active Parked Queue &mdash; ParkNGo Console</title>
+</head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex flex-col">
+
+    <div class="flex flex-1 min-h-screen">
+        <!-- Staff Operations Sidebar -->
+        <div th:replace="~{layout/app :: sidebar('STAFF', 'queue')}"></div>
+
+        <!-- Main Console Layout -->
+        <div class="flex-1 md:pl-64 flex flex-col min-w-0 min-h-screen">
+            <div th:replace="~{layout/app :: topbar('Active Parked Queue', 'STAFF')}"></div>
+
+            <main class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div th:replace="~{ui/flash :: flash}"></div>
+
+                <!-- Page Header Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-line-200 shadow-1">
+                    <div>
+                        <h1 class="text-2xl font-bold font-heading text-asphalt flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-primary-hover"></i>
+                            <span>Active Parked Vehicles &amp; Overstay Monitor</span>
+                        </h1>
+                        <p class="text-xs text-slate-500 mt-0.5">Live queue of all vehicles currently occupying parking bays, with automatic overstay detection.</p>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <a href="/staff/walk-in" class="btn btn-secondary btn-md gap-2">
+                            <i class="fa-solid fa-car-side text-xs"></i>
+                            <span>Walk-In Pass</span>
+                        </a>
+                        <a href="/staff/verify-reservation" class="btn btn-primary btn-md gap-2">
+                            <i class="fa-solid fa-check-to-slot text-xs"></i>
+                            <span>Verify &amp; Check-In</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Queue Container -->
+                <div class="bg-white rounded-2xl border border-line-200 shadow-1 overflow-hidden">
+                    <!-- Empty State -->
+                    <div th:if="${reservations == null or reservations.isEmpty()}" class="p-8">
+                        <div th:replace="~{ui/empty :: state('fa-square-parking', 'No vehicles currently parked', 'When arriving vehicles check in or walk-in tickets are issued, they appear here.', 'Issue Walk-In Pass', '/staff/walk-in')}"></div>
+                    </div>
+
+                    <!-- Active List Table -->
+                    <div th:if="${reservations != null and !reservations.isEmpty()}" class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-asphalt">
+                            <thead class="bg-mist border-b border-line-100 text-slate-500 uppercase tracking-wider font-semibold whitespace-nowrap">
+                                <tr>
+                                    <th class="px-4 py-3.5">Pass Code</th>
+                                    <th class="px-4 py-3.5">Vehicle Plate</th>
+                                    <th class="px-4 py-3.5">Occupied Space</th>
+                                    <th class="px-4 py-3.5">Guest / Customer</th>
+                                    <th class="px-4 py-3.5">Check-In Time</th>
+                                    <th class="px-4 py-3.5">Scheduled Departure</th>
+                                    <th class="px-4 py-3.5 text-right">Gate Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-line-100 font-medium">
+                                <tr th:each="res : ${reservations}" class="hover:bg-mist/60 transition-colors">
+                                    <td class="px-4 py-3 whitespace-nowrap align-middle">
+                                        <div class="flex flex-col items-start gap-1">
+                                            <span class="pill pill-info font-mono font-bold" th:text="${res.reservationCode != null ? res.reservationCode : 'RES-#' + res.id}">RES-104928</span>
+                                            <span th:if="${res.isWalkIn}" class="pill pill-caution text-[10px]">
+                                                <i class="fa-solid fa-person-walking text-[9px] mr-1"></i> Walk-In
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap align-middle">
+                                        <div th:replace="~{ui/plate :: plate(${res.vehicle != null ? res.vehicle.registrationNumber : (res.guestVehicleRegNumber != null ? res.guestVehicleRegNumber : 'WALK-IN')}, 'sm')}"></div>
+                                        <div class="text-[11px] text-slate-500 mt-0.5" th:text="${res.vehicle != null ? (res.vehicle.brand + ' ' + res.vehicle.model) : 'Guest Vehicle'}">Toyota Camry</div>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap align-middle">
+                                        <div class="font-bold font-num text-sm" th:text="${'Bay ' + res.parkingSpace.spaceNumber}">Space A01</div>
+                                        <div class="text-[11px] text-slate-500" th:text="${'Floor ' + res.parkingSpace.floor + ' · Rate: LKR ' + #numbers.formatDecimal(res.parkingSpace.hourlyRate, 1, 0) + '/hr'}">Floor 1</div>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap align-middle">
+                                        <div class="font-bold" th:text="${res.guestName != null and !res.guestName.isEmpty() ? res.guestName : (res.customer != null ? res.customer.fullName : 'Guest Driver')}">Customer Name</div>
+                                        <div class="text-[11px] text-slate-500" th:text="${res.contactPhone != null and !res.contactPhone.isEmpty() ? res.contactPhone : (res.customer != null ? res.customer.phone : 'Drive-up')}">Phone</div>
+                                    </td>
+                                    <td class="px-4 py-3 text-slate-500 whitespace-nowrap align-middle">
+                                        <span class="font-bold text-asphalt tnum" th:text="${#temporals.format(res.actualArrivalTime != null ? res.actualArrivalTime : res.arrivalTime, 'HH:mm')}">14:00</span>
+                                        <span class="text-[10px] text-slate-500 block tnum" th:text="${#temporals.format(res.actualArrivalTime != null ? res.actualArrivalTime : res.arrivalTime, 'dd MMM yyyy')}">28 Aug</span>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap align-middle">
+                                        <span class="font-bold text-asphalt tnum" th:text="${#temporals.format(res.departureTime, 'HH:mm')}">16:00</span>
+                                        <span class="text-[10px] text-slate-500 block tnum" th:text="${#temporals.format(res.departureTime, 'dd MMM yyyy')}">28 Aug</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-right whitespace-nowrap align-middle">
+                                        <div class="inline-flex items-center justify-end gap-1.5 whitespace-nowrap">
+                                            <button type="button" 
+                                                    onclick="openEditModal(this)"
+                                                    th:data-id="${res.id}"
+                                                    th:data-code="${res.reservationCode}"
+                                                    th:data-plate="${res.vehicle != null ? res.vehicle.registrationNumber : (res.guestVehicleRegNumber != null ? res.guestVehicleRegNumber : 'WALK-IN')}"
+                                                    th:data-vehicle-type="${res.vehicle != null ? res.vehicle.vehicleType : 'CAR'}"
+                                                    th:data-space-id="${res.parkingSpace.id}"
+                                                    th:data-space-num="${res.parkingSpace.spaceNumber}"
+                                                    th:data-arrival="${#temporals.format(res.actualArrivalTime != null ? res.actualArrivalTime : res.arrivalTime, 'yyyy-MM-dd''T''HH:mm')}"
+                                                    th:data-departure="${#temporals.format(res.departureTime, 'yyyy-MM-dd''T''HH:mm')}"
+                                                    class="btn btn-secondary btn-sm">
+                                                <i class="fa-solid fa-pen text-[10px]"></i>
+                                                <span>Edit</span>
+                                            </button>
+
+                                            <button type="button"
+                                                    onclick="openExitConfirmModal(this)"
+                                                    th:data-id="${res.id}"
+                                                    th:data-code="${res.reservationCode}"
+                                                    th:data-plate="${res.vehicle != null ? res.vehicle.registrationNumber : (res.guestVehicleRegNumber != null ? res.guestVehicleRegNumber : 'WALK-IN')}"
+                                                    th:data-space="${res.parkingSpace.spaceNumber}"
+                                                    class="btn btn-primary btn-sm">
+                                                <i class="fa-solid fa-arrow-right-from-bracket text-[10px]"></i>
+                                                <span>Process exit</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Hidden Global Form for Exit Submission -->
+    <form id="globalExitForm" action="/staff/verify-reservation/check-out" method="post" class="hidden">
+        <input type="hidden" name="reservationId" id="exitReservationId" value="">
+    </form>
+
+    <!-- Custom Exit / Checkout Confirmation Modal -->
+    <div id="exitConfirmModal" class="fixed inset-0 bg-asphalt/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-xl border border-line-200 p-6 text-center space-y-4">
+            <div class="w-12 h-12 rounded-full bg-go-50 text-go-600 flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </div>
+            <h3 class="text-lg font-bold font-heading text-asphalt">Process Vehicle Exit</h3>
+            <p class="text-xs text-slate-500">
+                Record checkout exit for vehicle <strong id="exitPlateSpan" class="font-mono text-asphalt">ABC-1234</strong> from <strong id="exitSpaceSpan">Bay A01</strong>?
+            </p>
+            <div class="flex items-center justify-center gap-3 pt-2">
+                <button type="button" onclick="closeExitConfirmModal()" class="btn btn-secondary btn-md">Cancel</button>
+                <button type="button" onclick="confirmExitSubmit()" class="btn btn-primary btn-md">Confirm exit &amp; free bay</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Active Reservation Modal -->
+    <div id="editActiveModal" class="fixed inset-0 bg-asphalt/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xl w-full shadow-xl border border-line-200 p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-line-100 pb-3">
+                <h3 class="text-base font-bold font-heading text-asphalt">Edit Active Reservation #<span id="modalResId"></span></h3>
+                <button type="button" onclick="closeEditModal()" class="btn btn-ghost btn-sm text-slate-500"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="editActiveForm" method="post" th:action="${editReservationId != null ? '/staff/active-reservations/edit/' + editReservationId : ''}" class="space-y-4 text-xs">
+                
+                <!-- Vehicle Details Matching Add-Vehicle / Walk-In UI -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="field">
+                        <label class="label label-required">License Plate Number</label>
+                        <input type="text" name="licensePlate" id="editPlate" th:value="${editLicensePlate}" required minlength="4" maxlength="15" 
+                               pattern="^(?:(?:(WP|CP|SP|NW|NC|EP|SG|VA|UW|wp|cp|sp|nw|nc|ep|sg|va|uw)[ -]*)?([A-Za-z0-9]{1,4})[ -]*)?[A-Za-z0-9 -]{2,10}$" 
+                               title="Use a valid Sri Lankan plate, such as WP CA-1234, CAB-5678, or 19-1234." 
+                               data-uppercase="true" placeholder="e.g. WP CA-1234 or CAB-5678" class="input font-mono uppercase font-bold">
+                        <p th:if="${editFieldErrors != null and editFieldErrors.containsKey('licensePlate')}" class="field-error" th:text="${editFieldErrors.get('licensePlate')}"></p>
+                    </div>
+                    <div class="field">
+                        <label class="label label-required">Vehicle Category</label>
+                        <select name="vehicleType" id="editVehicleType" required class="select font-semibold">
+                            <option value="CAR" th:selected="${editVehicleType == 'CAR'}">Standard Passenger Car</option>
+                            <option value="SUV" th:selected="${editVehicleType == 'SUV'}">SUV / Minivan</option>
+                            <option value="ELECTRIC" th:selected="${editVehicleType == 'ELECTRIC'}">Electric Vehicle (EV)</option>
+                            <option value="MOTORCYCLE" th:selected="${editVehicleType == 'MOTORCYCLE'}">Motorcycle</option>
+                            <option value="TRUCK" th:selected="${editVehicleType == 'TRUCK'}">Truck / Van</option>
+                        </select>
+                        <p th:if="${editFieldErrors != null and editFieldErrors.containsKey('vehicleType')}" class="field-error" th:text="${editFieldErrors.get('vehicleType')}"></p>
+                    </div>
+                </div>
+
+                <div class="field" th:if="${availableSpaces != null}">
+                    <label class="label">Assigned Space</label>
+                    <select name="parkingSpaceId" id="editSpaceId" class="select font-bold">
+                        <option th:each="sp : ${availableSpaces}" th:value="${sp.id}" th:text="${'Space ' + sp.spaceNumber + ' (Floor ' + sp.floor + ')'}" th:selected="${editParkingSpaceId == sp.id}"></option>
+                    </select>
+                    <p th:if="${editFieldErrors != null and editFieldErrors.containsKey('parkingSpaceId')}" class="field-error" th:text="${editFieldErrors.get('parkingSpaceId')}"></p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="field">
+                        <label class="label">Check-In Arrival Time</label>
+                        <input type="datetime-local" name="arrivalTime" id="editArrival" th:value="${editArrivalTime}" disabled aria-describedby="editArrivalHelp" class="input font-mono">
+                        <p id="editArrivalHelp" class="form-help">Recorded arrival cannot be changed after check-in.</p>
+                    </div>
+                    <div class="field">
+                        <label class="label">Scheduled Departure</label>
+                        <input type="datetime-local" name="departureTime" id="editDeparture" th:value="${editDepartureTime}" required class="input font-mono">
+                        <p th:if="${editFieldErrors != null and editFieldErrors.containsKey('departureTime')}" class="field-error" th:text="${editFieldErrors.get('departureTime')}"></p>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-line-100 flex justify-end gap-2">
+                    <button type="button" onclick="closeEditModal()" class="btn btn-secondary btn-md">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-md">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        function openExitConfirmModal(btn) {
+            const id = btn.getAttribute('data-id');
+            const plate = btn.getAttribute('data-plate');
+            const space = btn.getAttribute('data-space');
+
+            document.getElementById('exitReservationId').value = id;
+            document.getElementById('exitPlateSpan').innerText = plate || '';
+            document.getElementById('exitSpaceSpan').innerText = 'Bay ' + (space || '');
+
+            const modal = document.getElementById('exitConfirmModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeExitConfirmModal() {
+            const modal = document.getElementById('exitConfirmModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function confirmExitSubmit() {
+            document.getElementById('globalExitForm').requestSubmit();
+        }
+
+        function openEditModal(btn) {
+            const id = btn.getAttribute('data-id');
+            document.getElementById('modalResId').innerText = id;
+            document.getElementById('editActiveForm').action = '/staff/active-reservations/edit/' + id;
+
+            document.getElementById('editPlate').value = btn.getAttribute('data-plate') || '';
+            document.getElementById('editVehicleType').value = btn.getAttribute('data-vehicle-type') || 'CAR';
+            document.getElementById('editSpaceId').value = btn.getAttribute('data-space-id') || '';
+            document.getElementById('editArrival').value = btn.getAttribute('data-arrival') || '';
+            document.getElementById('editDeparture').value = btn.getAttribute('data-departure') || '';
+
+            const modal = document.getElementById('editActiveModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editActiveModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const serverEditId = /*[[${editReservationId}]]*/ null;
+            if (serverEditId == null) return;
+            document.getElementById('modalResId').innerText = serverEditId;
+            const modal = document.getElementById('editActiveModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Active vehicles')}"><title>Active vehicles - ParkNGo</title></head>
+<body class="font-sans min-h-screen">
+<div th:replace="~{layout/app :: sidebar('STAFF', 'vehicles')}"></div>
+<div class="md:pl-64 min-h-screen">
+    <div th:replace="~{layout/app :: topbar('Active vehicles', 'STAFF')}"></div>
+    <main class="pg-page">
+        <div th:replace="~{ui/flash :: flash}"></div>
+        <div class="pg-heading">
+            <div><span class="eyebrow">OPERATIONS / VEHICLES</span><h1>Vehicles on site.</h1><p>See every level of your assigned facility on the live parking map.</p></div>
+        </div>
+        <div class="mb-6"><div th:replace="~{ui/parking-map :: map('/staff/slot-map', ${facility.id}, false)}"></div></div>
+        <div class="bg-white rounded-2xl border border-line-200 shadow-1 overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-3 p-4 border-b border-line-100">
+                <h2 class="text-lg font-bold font-heading">Active vehicle list</h2>
+                <form method="get" action="/staff/vehicles" class="flex gap-2">
+                    <input class="input" type="search" name="q" th:value="${filterQ}" placeholder="Plate number" aria-label="Plate number">
+                    <button class="btn btn-primary" type="submit">Search</button>
+                </form>
+            </div>
+            <div th:if="${activeReservations == null or activeReservations.isEmpty()}" class="p-8 pg-empty">No active vehicles found.</div>
+            <table th:if="${activeReservations != null and !activeReservations.isEmpty()}" class="w-full text-left text-sm">
+                <thead class="bg-mist text-slate-500 uppercase text-xs"><tr><th class="p-4">Plate</th><th class="p-4">Bay</th><th class="p-4">Status</th><th class="p-4">Departure</th></tr></thead>
+                <tbody class="divide-y divide-line-100">
+                <tr th:each="res : ${activeReservations}">
+                    <td class="p-4 font-semibold" th:text="${res.vehicle != null ? res.vehicle.registrationNumber : (res.guestVehicleRegNumber != null ? res.guestVehicleRegNumber : 'Guest vehicle')}">Plate</td>
+                    <td class="p-4" th:text="${res.parkingSpace != null ? res.parkingSpace.spaceNumber : '-'}">Bay</td>
+                    <td class="p-4" th:text="${res.status}">ACTIVE</td>
+                    <td class="p-4" th:text="${res.departureTime != null ? #temporals.format(res.departureTime, 'dd MMM yyyy HH:mm') : '-'}">-</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

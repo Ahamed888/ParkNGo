@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Create Account')}">
+    <title>Create Account &mdash; ParkNGo</title>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col justify-between text-slate-800 font-sans">
+    
+    <div class="flex-1 flex min-h-screen">
+        
+        <!-- Left Brand Panel (Desktop) -->
+        <div th:replace="~{layout/auth :: brandPanel}"></div>
+
+        <!-- Right Form Panel -->
+        <div class="w-full lg:w-7/12 flex flex-col justify-between p-6 sm:p-12">
+            
+            <!-- Top Nav Back Link -->
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center gap-2 text-slate-500 hover:text-slate-900 text-xs font-semibold transition">
+                    <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    <span>Back to Home</span>
+                </a>
+                <span class="text-xs text-slate-500">
+                    Already registered? 
+                    <a href="/login" class="font-bold text-caution-700 hover:underline ml-1">Sign In</a>
+                </span>
+            </div>
+
+            <!-- Centered Form Container -->
+            <div class="w-full max-w-md mx-auto my-auto py-8">
+                
+                <div class="mb-6">
+                    <div class="lg:hidden flex items-center space-x-2.5 mb-6">
+                        <span th:replace="~{ui/brand :: mark('w-10 h-10 shrink-0')}"></span>
+                        <span class="text-lg font-bold text-slate-900 font-heading">Park<span class="parkngo-brand-n">N</span>Go</span>
+                    </div>
+
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-heading">
+                        Create your account
+                    </h1>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+                        Join Sri Lanka's automated parking and bay reservation network.
+                    </p>
+                </div>
+
+                <!-- Primary Alert -->
+                <div th:if="${error}" class="mb-4 bg-stop-50 border border-stop-200 text-rose-800 p-3.5 rounded-xl text-xs flex items-center gap-2.5 shadow-xs">
+                    <i class="fa-solid fa-circle-exclamation text-stop-600 flex-shrink-0"></i>
+                    <span th:text="${error}">Registration error</span>
+                </div>
+
+                <!-- Registration Form -->
+                <form id="registrationForm" method="post" th:action="@{/register}" class="space-y-3.5">
+                    
+                    <!-- Full Name -->
+                    <div>
+                        <label for="fullName" class="block text-xs font-bold text-slate-700 font-num uppercase tracking-wider mb-1">
+                            Full Name *
+                        </label>
+                        <input type="text" id="fullName" name="fullName" required minlength="2" maxlength="60" autocomplete="name" placeholder="Kasun Perera"
+                               th:value="${user?.fullName}"
+                               class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#F5B800]"
+                               th:classappend="${fieldErrors != null and fieldErrors.containsKey('fullName')} ? 'border-stop-400 bg-stop-50/40'">
+                        <p th:if="${fieldErrors != null and fieldErrors.containsKey('fullName')}"
+                           class="field-error" th:text="${fieldErrors.get('fullName')}">Full name error</p>
+                    </div>
+
+                    <!-- Email Address -->
+                    <div>
+                        <label for="email" class="block text-xs font-bold text-slate-700 font-num uppercase tracking-wider mb-1">
+                            Email Address *
+                        </label>
+                        <input type="email" id="email" name="email" required maxlength="100" autocomplete="email" placeholder="kasun@example.com"
+                               th:value="${user?.email}"
+                               class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#F5B800]"
+                               th:classappend="${fieldErrors != null and fieldErrors.containsKey('email')} ? 'border-stop-400 bg-stop-50/40'">
+                        <p th:if="${fieldErrors != null and fieldErrors.containsKey('email')}"
+                           class="field-error" th:text="${fieldErrors.get('email')}">Email error</p>
+                    </div>
+
+                    <!-- Phone Number -->
+                    <div>
+                        <label for="phone" class="block text-xs font-bold text-slate-700 font-num uppercase tracking-wider mb-1">
+                            Mobile Number *
+                        </label>
+                        <input type="tel" id="phone" name="phone" required inputmode="tel" autocomplete="tel"
+                               pattern="(?:07[0-9]{8}|\+947[0-9]{8})" minlength="10" maxlength="12"
+                               title="Enter a valid Sri Lankan mobile number, such as 0771234567 or +94771234567."
+                               placeholder="0771234567"
+                               th:value="${user?.phone}"
+                               class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#F5B800]"
+                               th:classappend="${fieldErrors != null and fieldErrors.containsKey('phone')} ? 'border-stop-400 bg-stop-50/40'">
+                        <p th:if="${fieldErrors != null and fieldErrors.containsKey('phone')}"
+                           class="field-error" th:text="${fieldErrors.get('phone')}">Phone error</p>
+                    </div>
+
+                    <!-- Password Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label for="password" class="block text-xs font-bold text-slate-700 font-num uppercase tracking-wider mb-1">
+                                Password *
+                            </label>
+                            <input type="password" id="password" name="password" required minlength="8" maxlength="72"
+                                   autocomplete="new-password"
+                                   pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,72}"
+                                   title="Use 8-72 characters with uppercase, lowercase, a number, and a special character."
+                                   placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
+                                   class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#F5B800]"
+                                   th:classappend="${fieldErrors != null and fieldErrors.containsKey('password')} ? 'border-stop-400 bg-stop-50/40'">
+                            <p class="form-help">Use 8–72 characters with uppercase, lowercase, a number, and a special character.</p>
+                            <p th:if="${fieldErrors != null and fieldErrors.containsKey('password')}"
+                               class="field-error" th:text="${fieldErrors.get('password')}">Password error</p>
+                        </div>
+
+                        <div>
+                            <label for="confirmPassword" class="block text-xs font-bold text-slate-700 font-num uppercase tracking-wider mb-1">
+                                Confirm Password *
+                            </label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8" maxlength="72"
+                                   autocomplete="new-password"
+                                   data-match="#password" data-error-match="Passwords do not match. Re-enter the same password."
+                                   placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
+                                   class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#F5B800]"
+                                   th:classappend="${fieldErrors != null and fieldErrors.containsKey('confirmPassword')} ? 'border-stop-400 bg-stop-50/40'">
+                            <p th:if="${fieldErrors != null and fieldErrors.containsKey('confirmPassword')}"
+                               class="field-error" th:text="${fieldErrors.get('confirmPassword')}">Confirmation error</p>
+                        </div>
+                    </div>
+
+                    <div class="pt-3">
+                        <button type="submit" data-loading-text="Creating account…"
+                                class="w-full py-2.5 px-4 rounded-lg bg-primary hover:bg-primary-hover text-asphalt font-bold text-xs shadow-xs transition flex items-center justify-center gap-2">
+                            <span>Create Account</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+
+            <!-- Bottom Disclaimer -->
+            <div class="text-center text-[11px] text-slate-400">
+                &copy; 2026 ParkNGo Sri Lanka. Commercial Smart Parking System.
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

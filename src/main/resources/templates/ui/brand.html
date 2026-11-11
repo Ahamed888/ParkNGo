@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"></head>
+<body>
+
+    <!-- Official ParkNGo mark; its container gives it a consistent premium presentation everywhere. -->
+    <span th:fragment="mark(size)" class="brand-mark" th:classappend="${size != null ? size : 'w-10 h-10'}">
+        <img th:src="@{/images/parkngo-mark.svg}" alt="" width="40" height="40">
+    </span>
+
+    <a th:fragment="logo(theme)" href="/" class="inline-flex items-center gap-3 group" th:attr="aria-label=${'ParkNGo home'}">
+        <span th:replace="~{ui/brand :: mark('w-8 h-8 shrink-0')}"></span>
+        <span class="text-xl font-bold tracking-tight"
+              th:classappend="${theme == 'dark' ? ' text-white' : ' text-navy-900'}">
+            Park<span class="parkngo-brand-n">N</span>Go
+        </span>
+    </a>
+
+</body>
+</html>

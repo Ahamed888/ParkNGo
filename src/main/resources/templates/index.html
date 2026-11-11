@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head('Smart Parking & Bay Management')}">
+    <title>ParkNGo — Smart Parking</title>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col justify-between font-sans">
+
+    <!-- Startup splash: shown once per browser session before the home page -->
+    <div id="parkngoIntro" class="parkngo-intro" aria-label="ParkNGo introduction">
+        <video id="parkngoIntroVideo" class="parkngo-intro__video" muted playsinline preload="auto">
+            <source th:src="@{/images/parkngo-intro.mp4}" type="video/mp4">
+        </video>
+        <div class="parkngo-intro__brand" aria-hidden="true">
+            <span th:replace="~{ui/brand :: mark('w-16 h-16 shrink-0')}"></span>
+            <span class="text-3xl font-bold tracking-tight text-white">Park<span class="parkngo-brand-n">N</span>Go</span>
+        </div>
+    </div>
+    
+    <!-- Site Navigation -->
+    <header th:replace="~{layout/site :: header}"></header>
+
+    <main class="flex-1">
+        
+        <!-- TRIP-FIRST HERO SECTION (Asphalt & Road Marking Identity) -->
+        <section class="parkngo-home-hero border-b border-[#1A2B42] text-white py-16 px-4 relative overflow-hidden min-h-[calc(100vh-72px)] flex items-center">
+            <div class="parkngo-home-hero__image absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+            <div class="parkngo-home-hero__scrim absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+
+            <div class="parkngo-home-hero__copy max-w-5xl mx-auto text-center space-y-5 relative z-10">
+                
+                <div class="parkngo-home-hero__eyebrow inline-flex items-center gap-2 px-3 py-1 rounded-full bg-asphalt-800/80 border border-slate-600/80 text-[11px] font-semibold text-primary-100 uppercase tracking-[0.18em] font-num">
+                    <span class="w-1.5 h-1.5 rounded-full bg-primary-100"></span>
+                    <span>Commercial Parking Network · Sri Lanka</span>
+                </div>
+
+                <h1 class="parkngo-home-hero__title text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight font-heading leading-[1.02]">
+                    Guaranteed Urban Parking.<br class="hidden sm:inline">
+                    <span class="text-slate-300">Reserved in Seconds.</span>
+                </h1>
+
+                <p class="parkngo-home-hero__description text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
+                    Time-window reservations with automatic 15-minute turnover buffer. Free cancellation until arrival with instant refund. Real-time availability in Colombo, Kandy and Galle.
+                </p>
+
+            </div>
+
+            <div class="parkngo-home-hero__slide-number absolute left-5 bottom-7 sm:left-8 sm:bottom-8 z-10 text-[10px] tracking-[0.28em] text-slate-300/80 font-num" aria-hidden="true">
+                01 / PARK SMART
+            </div>
+            <div class="parkngo-home-hero__scroll absolute right-5 bottom-7 sm:right-8 sm:bottom-8 z-10 flex items-center gap-3 text-[10px] tracking-[0.2em] text-slate-300/80 uppercase font-num" aria-hidden="true">
+                <span>Scroll to explore</span>
+                <span class="parkngo-home-hero__scroll-line"></span>
+            </div>
+
+        </section>
+
+        <!-- Simple benefits below the full-screen hero -->
+        <section class="bg-slate-50 px-4 py-10 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-xl border border-line-200 shadow-xs flex items-start gap-4 text-slate-900">
+                    <div class="w-10 h-10 rounded-lg bg-info-50 text-info-600 flex items-center justify-center flex-shrink-0 text-base">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold font-heading">15-Min Turnover Buffer</h3>
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Every booking includes turnover buffering. Your assigned space is held ready before you arrive.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-line-200 shadow-xs flex items-start gap-4 text-slate-900">
+                    <div class="w-10 h-10 rounded-lg bg-go-50 text-go-600 flex items-center justify-center flex-shrink-0 text-base">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold font-heading">Free Cancellation</h3>
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Plans changed? Cancel free of charge before your scheduled arrival time for an automatic full refund.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-line-200 shadow-xs flex items-start gap-4 text-slate-900">
+                    <div class="w-10 h-10 rounded-lg bg-caution-50 text-caution-600 flex items-center justify-center flex-shrink-0 text-base">
+                        <i class="fa-solid fa-tags"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold font-heading">Automatic Best Rate</h3>
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Your eligible parking pass or discount code is applied at checkout.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PARKING COMPLEXES DIRECTORY -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16" th:if="${!#lists.isEmpty(facilities)}">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-900 tracking-tight font-heading">
+                        Parking Complexes & Garages
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">Select a facility to check available bays and reserve your space.</p>
+                </div>
+                <a href="/customer/parking-search" class="text-xs font-bold text-info-600 hover:text-[#1238BD] flex items-center gap-1.5 self-start">
+                    <span>Explore all complexes</span>
+                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </a>
+            </div>
+
+            <!-- Complex Cards Grid -->
+            <div class="space-y-4">
+                <div th:each="facility : ${facilities}">
+                    <div th:replace="~{ui/location :: card(${facility}, null)}"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROMOTIONS & PASSES BANNER (If discounts available) -->
+        <section class="bg-slate-100 border-t border-line-200 py-12 px-4" th:if="${discounts != null and !discounts.isEmpty()}">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 font-heading">Available Discounts & Passes</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Use active discount codes at checkout.</p>
+                    </div>
+                    <a href="/customer/packages" class="text-xs font-bold text-info-600 hover:underline">View Commuter Passes →</a>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div th:each="disc : ${discounts}" class="bg-white p-4 rounded-xl border border-line-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-info-50 text-info-700 border border-line-200" th:text="${disc.code}">PROMO10</span>
+                                <span class="text-xs font-black text-go-600 font-num" th:text="${disc.discountType != null and disc.discountType.name() == 'PERCENTAGE' ? (#numbers.formatDecimal(disc.discountValue, 1, 0) + '% OFF') : ('LKR ' + #numbers.formatDecimal(disc.discountValue, 1, 0) + ' OFF')}">10% OFF</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 mt-1" th:text="${disc.description != null ? disc.description : 'Valid across all network complexes.'}">Valid on all bookings</div>
+                        </div>
+                        <button type="button" th:data-copy="${disc.code}" class="text-xs text-slate-400 hover:text-slate-800 p-1.5 rounded transition" title="Copy Code" aria-label="Copy Discount Code">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Global Footer -->
+    <footer th:replace="~{layout/site :: footer}"></footer>
+
+    <script>
+        (function () {
+            const intro = document.getElementById('parkngoIntro');
+            const video = document.getElementById('parkngoIntroVideo');
+            if (!intro || !video) return;
+
+            const returningFromLogout = new URLSearchParams(window.location.search).has('logout');
+            if (returningFromLogout || sessionStorage.getItem('parkngoIntroShown')) {
+                if (returningFromLogout) sessionStorage.setItem('parkngoIntroShown', 'true');
+                intro.remove();
+                return;
+            }
+
+            let finished = false;
+            function finishIntro() {
+                if (finished) return;
+                finished = true;
+                intro.classList.add('parkngo-intro--brand');
+                sessionStorage.setItem('parkngoIntroShown', 'true');
+                window.setTimeout(function () {
+                    intro.classList.add('parkngo-intro--hide');
+                    window.setTimeout(function () { intro.remove(); }, 700);
+                }, 1100);
+            }
+
+            function skipIntro() {
+                if (finished) return;
+                finished = true;
+                video.pause();
+                sessionStorage.setItem('parkngoIntroShown', 'true');
+                intro.classList.add('parkngo-intro--hide');
+                window.setTimeout(function () { intro.remove(); }, 700);
+            }
+
+            video.playbackRate = 1.25;
+            video.addEventListener('ended', finishIntro);
+            video.addEventListener('error', finishIntro);
+            intro.addEventListener('click', skipIntro);
+            video.play().catch(finishIntro);
+        }());
+    </script>
+
+</body>
+</html>

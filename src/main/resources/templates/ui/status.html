@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- 1. RESERVATION STATUS PILL -->
+    <span th:fragment="reservation(status, isConsole)" th:switch="${#strings.toUpperCase(status != null ? status.toString() : '')}">
+        <span th:case="'CONFIRMED'" class="pill pill-info">Confirmed</span>
+        <span th:case="'PENDING'" class="pill pill-neutral">Pending</span>
+        <span th:case="'VERIFIED'" class="pill pill-info">Verified</span>
+        <span th:case="'ACTIVE'" class="pill pill-go">Checked In</span>
+        <span th:case="'OVERSTAYING'" class="pill pill-caution">Overstaying</span>
+        <span th:case="'OVERSTAY_PAYMENT_DUE'" class="pill pill-stop">Overstay Payment Due</span>
+        <span th:case="'COMPLETED'" class="pill pill-neutral">Completed</span>
+        <span th:case="'CANCELLED'" class="pill pill-stop">Cancelled</span>
+        <span th:case="'EXPIRED'" class="pill pill-caution">Expired</span>
+        <!-- OVERDUE -->
+        <span th:case="'OVERDUE'" class="pill pill-stop">Overdue</span>
+        <!-- DEFAULT / UNKNOWN -->
+        <span th:case="*" class="pill pill-neutral" th:text="${status}">Status</span>
+    </span>
+
+    <span th:fragment="space(status)" th:switch="${#strings.toUpperCase(status != null ? status.toString() : '')}">
+        <!-- AVAILABLE -->
+        <span th:case="'AVAILABLE'" class="pill pill-go">
+            <i class="fa-solid fa-square-parking"></i>
+            <span>Available</span>
+        </span>
+        <!-- RESERVED -->
+        <span th:case="'RESERVED'" class="pill pill-info">
+            <i class="fa-solid fa-lock"></i>
+            <span>Reserved</span>
+        </span>
+        <!-- OCCUPIED -->
+        <span th:case="'OCCUPIED'" class="pill pill-stop">
+            <i class="fa-solid fa-car"></i>
+            <span>Occupied</span>
+        </span>
+        <!-- MAINTENANCE -->
+        <span th:case="'MAINTENANCE'" class="pill pill-caution">
+            <i class="fa-solid fa-traffic-cone"></i>
+            <span>Maintenance</span>
+        </span>
+        <span th:case="'OUT_OF_SERVICE'" class="pill pill-stop">Out of service</span>
+        <span th:case="'ONLINE_ONLY'" class="pill pill-info">Online only</span>
+        <span th:case="'WALK_IN_ONLY'" class="pill pill-caution">Walk-in only</span>
+        <!-- DEFAULT -->
+        <span th:case="*" class="pill pill-neutral" th:text="${status}">Status</span>
+    </span>
+
+    <!-- 3. PAYMENT STATUS PILL -->
+    <span th:fragment="payment(status)" th:switch="${#strings.toUpperCase(status != null ? status.toString() : '')}">
+        <!-- PAID / COMPLETED -->
+        <span th:case="'PAID'" class="pill pill-go">Paid</span>
+        <span th:case="'COMPLETED'" class="pill pill-go">Paid</span>
+        <!-- PENDING -->
+        <span th:case="'PENDING'" class="pill pill-caution">Pending</span>
+        <!-- FAILED -->
+        <span th:case="'FAILED'" class="pill pill-stop">Failed</span>
+        <!-- REFUNDED -->
+        <span th:case="'REFUNDED'" class="pill pill-info">Refunded</span>
+        <!-- DEFAULT -->
+        <span th:case="*" class="pill pill-neutral" th:text="${status}">Status</span>
+    </span>
+
+    <!-- 4. SUBSCRIPTION / PASS STATUS PILL -->
+    <span th:fragment="subscription(status)" th:switch="${#strings.toUpperCase(status != null ? status.toString() : '')}">
+        <span th:case="'PENDING'" class="pill pill-caution">Awaiting Payment</span>
+        <span th:case="'ACTIVE'" class="pill pill-go">Active</span>
+        <span th:case="'EXPIRED'" class="pill pill-neutral">Expired</span>
+        <span th:case="'CANCELLED'" class="pill pill-stop">Cancelled</span>
+        <span th:case="'EXHAUSTED'" class="pill pill-neutral">Used Up</span>
+        <span th:case="*" class="pill pill-neutral" th:text="${status}">Status</span>
+    </span>
+
+    <!-- 5. FEEDBACK STATUS PILL -->
+    <span th:fragment="feedback(status)" th:switch="${#strings.toUpperCase(status != null ? status.toString() : '')}">
+        <span th:case="'PENDING'" class="pill pill-caution">Awaiting Reply</span>
+        <span th:case="'RESPONDED'" class="pill pill-info">Replied</span>
+        <span th:case="'RESOLVED'" class="pill pill-go">Resolved</span>
+        <span th:case="'ARCHIVED'" class="pill pill-neutral">Archived</span>
+        <span th:case="*" class="pill pill-neutral" th:text="${status}">Status</span>
+    </span>
+
+    <!-- 6. GENERAL ACTIVE / INACTIVE PILL -->
+    <span th:fragment="activeState(isActive)" th:switch="${isActive}">
+        <span th:case="true" class="pill pill-go">Active</span>
+        <span th:case="'ACTIVE'" class="pill pill-go">Active</span>
+        <span th:case="'EXPIRED'" class="pill pill-stop">Expired</span>
+        <span th:case="*" class="pill pill-neutral">Inactive</span>
+    </span>
+
+    <!-- 7. LOYALTY TIER BADGE -->
+    <span th:fragment="loyalty(tier)" th:switch="${#strings.toUpperCase(tier != null ? tier.toString() : '')}">
+        <span th:case="'GOLD'" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary-50 text-asphalt border border-primary">
+            <i class="fa-solid fa-crown text-primary text-[10px]"></i>
+            <span>Gold Tier</span>
+        </span>
+        <span th:case="*" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-mist text-ink-700 border border-line-200">
+            <span>Standard</span>
+        </span>
+    </span>
+
+</body>
+</html>

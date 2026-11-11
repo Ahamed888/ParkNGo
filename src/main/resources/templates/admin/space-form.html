@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head(${isEdit} ? 'Edit Parking Space - ParkNGo Admin' : 'Add Parking Space - ParkNGo Admin')}"></head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex">
+
+    <!-- Console Sidebar -->
+    <aside th:replace="~{layout/app :: sidebar('ADMIN', 'spaces')}"></aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen bg-mist">
+        
+        <!-- Console Topbar -->
+        <header th:replace="~{layout/app :: topbar(${isEdit} ? 'Edit Parking Space' : 'Add Parking Space', 'ADMIN')}"></header>
+
+        <!-- Main Body -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-3xl w-full mx-auto">
+            
+            <!-- Flash Alerts -->
+            <div th:replace="~{ui/flash :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="space-y-2 pb-4 border-b border-line-200">
+                <a href="/admin/parking-spaces" class="inline-flex items-center text-xs font-bold text-info-600 hover:underline">
+                    <i class="fa-solid fa-arrow-left mr-1.5"></i>Back to Parking Spaces
+                </a>
+                <h2 class="text-2xl font-black text-asphalt font-heading tracking-tight" th:text="${isEdit} ? 'Edit Parking Space' : 'Add Parking Space'">
+                    Add Parking Space
+                </h2>
+                <p class="text-sm text-slate-500">Configure a new parking bay with rate, floor, and location attributes.</p>
+            </div>
+
+            <!-- Form Card -->
+            <div class="p-6 rounded-xl bg-white border border-line-200 shadow-1">
+                <form th:action="${isEdit} ? @{/admin/parking-space/edit/{id}(id=${space.id})} : @{/admin/parking-space/add}" th:object="${space}" method="post" class="space-y-6">
+                    <input type="hidden" th:if="${isEdit}" th:field="*{id}" />
+                    <input type="hidden" th:unless="${isEdit}" th:field="*{status}" />
+
+                    <!-- Section 1: Location & Space Code -->
+                    <div class="space-y-4">
+                        <div class="border-b border-line-100 pb-2">
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-info-600 flex items-center gap-1.5 font-heading">
+                                <i class="fa-solid fa-location-dot"></i> Location & Space Code
+                            </h3>
+                        </div>
+
+                        <div>
+                            <label for="facilityId" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Parking Complex Location *</label>
+                            <select id="facilityId" name="facilityId" required class="w-full rounded-lg bg-slate-50 border border-line-200 px-4 py-2.5 text-sm font-bold text-asphalt focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                                <option value="" disabled th:selected="${space == null or space.facility == null}">-- Select Parking Complex --</option>
+                                <option th:each="fac : ${facilities}" 
+                                        th:value="${fac.id}" 
+                                        th:text="${fac.name + ' (' + fac.totalFloors + ' Floor' + (fac.totalFloors > 1 ? 's' : '') + ') - ' + fac.address}"
+                                        th:attr="data-floors=${fac.totalFloors != null ? fac.totalFloors : 1}"
+                                        th:selected="${space != null and space.facility != null and space.facility.id == fac.id}">
+                                    Downtown Complex
+                                </option>
+                            </select>
+                            <p th:if="${facilityError}" class="field-error" th:text="${facilityError}"></p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label for="floor" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Floor Level *</label>
+                                <select id="floor" name="floor" required
+                                        class="w-full rounded-lg bg-slate-50 border border-line-200 px-4 py-2.5 text-sm font-bold text-asphalt focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                                    <option value="" disabled>-- Select Complex First --</option>
+                                </select>
+                                <p th:if="${#fields.hasErrors('floor')}" th:errors="*{floor}" class="field-error"></p>
+                                <p class="text-[11px] text-slate-500 mt-1.5" id="floorHelpText">Floors are constrained to the selected parking complex.</p>
+                            </div>
+
+                            <div>
+                                <label for="zone" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Zone Code *</label>
+                                <select id="zone" th:field="*{zone}" required class="w-full rounded-lg bg-slate-50 border border-line-200 px-4 py-2.5 text-sm font-bold text-asphalt focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                                    <option th:if="${space != null and space.zone != null and !#arrays.contains({'ZONE-A','ZONE-B','ZONE-C','ZONE-D','ZONE-E','ZONE-F','VIP-ZONE'}, space.zone)}" 
+                                            th:value="${space.zone}" th:text="${space.zone}" selected></option>
+                                    <option value="ZONE-A">ZONE-A</option>
+                                    <option value="ZONE-B">ZONE-B</option>
+                                    <option value="ZONE-C">ZONE-C</option>
+                                    <option value="ZONE-D">ZONE-D</option>
+                                    <option value="ZONE-E">ZONE-E</option>
+                                    <option value="ZONE-F">ZONE-F</option>
+                                    <option value="VIP-ZONE">VIP-ZONE</option>
+                                </select>
+                                <p th:if="${#fields.hasErrors('zone')}" th:errors="*{zone}" class="field-error"></p>
+                                <p class="text-[11px] text-slate-500 mt-1.5">Section or zone on this floor.</p>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl bg-slate-50 border border-line-200 p-5">
+                            <div class="flex items-center justify-between mb-3">
+                                <label for="spaceNumber" class="block text-xs font-bold uppercase tracking-widest text-asphalt">Space Code / Number *</label>
+                                <span id="codeGenBadge" class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-go-100 px-2 py-0.5 rounded border border-go-200 hidden">
+                                    <i class="fa-solid fa-circle-check text-[9px]"></i> Auto-Generated
+                                </span>
+                            </div>
+                            <input type="text" id="spaceNumber" th:field="*{spaceNumber}" required placeholder="e.g. F1-L1A-01"
+                                   minlength="2" maxlength="30" pattern="[A-Za-z0-9][A-Za-z0-9 -]*"
+                                   class="w-full rounded-lg bg-white border border-slate-300 px-4 py-3 text-base font-mono uppercase font-black text-asphalt focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition shadow-xs">
+                            <p th:if="${#fields.hasErrors('spaceNumber')}" th:errors="*{spaceNumber}" class="field-error"></p>
+                            <p class="text-[11px] text-slate-500 mt-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-info text-info-600"></i>
+                                <span>Standard format: <code class="font-mono text-info-600 font-bold bg-white px-1.5 py-0.5 rounded border border-line-200">F{complex}-L{floor}{zone}-{slot}</code></span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Attributes & Pricing -->
+                    <div class="space-y-4 pt-2">
+                        <div class="border-b border-line-100 pb-2">
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-info-600 flex items-center gap-1.5 font-heading">
+                                <i class="fa-solid fa-sliders"></i> Space Attributes & Pricing
+                            </h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label for="parkingType" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Space Type *</label>
+                                <select id="parkingType" th:field="*{parkingType}" required class="w-full rounded-lg bg-slate-50 border border-line-200 px-4 py-2.5 text-sm font-bold text-asphalt focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                                    <option value="STANDARD">Standard</option>
+                                    <option value="COMPACT">Compact</option>
+                                    <option value="EV_CHARGING">EV Fast Charging</option>
+                                    <option value="ACCESSIBLE">Handicapped ADA</option>
+                                    <option value="VIP">VIP Reserved</option>
+                                </select>
+                                <p th:if="${#fields.hasErrors('parkingType')}" th:errors="*{parkingType}" class="field-error"></p>
+                            </div>
+
+                            <div>
+                                <label for="allocationType" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Allocation Category *</label>
+                                <select id="allocationType" th:field="*{allocationType}" required class="w-full rounded-lg bg-slate-50 border border-line-200 px-4 py-2.5 text-sm font-bold text-asphalt focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                                    <option value="GENERAL">General</option>
+                                    <option value="EV_PRIORITY">EV Priority</option>
+                                    <option value="ACCESSIBLE">Accessible</option>
+                                    <option value="RESERVED_VIP">Reserved VIP</option>
+                                    <option value="LONG_TERM">Long Term</option>
+                                </select>
+                                <p th:if="${#fields.hasErrors('allocationType')}" th:errors="*{allocationType}" class="field-error"></p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="hourlyRate" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Hourly Tariff (LKR) *</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">LKR</span>
+                                <input type="number" id="hourlyRate" name="hourlyRate" th:value="${space.hourlyRate != null ? #numbers.formatDecimal(space.hourlyRate, 1, 0) : '250'}" required min="0" max="999999" step="5" placeholder="250"
+                                       class="w-full rounded-lg bg-slate-50 border border-line-200 pl-12 pr-4 py-2.5 text-sm font-black text-asphalt font-num focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                            </div>
+                            <p th:if="${#fields.hasErrors('hourlyRate')}" th:errors="*{hourlyRate}" class="field-error"></p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <label class="flex items-center gap-3 p-4 rounded-lg border border-line-200 bg-slate-50 cursor-pointer hover:bg-slate-100 transition">
+                                <input type="checkbox" th:field="*{hasEVCharging}" class="w-4 h-4 text-primary border-slate-300 rounded focus:ring-[#F5B800] focus:ring-offset-slate-50">
+                                <div>
+                                    <span class="block text-sm font-bold text-asphalt">EV Fast Charging</span>
+                                    <span class="text-[11px] text-slate-500">Space is equipped with a Level 2/3 EV charger.</span>
+                                </div>
+                            </label>
+                            
+                            <label class="flex items-center gap-3 p-4 rounded-lg border border-line-200 bg-slate-50 cursor-pointer hover:bg-slate-100 transition">
+                                <input type="checkbox" th:field="*{isAccessible}" class="w-4 h-4 text-primary border-slate-300 rounded focus:ring-[#F5B800] focus:ring-offset-slate-50">
+                                <div>
+                                    <span class="block text-sm font-bold text-asphalt">ADA Accessible</span>
+                                    <span class="text-[11px] text-slate-500">Wider bay matching disability guidelines.</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="pt-5 flex items-center justify-end gap-3 border-t border-line-100 mt-8">
+                        <a href="/admin/parking-spaces" class="px-5 py-2.5 rounded-lg bg-white border border-line-200 hover:bg-slate-50 text-slate-600 font-bold text-sm transition shadow-xs">Cancel</a>
+                        <button type="submit" class="px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-hover text-asphalt font-bold text-sm transition flex items-center gap-2 shadow-xs">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span th:text="${isEdit} ? 'Update Space' : 'Save Space'">Save Space</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        /* Auto-populate default hourly rates based on Space Type when adding a new space */
+        const isEdit = /*[[${isEdit}]]*/ false;
+        
+        const parkingTypeSelect = document.getElementById('parkingType');
+        const hourlyRateInput = document.getElementById('hourlyRate');
+        const hasEVChargingInput = document.getElementById('hasEVCharging');
+        const isAccessibleInput = document.getElementById('isAccessible');
+
+        const rateDefaults = {
+            'STANDARD': 250,
+            'COMPACT': 200,
+            'EV_CHARGING': 350,
+            'ELECTRIC': 350,
+            'ACCESSIBLE': 200,
+            'HANDICAPPED': 200,
+            'VIP': 500
+        };
+
+        if (parkingTypeSelect && !isEdit) {
+            parkingTypeSelect.addEventListener('change', function() {
+                const selectedType = this.value;
+                if (rateDefaults[selectedType] !== undefined) {
+                    hourlyRateInput.value = rateDefaults[selectedType];
+                }
+                
+                // Auto-toggle checkboxes based on type
+                if (selectedType === 'EV_CHARGING' || selectedType === 'ELECTRIC') {
+                    if (hasEVChargingInput) hasEVChargingInput.checked = true;
+                } else if (selectedType === 'ACCESSIBLE' || selectedType === 'HANDICAPPED') {
+                    if (isAccessibleInput) isAccessibleInput.checked = true;
+                }
+            });
+        }
+
+        // Dependent dropdown: Floors based on selected Facility
+        const facilitySelect = document.getElementById('facilityId');
+        const floorSelect = document.getElementById('floor');
+        const zoneSelect = document.getElementById('zone');
+        const spaceNumberInput = document.getElementById('spaceNumber');
+        const codeGenBadge = document.getElementById('codeGenBadge');
+
+        const savedFloor = /*[[${space != null and space.floor != null ? space.floor : 1}]]*/ 1;
+
+        async function fetchNextSpaceCode() {
+            if (!facilitySelect || !floorSelect || !zoneSelect || !spaceNumberInput) return;
+            const facId = facilitySelect.value;
+            const floor = floorSelect.value;
+            const zone = zoneSelect.value;
+
+            if (!facId || !floor || !zone) return;
+
+            // When editing, do not overwrite existing space number
+            if (isEdit && spaceNumberInput.value.trim() !== '') {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/admin/parking-space/generate-code?facilityId=${encodeURIComponent(facId)}&floor=${encodeURIComponent(floor)}&zone=${encodeURIComponent(zone)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.spaceNumber) {
+                        spaceNumberInput.value = data.spaceNumber;
+                        if(codeGenBadge) codeGenBadge.classList.remove('hidden');
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to auto-generate space code:', err);
+            }
+        }
+
+        function updateFloorDropdown() {
+            if (!facilitySelect || !floorSelect) return;
+            const selectedOption = facilitySelect.options[facilitySelect.selectedIndex];
+            if (!selectedOption || !selectedOption.value) {
+                floorSelect.innerHTML = '<option value="" disabled selected>-- Select Complex First --</option>';
+                return;
+            }
+
+            const totalFloors = parseInt(selectedOption.getAttribute('data-floors') || '1', 10);
+            
+            // Retain currently selected floor if possible
+            const currentSelectedFloor = floorSelect.value ? parseInt(floorSelect.value, 10) : savedFloor;
+
+            floorSelect.innerHTML = '';
+            for (let i = 1; i <= totalFloors; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.text = `Level ${i}`;
+                if (i === currentSelectedFloor) {
+                    option.selected = true;
+                }
+                floorSelect.appendChild(option);
+            }
+            
+            const floorHelpText = document.getElementById('floorHelpText');
+            if (floorHelpText) {
+                floorHelpText.innerText = `Available floors: 1 to ${totalFloors} for this facility.`;
+            }
+
+            fetchNextSpaceCode();
+        }
+
+        if (facilitySelect) {
+            facilitySelect.addEventListener('change', updateFloorDropdown);
+            // Run on load
+            if (facilitySelect.value) {
+                updateFloorDropdown();
+            }
+        }
+
+        if (zoneSelect) {
+            zoneSelect.addEventListener('change', function() {
+                fetchNextSpaceCode();
+            });
+        }
+        
+        if (floorSelect) {
+            floorSelect.addEventListener('change', function() {
+                fetchNextSpaceCode();
+            });
+        }
+
+        // Hide auto-gen badge if manually edited
+        if (spaceNumberInput) {
+            spaceNumberInput.addEventListener('input', function() {
+                if (codeGenBadge) codeGenBadge.classList.add('hidden');
+            });
+        }
+    </script>
+</body>
+</html>

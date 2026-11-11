@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head(${mode == 'edit' ? 'Edit Reservation' : 'Book a Parking Space'})}">
+    <title th:text="${mode == 'edit' ? 'Edit Reservation - ParkNGo' : 'Book Bay - ParkNGo'}">Book Bay - ParkNGo</title>
+</head>
+<body class="bg-mist text-asphalt min-h-screen flex flex-col justify-between font-sans antialiased">
+
+    <!-- Distraction-free Checkout Shell Header -->
+    <div th:replace="~{layout/checkout :: header(1)}"></div>
+
+    <main class="reservation-page mx-auto px-4 sm:px-6 py-8 w-full flex-1">
+        <!-- Global Flash / Error Notice -->
+        <div th:replace="~{ui/flash :: flash}"></div>
+
+        <!-- Page Heading Bar -->
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold font-heading text-asphalt flex items-center gap-2.5">
+                    <i th:class="${mode == 'edit' ? 'fa-solid fa-pen-to-square text-caution-700' : 'fa-solid fa-calendar-check text-caution-700'}"></i>
+                    <span th:text="${mode == 'edit' ? 'Edit Reservation #' + reservation.id : 'Reserve a Parking Space'}">Reserve a Parking Space</span>
+                </h1>
+                <p class="text-xs text-slate-500 mt-0.5" th:text="${mode == 'edit' ? 'Adjust stay schedule, vehicle, or assigned parking bay below.' : 'Select your vehicle, parking garage, date & time window to reserve.'}">
+                    Select your vehicle, parking garage, date &amp; time window to reserve.
+                </p>
+            </div>
+            <a href="/customer/reservations" class="btn btn-secondary btn-sm gap-1.5">
+                <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                <span>My Bookings</span>
+            </a>
+        </div>
+
+        <nav class="reservation-journey" aria-label="Reservation journey">
+            <span class="is-current"><b>1</b> Facility</span><span><b>2</b> Date &amp; time</span><span><b>3</b> Parking space</span><span><b>4</b> Vehicle</span><span><b>5</b> Options</span><span><b>6</b> Payment</span><span><b>7</b> Confirmation</span>
+        </nav>
+
+        <form id="reservationForm" method="post"
+              th:action="${mode == 'edit' ? '/customer/reservation/edit/' + reservation.id : '/customer/reservation/create'}">
+            
+            <div class="space-y-6">
+                <div class="space-y-6">
+
+                    <!-- Step 1: Facility Selection -->
+                    <section data-checkout-stage="1" class="bg-white p-6 rounded-2xl border border-line-200 shadow-1 space-y-4">
+                        <div class="flex items-center justify-between border-b border-line-100 pb-3">
+                            <h2 class="text-sm font-bold font-heading text-asphalt flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-full bg-primary text-asphalt inline-flex items-center justify-center text-xs">1</span>
+                                <span>Parking Location</span>
+                            </h2>
+                        </div>
+
+                        <!-- Facility selection -->
+                        <div class="field">
+                            <label class="label label-required">Facility / Parking Garage</label>
+                            <select id="facilitySelect" name="facilityId" required onchange="onFacilityOrScheduleChange()" class="select font-medium">
+                                <option value="" disabled th:selected="${selectedFacilityId == null}">-- Select Parking Garage --</option>
+                                <option th:each="fac : ${facilities}" th:value="${fac.id}"
+                                        th:data-opening-time="${fac.openingTime != null ? #temporals.format(fac.openingTime, 'HH:mm') : ''}"
+                                        th:data-closing-time="${fac.closingTime != null ? #temporals.format(fac.closingTime, 'HH:mm') : ''}"
+                                        th:text="${fac.name + ' - ' + fac.address}"
+                                        th:selected="${fac.id == selectedFacilityId}">
+                                    Downtown Central Garage
+                                </option>
+                            </select>
+                            <div id="facilityHours" class="mt-2 flex items-center gap-2 text-xs text-slate-600"
+                                 th:if="${selectedFacilityId != null}">
+                                <i class="fa-solid fa-clock text-caution-700"></i>
+                                <span class="font-semibold">Opening hours:</span>
+                                <span id="facilityHoursValue"
+                                      th:each="fac : ${facilities}"
+                                      th:if="${fac.id == selectedFacilityId}"
+                                      th:text="${(fac.openingTime != null ? #temporals.format(fac.openingTime, 'HH:mm') : '--') + ' - ' + (fac.closingTime != null ? #temporals.format(fac.closingTime, 'HH:mm') : '--')}">
+                                    06:00 - 23:00
+                                </span>
+                            </div>
+                        </div>
+
+                        <div th:if="${fieldErrors != null and fieldErrors.containsKey('facilityId')}" class="field-error" th:text="${fieldErrors.get('facilityId')}">Facility error</div>
+                    </section>
+
+                    <!-- Step 2: Vehicle Selection -->
+                    <section data-checkout-stage="2" class="bg-white p-6 rounded-2xl border border-line-200 shadow-1 space-y-4">
+                        <div class="flex items-center justify-between border-b border-line-100 pb-3">
+                            <h2 class="text-sm font-bold font-heading text-asphalt flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-full bg-primary text-asphalt inline-flex items-center justify-center text-xs">2</span>
+                                <span>Select Vehicle</span>
+                            </h2>
+                            <a href="/customer/vehicles/add" class="text-xs text-caution-700 hover:underline font-semibold flex items-center gap-1"><i class="fa-solid fa-plus text-[10px]"></i> New vehicle</a>
+                        </div>
+                        <div th:if="${vehicles != null and !vehicles.isEmpty()}" class="field">
+                            <label class="label label-required">Saved Vehicle</label>
+                            <select id="vehicleSelect" name="vehicleId" class="select font-medium">
+                                <option th:each="veh : ${vehicles}" th:value="${veh.id}" th:selected="${veh.id == selectedVehicleId or (reservation.vehicle != null and veh.id == reservation.vehicle.id)}" th:text="${veh.registrationNumber + ' - ' + veh.brand + ' ' + veh.model + ' (' + veh.vehicleType + ')'}">ABC-1234 - Toyota Camry</option>
+                            </select>
+                        </div>
+                        <div th:if="${vehicles == null or vehicles.isEmpty()}" class="space-y-3 bg-primary/10 p-4 rounded-[10px] border border-primary/30">
+                            <div class="text-xs text-caution-700 font-semibold flex items-center gap-2"><i class="fa-solid fa-car"></i><span>No saved vehicles found. Reserve with your license plate:</span></div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div class="field"><label class="label label-required">Plate Number</label><input type="text" name="quickPlate" required minlength="4" maxlength="15" pattern="^(?:(?:(WP|CP|SP|NW|NC|EP|SG|VA|UW)[ -]?)?[A-Za-z]{2,3}|[0-9]{1,3})[ -]?[0-9]{4}$" title="Use a valid Sri Lankan plate, such as WP CA-1234, CAB-5678, or 19-1234." data-uppercase="true" placeholder="e.g. WP CA-1234, CAB-5678" th:value="${prevQuickPlate}" class="input font-mono uppercase font-bold text-xs"></div>
+                                <div class="field"><label class="label">Vehicle Category</label><select name="quickType" class="select text-xs"><option value="SEDAN" th:selected="${prevQuickType == 'SEDAN'}">Sedan / Standard Car</option><option value="SUV" th:selected="${prevQuickType == 'SUV'}">SUV / Crossover</option><option value="ELECTRIC" th:selected="${prevQuickType == 'ELECTRIC'}">Electric Vehicle (EV)</option><option value="MOTORCYCLE" th:selected="${prevQuickType == 'MOTORCYCLE'}">Motorcycle / Scooter</option></select></div>
+                            </div>
+                        </div>
+                        <div th:if="${fieldErrors != null and fieldErrors.containsKey('vehicleId')}" class="field-error" th:text="${fieldErrors.get('vehicleId')}">Vehicle error</div>
+                    </section>
+
+                    <!-- Step 3: Date, Time & Stay Duration -->
+                    <section data-checkout-stage="3" class="bg-white p-6 rounded-2xl border border-line-200 shadow-1 space-y-5">
+                        <div class="flex items-center justify-between border-b border-line-100 pb-3">
+                            <h2 class="text-sm font-bold font-heading text-asphalt flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-full bg-primary text-asphalt inline-flex items-center justify-center text-xs">3</span>
+                                <span>Date &amp; Parking Schedule</span>
+                            </h2>
+                            <span class="pill pill-info text-xs" id="scheduleStatusText">Standard Stay</span>
+                        </div>
+
+                        <!-- Date & Arrival Time Pickers -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="field">
+                                <label class="label label-required">
+                                    <i class="fa-regular fa-calendar text-caution-700 mr-1"></i> Parking Date
+                                </label>
+                                <input type="date" id="bookingDateInput" onchange="onDateChanged()" required class="input">
+                            </div>
+
+                            <div class="field">
+                                <label class="label label-required">
+                                    <i class="fa-regular fa-clock text-caution-700 mr-1"></i> Arrival Time
+                                </label>
+                                <input type="time" id="arrivalTimeInput" onchange="onTimeChanged()" required class="input">
+                            </div>
+                        </div>
+
+                        <!-- Duration Quick Pills -->
+                        <div class="field">
+                            <label class="label">Estimated Stay Duration:</label>
+                            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                                <button type="button" onclick="setStayDuration(1)" id="durBtn1" class="dur-choice-btn chip">1 Hour</button>
+                                <button type="button" onclick="setStayDuration(2)" id="durBtn2" class="dur-choice-btn chip active">2 Hours</button>
+                                <button type="button" onclick="setStayDuration(3)" id="durBtn3" class="dur-choice-btn chip">3 Hours</button>
+                                <button type="button" onclick="setStayDuration(4)" id="durBtn4" class="dur-choice-btn chip">4 Hours</button>
+                                <button type="button" onclick="setStayDuration(5)" id="durBtn5" class="dur-choice-btn chip">5 Hours</button>
+                                <button type="button" onclick="setStayDuration(6)" id="durBtn6" class="dur-choice-btn chip">6 Hours</button>
+                                <button type="button" onclick="setStayDuration(7)" id="durBtn7" class="dur-choice-btn chip">7 Hours</button>
+                                <button type="button" onclick="setStayDuration(8)" id="durBtn8" class="dur-choice-btn chip">8 Hours</button>
+                            </div>
+                        </div>
+
+                        <!-- Live Schedule Visual Banner -->
+                        <div class="bg-primary/10 border border-primary/30 rounded-[10px] p-3.5 flex items-center justify-between gap-3 text-xs">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-full bg-primary text-asphalt flex items-center justify-center font-bold flex-shrink-0">
+                                    <i class="fa-solid fa-clock"></i>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-caution-700 uppercase tracking-wider">Reserved Time Window</div>
+                                    <div class="text-sm font-bold text-asphalt tnum" id="liveScheduleText">Today, 2:00 PM - 4:00 PM</div>
+                                </div>
+                            </div>
+                            <span class="pill pill-info font-bold tnum text-xs" id="liveDurationBadge">2 Hours</span>
+                        </div>
+
+                        <!-- Hidden Standard Timestamps For Submission -->
+                        <input type="hidden" id="arrivalTime" name="arrivalTime" th:value="${defaultArrival}">
+                        <input type="hidden" id="departureTime" name="departureTime" th:value="${defaultDeparture}">
+
+                        <div th:if="${fieldErrors != null and (fieldErrors.containsKey('arrivalTime') or fieldErrors.containsKey('departureTime'))}" class="space-y-1">
+                            <div th:if="${fieldErrors.containsKey('arrivalTime')}" class="field-error" th:text="${fieldErrors.get('arrivalTime')}">Arrival time error</div>
+                            <div th:if="${fieldErrors.containsKey('departureTime')}" class="field-error" th:text="${fieldErrors.get('departureTime')}">Departure time error</div>
+                        </div>
+                    </section>
+
+                    <!-- Step 4: Available Parking Bay Selection -->
+                    <section data-checkout-stage="4" class="bg-white p-6 rounded-2xl border border-line-200 shadow-1 space-y-4">
+                        <div class="flex items-center justify-between border-b border-line-100 pb-3">
+                            <h2 class="text-sm font-bold font-heading text-asphalt flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-full bg-primary text-asphalt inline-flex items-center justify-center text-xs">4</span>
+                                <span>Choose Parking Bay</span>
+                            </h2>
+                            <span id="bayAvailabilityNotice" class="pill pill-go">
+                                <span id="bayCountText">Bays Available</span>
+                            </span>
+                        </div>
+
+                        <div class="field">
+                            <div th:replace="~{ui/parking-map :: map('/customer/reservation/slot-map', null, true)}"></div><label for="parkingSpaceSelect" class="label label-required">Selected parking bay · list alternative</label>
+                            <select id="parkingSpaceSelect" name="parkingSpaceId" required onchange="updatePriceCalculation()" class="select font-bold">
+                                <option value="" id="defaultSpaceOption">-- Select Parking Bay --</option>
+                                <option th:each="sp : ${spaces}" 
+                                        th:value="${sp.id}" 
+                                        th:data-rate="${sp.hourlyRate}"
+                                        th:data-facility-id="${sp.facility != null ? sp.facility.id : ''}"
+                                        th:selected="${sp.id == selectedSpaceId}"
+                                        th:text="${'Bay ' + sp.spaceNumber + ' (Floor ' + sp.floor + ' - LKR ' + #numbers.formatDecimal(sp.hourlyRate, 1, 0) + '/hr)' + (sp.hasEVCharging != null and sp.hasEVCharging ? ' EV Charging' : '')}">
+                                    Bay A01 (Floor 1 - LKR 250/hr)
+                                </option>
+                            </select>
+                        </div>
+
+                        <div th:if="${fieldErrors != null and fieldErrors.containsKey('parkingSpaceId')}" class="field-error" th:text="${fieldErrors.get('parkingSpaceId')}">Parking bay error</div>
+                    </section>
+
+                    <!-- Optional add-ons and discount section -->
+                    <div class="bg-white p-6 rounded-2xl border border-line-200 shadow-1 space-y-4">
+                        <h2 class="text-sm font-bold font-heading text-asphalt flex items-center gap-2 border-b border-line-100 pb-3">
+                            <i class="fa-solid fa-sparkles text-primary-100"></i>
+                            <span>Optional Add-Ons &amp; Discount</span>
+                        </h2>
+
+                        <!-- Add-On Services -->
+                        <div th:if="${availableServices != null and !availableServices.isEmpty()}" class="field space-y-2">
+                            <label class="label">Add-on Facility Amenities</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="amenitiesGrid">
+                                <label th:each="srv : ${availableServices}"
+                                       th:data-facility-id="${srv.facility != null ? srv.facility.id : ''}"
+                                       th:data-facility-ids="${srv.facilityIdsCsv}"
+                                       class="amenity-card choice-card">
+                                    <input type="checkbox" name="serviceIds" th:value="${srv.id}" th:data-price="${srv.price}" onchange="updatePriceCalculation()"
+                                           th:checked="${(prevServiceIds != null ? #lists.contains(prevServiceIds, srv.id) : (reservation.serviceItems != null and !#lists.isEmpty(reservation.serviceItems) and #lists.contains(reservation.serviceItems.![service?.id], srv.id)))}"
+                                           class="mt-1 service-checkbox">
+                                    <div>
+                                        <div class="text-xs font-bold text-asphalt" th:text="${srv.name}">Car Wash</div>
+                                        <div class="text-[11px] text-slate-500" th:text="${srv.description}">Exterior wash &amp; clean</div>
+                                        <div class="text-xs font-bold text-caution-700 mt-0.5 tnum" th:text="${'+LKR ' + srv.price}">+LKR 1500.00</div>
+                                    </div>
+                                </label>
+                            </div>
+                            <div th:if="${fieldErrors != null and fieldErrors.containsKey('serviceIds')}" class="field-error" th:text="${fieldErrors.get('serviceIds')}">Service selection error</div>
+                        </div>
+
+                        <!-- Membership benefits are derived from the signed-in customer's active membership. -->
+                        <div th:if="${membershipBenefits != null and !membershipBenefits.isEmpty()}" class="callout callout-go text-xs">
+                            <i class="fa-solid fa-id-card text-go-600"></i>
+                            <div>
+                                <span class="font-bold" th:text="${activeMembershipName}">Membership</span>
+                                <ul class="mt-1 list-disc pl-4"><li th:each="benefit : ${membershipBenefits}" th:text="${benefit.displayDescription}">Benefit</li></ul>
+                            </div>
+                        </div>
+
+                        <!-- Discount code -->
+                        <div class="field">
+                            <label class="label">Discount Code</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="discountCode" name="discountCode" maxlength="50" pattern="[A-Za-z0-9_-]+" title="Use letters, numbers, underscores, or hyphens only." data-uppercase="true" placeholder="e.g. EARLYBIRD, WEEKEND20"
+                                       th:value="${prevDiscountCode}"
+                                       class="input uppercase font-mono font-bold text-xs flex-1">
+                                <button type="button" onclick="applyPromoCode()" class="btn btn-secondary btn-md">
+                                    Apply
+                                </button>
+                            </div>
+                            <div id="promoFeedback" class="text-xs mt-1.5 hidden font-semibold"></div>
+                            <div th:if="${fieldErrors != null and fieldErrors.containsKey('discountCode')}" class="field-error" th:text="${fieldErrors.get('discountCode')}">Discount code error</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Payment Method -->
+                    <div id="paymentSection" th:class="${mode == 'edit' ? 'bg-white p-6 rounded-2xl border border-info-600 shadow-1 space-y-4 hidden' : 'bg-white p-6 rounded-2xl border border-line-200 shadow-1 space-y-4'}">
+                        <div class="flex items-center justify-between border-b border-line-100 pb-3">
+                            <h2 class="text-sm font-bold font-heading text-asphalt flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-full bg-primary text-asphalt inline-flex items-center justify-center text-xs">4</span>
+                                <span th:text="${mode == 'edit' ? 'Payment for Additional Time' : 'Payment Method'}">Payment Method</span>
+                            </h2>
+                            <span class="text-xs text-slate-500 flex items-center gap-1">
+                                <i class="fa-solid fa-lock text-go-600"></i> Encrypted &amp; Secure
+                            </span>
+                        </div>
+
+                        <!-- Edit Mode Additional Due Notice -->
+                        <div th:if="${mode == 'edit'}" class="callout callout-info flex items-center justify-between font-bold text-xs">
+                            <span>Additional Duration Charge:</span>
+                            <span class="text-caution-700 text-sm tnum" id="additionalDueBadge">+LKR 0.00</span>
+                        </div>
+
+                        <!-- Hidden payment method field -->
+                        <input type="hidden" id="paymentMethodInput" name="paymentMethod" th:value="${prevPaymentMethod != null ? prevPaymentMethod : 'CREDIT_CARD'}">
+
+                        <!-- Payment Method Tabs -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="button" onclick="selectPaymentMethod('CREDIT_CARD')" id="tabCard"
+                                    class="pay-tab-btn p-3.5 rounded-[10px] border-2 border-info-600 bg-primary/10 text-caution-700 text-left transition flex flex-col justify-between">
+                                <div class="flex items-center justify-between w-full">
+                                    <i class="fa-solid fa-credit-card text-base text-caution-700"></i>
+                                    <span class="w-2 h-2 rounded-full bg-info-600" id="cardDot"></span>
+                                </div>
+                                <span class="text-xs font-bold text-asphalt mt-2">Card</span>
+                                <span class="text-[10px] text-slate-500">Credit / Debit</span>
+                            </button>
+
+                            <button type="button" onclick="selectPaymentMethod('CASH')" id="tabCash"
+                                    class="pay-tab-btn p-3.5 rounded-[10px] border border-line-200 bg-mist text-ink-700 text-left transition flex flex-col justify-between hover:border-info-600">
+                                <div class="flex items-center justify-between w-full">
+                                    <i class="fa-solid fa-money-bill-wave text-base text-slate-500"></i>
+                                    <span class="w-2 h-2 rounded-full bg-transparent" id="cashDot"></span>
+                                </div>
+                                <span class="text-xs font-bold text-asphalt mt-2">Pay at Gate</span>
+                                <span class="text-[10px] text-slate-500">Gate Barrier Settle</span>
+                            </button>
+                        </div>
+
+                        <!-- Card Details Form -->
+                        <div id="cardFields" class="space-y-3 pt-2">
+                            <div class="field">
+                                <label class="label">Cardholder Full Name</label>
+                                <input type="text" id="cardholderName" name="cardholderName" minlength="2" maxlength="50" autocomplete="cc-name"
+                                       title="Enter the name shown on the card."
+                                       placeholder="e.g. John Doe"
+                                       th:value="${prevCardholderName}"
+                                       th:classappend="${fieldErrors != null and fieldErrors.containsKey('cardholderName')} ? 'input-error'"
+                                       class="input">
+                                <div th:if="${fieldErrors != null and fieldErrors.containsKey('cardholderName')}" class="field-error" th:text="${fieldErrors.get('cardholderName')}">Cardholder error</div>
+                            </div>
+
+                            <div class="field">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="label">Card Number</label>
+                                    <span id="cardBrandLabel" class="pill pill-info text-[10px] hidden"></span>
+                                </div>
+                                <div class="relative">
+                                    <input type="text" id="cardNumber" name="cardNumber" placeholder="4242 4242 4242 4242" minlength="13" maxlength="19" inputmode="numeric" autocomplete="cc-number" data-card-number="true" data-card-max-digits="16"
+                                           th:value="${prevCardNumber}"
+                                           oninput="handleCardNumberInput(this)"
+                                           th:classappend="${fieldErrors != null and fieldErrors.containsKey('cardNumber')} ? 'input-error'"
+                                           class="input font-mono font-bold tracking-wider">
+                                    <div class="absolute right-3 top-2.5 flex items-center gap-2">
+                                        <span id="cardValidIcon" class="hidden text-go-600 text-xs font-bold"><i class="fa-solid fa-circle-check"></i></span>
+                                        <div id="cardBrandIcons" class="flex items-center gap-1 text-slate-500">
+                                            <i id="brandVisa" class="fa-brands fa-cc-visa text-base transition"></i>
+                                            <i id="brandMastercard" class="fa-brands fa-cc-mastercard text-base transition"></i>
+                                            <i id="brandAmex" class="fa-brands fa-cc-amex text-base transition"></i>
+                                            <i id="brandDiscover" class="fa-brands fa-cc-discover text-base transition"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="cardNumberFeedback" class="mt-1 text-xs hidden"></div>
+                                <div th:if="${fieldErrors != null and fieldErrors.containsKey('cardNumber')}" class="field-error" th:text="${fieldErrors.get('cardNumber')}">Card error</div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="field">
+                                    <label class="label">Expiry (MM/YY)</label>
+                                    <input type="text" id="expiryDate" name="expiryDate" placeholder="12/28" maxlength="5" inputmode="numeric" autocomplete="cc-exp" pattern="^(0[1-9]|1[0-2])\/([0-9]{2})$" data-expiry="true" title="Enter a valid future expiry date in MM/YY format."
+                                           th:value="${prevExpiryDate}"
+                                           oninput="handleExpiryInput(this)"
+                                           th:classappend="${fieldErrors != null and fieldErrors.containsKey('expiryDate')} ? 'input-error'"
+                                           class="input font-mono font-bold text-center">
+                                    <div id="expiryFeedback" class="mt-1 text-xs hidden"></div>
+                                    <div th:if="${fieldErrors != null and fieldErrors.containsKey('expiryDate')}" class="field-error" th:text="${fieldErrors.get('expiryDate')}">Expiry error</div>
+                                </div>
+                                <div class="field">
+                                    <label class="label">CVV / CVC</label>
+                                    <input type="password" id="cvc" name="cvc" placeholder="CVC" minlength="3" maxlength="4" pattern="[0-9]{3,4}" inputmode="numeric" autocomplete="cc-csc" data-digits-only="true" title="Enter a 3 or 4 digit security code."
+                                           oninput="handleCvcInput(this)"
+                                           th:classappend="${fieldErrors != null and fieldErrors.containsKey('cvc')} ? 'input-error'"
+                                           class="input font-mono font-bold text-center">
+                                    <div id="cvcFeedback" class="mt-1 text-xs hidden"></div>
+                                    <div th:if="${fieldErrors != null and fieldErrors.containsKey('cvc')}" class="field-error" th:text="${fieldErrors.get('cvc')}">CVC error</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cash Info -->
+                        <div id="cashFields" class="hidden callout callout-caution text-xs space-y-1">
+                            <span class="font-bold block text-caution-700">Pay Cash at Barrier Entrance</span>
+                            <p>Settle payment directly with staff upon arrival at the gate barrier.</p>
+                        </div>
+                    </div>
+
+                    <!-- Edit Mode Notice -->
+                    <div th:if="${mode == 'edit'}" class="callout callout-info text-xs">
+                        <i class="fa-solid fa-circle-info text-caution-700 mr-1"></i>
+                        <span id="editModeNotice">Modifying your reservation recalculates pricing automatically. Any payment adjustments or refunds will be processed upon saving.</span>
+                    </div>
+
+                    <!-- Booking summary stays in the normal checkout flow, after payment. -->
+                    <section id="bookingSummary" data-checkout-stage="5" class="bg-white p-6 rounded-2xl border border-line-200 shadow-1 space-y-5">
+                        <h2 class="text-base font-bold font-heading text-asphalt border-b border-line-100 pb-3 flex items-center justify-between">
+                            <span class="flex items-center gap-2">
+                                <i class="fa-solid fa-receipt text-caution-700"></i> Booking Summary
+                            </span>
+                            <span class="text-xs font-mono font-bold text-slate-500 tnum" id="summaryDuration">2 Hours</span>
+                        </h2>
+
+                        <div class="space-y-3 text-xs text-ink-700">
+                            <div class="flex justify-between">
+                                <span>Hourly Rate:</span>
+                                <span id="summaryRate" class="font-bold text-asphalt tnum">LKR 250.00/hr</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Base Parking Fee:</span>
+                                <span id="summaryBase" class="font-bold text-asphalt tnum">LKR 500.00</span>
+                            </div>
+                            <div id="summaryServicesRow" class="flex justify-between text-caution-700 hidden">
+                                <span>Add-on Amenities:</span>
+                                <span id="summaryServices" class="font-bold tnum">+LKR 0.00</span>
+                            </div>
+                            <div id="summaryDiscountRow" class="flex justify-between text-go-600 hidden">
+                                <span id="summaryDiscountLabel">Discount:</span>
+                                <span id="summaryDiscount" class="font-bold tnum">-LKR 0.00</span>
+                            </div>
+
+                            <!-- Edit Mode Paid & Adjustment Details -->
+                            <div th:if="${mode == 'edit'}" class="flex justify-between text-slate-500 border-t border-line-100 pt-2">
+                                <span>Previously Paid:</span>
+                                <span class="font-bold text-asphalt tnum">LKR <span th:text="${#numbers.formatDecimal(originalPaidAmount != null ? originalPaidAmount : 0, 1, 2)}">500.00</span></span>
+                            </div>
+                            <div id="summaryAdjustmentRow" class="flex justify-between hidden">
+                                <span id="summaryAdjustmentLabel" class="font-bold">Adjustment:</span>
+                                <span id="summaryAdjustment" class="font-bold tnum">LKR 0.00</span>
+                            </div>
+
+                            <div class="border-t border-line-100 pt-3.5 flex items-baseline justify-between text-sm font-bold text-asphalt">
+                                <span id="summaryTotalLabel" th:text="${mode == 'edit' ? 'New Total:' : 'Total Payable:'}">Total Payable:</span>
+                                <span id="summaryTotal" class="text-2xl font-bold font-num text-caution-700 tnum">LKR 500.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Primary Submit Button -->
+                        <button type="submit" id="submitBtn" class="btn btn-primary btn-block btn-lg gap-2">
+                            <i th:class="${mode == 'edit' ? 'fa-solid fa-check text-xs' : 'fa-solid fa-lock text-xs'}"></i>
+                            <span id="submitBtnText" th:text="${mode == 'edit' ? 'Save Reservation Changes' : 'Confirm Booking'}">Confirm Booking</span>
+                        </button>
+
+                        <div class="pt-2 border-t border-line-100 space-y-2 text-[11px] text-slate-500">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-shield-halved text-go-600"></i>
+                                <span>Pessimistic lock guarantees your bay space</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-rotate-left text-caution-700"></i>
+                                <span>Free cancellation &amp; full refund before start</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-car text-caution-700"></i>
+                                <span>Plate recognized automatically at barrier</span>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <div th:replace="~{layout/checkout :: footer}"></div>
+
+    <script th:inline="javascript">
+        const discountsData = /*[[${discounts}]]*/ [];
+        const membershipPricing = /*[[${membershipPricing}]]*/ {};
+        const initialArrivalStr = /*[[${defaultArrival}]]*/ '';
+        const initialDepartureStr = /*[[${defaultDeparture}]]*/ '';
+        const isEditMode = /*[[${mode == 'edit'}]]*/ false;
+        const initialSelectedSpaceId = /*[[${selectedSpaceId}]]*/ null;
+        const initialPaymentMethod = /*[[${prevPaymentMethod}]]*/ null;
+        const initialDiscountCode = /*[[${prevDiscountCode}]]*/ '';
+        const originalPaidAmount = /*[[${originalPaidAmount}]]*/ 0;
+        const isPayAtGate = /*[[${isPayAtGate}]]*/ false;
+        const originalTotal = /*[[${originalTotal}]]*/ 0;
+
+        let stayHours = 2;
+        let selectedPayment = 'CREDIT_CARD';
+
+        function pad(n) { return String(n).padStart(2, '0'); }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initSchedule();
+            updateFacilityHours();
+            updateFacilityBays();
+            updateAmenitiesVisibility();
+            if (initialPaymentMethod) {
+                selectPaymentMethod(initialPaymentMethod);
+            }
+            if (initialDiscountCode) {
+                applyPromoCode();
+            }
+            updatePriceCalculation();
+            initCheckoutProgress();
+
+            const cardInput = document.getElementById('cardNumber');
+            if (cardInput && cardInput.value) {
+                handleCardNumberInput(cardInput);
+            }
+            const expInput = document.getElementById('expiryDate');
+            if (expInput && expInput.value) {
+                handleExpiryInput(expInput);
+            }
+        });
+
+        function initCheckoutProgress() {
+            const stages = Array.from(document.querySelectorAll('[data-checkout-stage]'));
+            const progress = Array.from(document.querySelectorAll('[data-checkout-progress-step]'));
+            if (!stages.length || !progress.length || !('IntersectionObserver' in window)) return;
+
+            function setProgress(step) {
+                // The confirmation indicator represents a completed submission, not merely reaching the summary.
+                const activeStep = Math.min(step, 4);
+                progress.forEach(item => item.classList.toggle('is-current', Number(item.dataset.checkoutProgressStep) === activeStep));
+            }
+
+            const observer = new IntersectionObserver(function(entries) {
+                const visible = entries.filter(entry => entry.isIntersecting)
+                    .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+                if (visible) setProgress(Number(visible.target.dataset.checkoutStage));
+            }, { rootMargin: '-22% 0px -56% 0px', threshold: [0.05, 0.3, 0.6] });
+
+            stages.forEach(stage => observer.observe(stage));
+            document.getElementById('reservationForm')?.addEventListener('submit', function(event) {
+                // Validation listeners can still prevent submission; only light the final step after a valid submit.
+                window.setTimeout(function() {
+                    if (!event.defaultPrevented) {
+                        progress.forEach(item => item.classList.toggle('is-current', Number(item.dataset.checkoutProgressStep) === 5));
+                    }
+                }, 0);
+            });
+        }
+
+        function initSchedule() {
+            let start = new Date();
+            if (initialArrivalStr) {
+                const parsed = new Date(initialArrivalStr);
+                if (!isNaN(parsed.getTime())) start = parsed;
+            } else {
+                const mins = Math.ceil(start.getMinutes() / 15) * 15;
+                start.setMinutes(mins);
+                start.setSeconds(0);
+            }
+
+            const yyyy = start.getFullYear();
+            const mm = pad(start.getMonth() + 1);
+            const dd = pad(start.getDate());
+            const hh = pad(start.getHours());
+            const min = pad(start.getMinutes());
+
+            const dateInput = document.getElementById('bookingDateInput');
+            const timeInput = document.getElementById('arrivalTimeInput');
+            if (dateInput) {
+                dateInput.value = `${yyyy}-${mm}-${dd}`;
+                dateInput.min = `${yyyy}-${mm}-${dd}`;
+            }
+            if (timeInput) {
+                timeInput.value = `${hh}:${min}`;
+            }
+
+            if (initialArrivalStr && initialDepartureStr) {
+                const arr = new Date(initialArrivalStr);
+                const dep = new Date(initialDepartureStr);
+                const diffMs = dep - arr;
+                if (diffMs > 0) {
+                    stayHours = Math.min(8, Math.max(1, Math.round(diffMs / (1000 * 60 * 60))));
+                }
+            }
+
+            highlightDurationButton(stayHours);
+            syncScheduleTimestamps();
+        }
+
+        function onDateChanged() {
+            syncScheduleTimestamps();
+            onFacilityOrScheduleChange();
+        }
+
+        function onTimeChanged() {
+            syncScheduleTimestamps();
+            onFacilityOrScheduleChange();
+        }
+
+        function setStayDuration(hours) {
+            if (!Number.isInteger(hours) || hours < 1 || hours > 8) return;
+            stayHours = hours;
+            highlightDurationButton(hours);
+            syncScheduleTimestamps();
+            onFacilityOrScheduleChange();
+        }
+
+        function highlightDurationButton(hours) {
+            document.querySelectorAll('.dur-choice-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const active = document.getElementById('durBtn' + hours);
+            if (active) {
+                active.classList.add('active');
+            }
+        }
+
+        function syncScheduleTimestamps() {
+            const dateVal = document.getElementById('bookingDateInput').value;
+            const timeVal = document.getElementById('arrivalTimeInput').value;
+            if (!dateVal || !timeVal) return;
+
+            const [year, month, day] = dateVal.split('-').map(Number);
+            const [hours, minutes] = timeVal.split(':').map(Number);
+
+            const arrival = new Date(year, month - 1, day, hours, minutes, 0);
+            const departure = new Date(arrival.getTime() + stayHours * 60 * 60 * 1000);
+
+            const arrivalIso = formatLocalDateTime(arrival);
+            const departureIso = formatLocalDateTime(departure);
+
+            document.getElementById('arrivalTime').value = arrivalIso;
+            document.getElementById('departureTime').value = departureIso;
+
+            const opts = { month: 'short', day: 'numeric' };
+            const dateStr = arrival.toLocaleDateString('en-US', opts);
+            const arrTimeStr = formatTimeAmPm(arrival);
+            const depTimeStr = formatTimeAmPm(departure);
+
+            const liveScheduleText = document.getElementById('liveScheduleText');
+            if (liveScheduleText) {
+                liveScheduleText.innerText = `${dateStr}, ${arrTimeStr} - ${depTimeStr}`;
+            }
+
+            const liveDurationBadge = document.getElementById('liveDurationBadge');
+            if (liveDurationBadge) {
+                liveDurationBadge.innerText = stayHours + (stayHours === 1 ? ' Hour' : ' Hours');
+            }
+
+            const summaryDur = document.getElementById('summaryDuration');
+            if (summaryDur) {
+                summaryDur.innerText = stayHours + (stayHours === 1 ? ' Hour' : ' Hours');
+            }
+        }
+
+        function formatLocalDateTime(d) {
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+        }
+
+        function formatTimeAmPm(d) {
+            const h = d.getHours();
+            const m = pad(d.getMinutes());
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const h12 = h % 12 || 12;
+            return `${h12}:${m} ${ampm}`;
+        }
+
+        function onFacilityOrScheduleChange() {
+            updateFacilityHours();
+            updateFacilityBays();
+            updateAmenitiesVisibility();
+            updatePriceCalculation();
+        }
+
+        function updateFacilityHours() {
+            const facilitySelect = document.getElementById('facilitySelect');
+            const hours = document.getElementById('facilityHours');
+            if (!facilitySelect) return;
+
+            const selectedOption = facilitySelect.options[facilitySelect.selectedIndex];
+            const opening = selectedOption?.dataset.openingTime;
+            const closing = selectedOption?.dataset.closingTime;
+
+            if (!hours) {
+                if (!opening || !closing) return;
+                const hoursContainer = document.createElement('div');
+                hoursContainer.id = 'facilityHours';
+                hoursContainer.className = 'mt-2 flex items-center gap-2 text-xs text-slate-600';
+                hoursContainer.innerHTML = '<i class="fa-solid fa-clock text-caution-700"></i><span class="font-semibold">Opening hours:</span><span id="facilityHoursValue"></span>';
+                facilitySelect.insertAdjacentElement('afterend', hoursContainer);
+            }
+
+            const currentHours = document.getElementById('facilityHours');
+            const hoursValue = document.getElementById('facilityHoursValue');
+            if (currentHours && hoursValue && opening && closing) {
+                hoursValue.textContent = `${opening} - ${closing}`;
+                currentHours.classList.remove('hidden');
+            } else if (currentHours) {
+                currentHours.classList.add('hidden');
+            }
+        }
+
+        function updateAmenitiesVisibility() {
+            const facSelect = document.getElementById('facilitySelect');
+            const facilityId = facSelect ? facSelect.value : '';
+            document.querySelectorAll('#amenitiesGrid .amenity-card').forEach(card => {
+                const rawFacIds = card.getAttribute('data-facility-ids') || card.getAttribute('data-facility-id') || '';
+                const facIds = rawFacIds.split(',').map(s => s.trim()).filter(Boolean);
+                const matches = !facilityId || facIds.length === 0 || facIds.includes(facilityId);
+                if (matches) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                    const cb = card.querySelector('input[type="checkbox"]');
+                    if (cb && !isEditMode) cb.checked = false;
+                }
+            });
+        }
+
+        function updateFacilityBays() { document.querySelector('[data-slot-map]')?.refreshMap?.(); }
+
+
+
+        function selectPaymentMethod(method) {
+            selectedPayment = method;
+            document.getElementById('paymentMethodInput').value = method;
+
+            const tabs = {
+                'CREDIT_CARD': { btn: 'tabCard', dot: 'cardDot', fields: 'cardFields' },
+                'CASH': { btn: 'tabCash', dot: 'cashDot', fields: 'cashFields' }
+            };
+
+            Object.entries(tabs).forEach(([k, config]) => {
+                const btn = document.getElementById(config.btn);
+                const dot = document.getElementById(config.dot);
+                const fields = document.getElementById(config.fields);
+
+                if (k === method) {
+                    btn.classList.remove('border-line-200', 'bg-mist', 'text-ink-700', 'border');
+                    btn.classList.add('border-2', 'border-info-600', 'bg-primary/10', 'text-caution-700');
+                    dot.className = 'w-2 h-2 rounded-full bg-info-600';
+                    if (fields) fields.classList.remove('hidden');
+                } else {
+                    btn.classList.remove('border-2', 'border-info-600', 'bg-primary/10', 'text-caution-700');
+                    btn.classList.add('border', 'border-line-200', 'bg-mist', 'text-ink-700');
+                    dot.className = 'w-2 h-2 rounded-full bg-transparent';
+                    if (fields) fields.classList.add('hidden');
+                }
+            });
+            updatePriceCalculation();
+        }
+
+        function applyPromoCode() {
+            const codeInput = document.getElementById('discountCode');
+            const feedback = document.getElementById('promoFeedback');
+            const codeVal = codeInput.value.trim().toUpperCase();
+
+            if (!codeVal) {
+                feedback.className = 'text-xs mt-1.5 font-semibold text-slate-500';
+                feedback.innerText = 'Please enter a discount code.';
+                feedback.classList.remove('hidden');
+                updatePriceCalculation();
+                return;
+            }
+
+            const match = (discountsData || []).find(d => d.code && d.code.toUpperCase() === codeVal && d.active);
+            if (match) {
+                feedback.className = 'text-xs mt-1.5 font-semibold text-go-600';
+                feedback.innerText = `Code ${match.code} applied: ${match.discountType === 'PERCENTAGE' ? match.value + '% off' : 'LKR ' + match.value + ' off'}`;
+                feedback.classList.remove('hidden');
+            } else {
+                feedback.className = 'text-xs mt-1.5 font-semibold text-[#C8281C]';
+                feedback.innerText = 'Invalid or expired discount code.';
+                feedback.classList.remove('hidden');
+            }
+            updatePriceCalculation();
+        }
+
+        function updatePriceCalculation() {
+            const spaceSelect = document.getElementById('parkingSpaceSelect');
+            const selectedOpt = spaceSelect ? spaceSelect.options[spaceSelect.selectedIndex] : null;
+
+            let hourlyRate = 250.00;
+            if (selectedOpt && selectedOpt.getAttribute('data-rate')) {
+                hourlyRate = parseFloat(selectedOpt.getAttribute('data-rate')) || 250.00;
+            }
+
+            const baseAmount = hourlyRate * stayHours;
+
+            let servicesTotal = 0;
+            document.querySelectorAll('input[name="serviceIds"]:checked').forEach(cb => {
+                const price = parseFloat(cb.getAttribute('data-price')) || 0;
+                servicesTotal += price;
+            });
+
+            const preDiscountTotal = baseAmount + servicesTotal;
+
+            let couponDiscount = 0;
+            let couponLabel = 'Discount:';
+            const codeInput = document.getElementById('discountCode');
+            const codeVal = codeInput ? codeInput.value.trim().toUpperCase() : '';
+            if (codeVal && discountsData) {
+                const match = discountsData.find(d => d.code && d.code.toUpperCase() === codeVal && d.active);
+                if (match) {
+                    if (match.discountType === 'PERCENTAGE') {
+                        couponDiscount = (preDiscountTotal * match.value) / 100.0;
+                    } else {
+                        couponDiscount = Math.min(match.value, preDiscountTotal);
+                    }
+                    couponLabel = `Discount (${match.code}):`;
+                }
+            }
+
+            let membershipDiscount = 0;
+            const membership = membershipPricing[document.getElementById('facilitySelect').value];
+            const membershipDiscountPercent = membership ? membership.percent : null;
+            const membershipName = membership ? membership.name : null;
+            if (membershipDiscountPercent !== null && membershipDiscountPercent !== undefined) {
+                membershipDiscount = (preDiscountTotal * parseFloat(membershipDiscountPercent)) / 100.0;
+            }
+
+            let finalDiscount = 0;
+            let discountLabel = 'Discount:';
+            if (membershipDiscount > 0 && membershipDiscount >= couponDiscount) {
+                finalDiscount = membershipDiscount;
+                discountLabel = `Membership Discount (${membershipName || 'Pass'}):`;
+            } else if (couponDiscount > 0) {
+                finalDiscount = couponDiscount;
+                discountLabel = couponLabel;
+            }
+
+            const total = Math.max(0, preDiscountTotal - finalDiscount);
+
+            const rateEl = document.getElementById('summaryRate');
+            if (rateEl) rateEl.innerText = 'LKR ' + Math.round(hourlyRate) + '/hr';
+
+            const baseEl = document.getElementById('summaryBase');
+            if (baseEl) baseEl.innerText = 'LKR ' + baseAmount.toFixed(2);
+
+            const srvRow = document.getElementById('summaryServicesRow');
+            const srvEl = document.getElementById('summaryServices');
+            if (srvRow && srvEl) {
+                if (servicesTotal > 0) {
+                    srvRow.classList.remove('hidden');
+                    srvEl.innerText = '+LKR ' + servicesTotal.toFixed(2);
+                } else {
+                    srvRow.classList.add('hidden');
+                }
+            }
+
+            const discRow = document.getElementById('summaryDiscountRow');
+            const discEl = document.getElementById('summaryDiscount');
+            const discLabelEl = document.getElementById('summaryDiscountLabel');
+            if (discRow && discEl) {
+                if (finalDiscount > 0) {
+                    discRow.classList.remove('hidden');
+                    discEl.innerText = '-LKR ' + finalDiscount.toFixed(2);
+                    if (discLabelEl) discLabelEl.innerText = discountLabel;
+                } else {
+                    discRow.classList.add('hidden');
+                }
+            }
+
+            const totalEl = document.getElementById('summaryTotal');
+            if (totalEl) totalEl.innerText = 'LKR ' + total.toFixed(2);
+
+            const submitBtnText = document.getElementById('submitBtnText');
+            if (isEditMode) {
+                const paid = (typeof originalPaidAmount === 'number' ? originalPaidAmount : parseFloat(originalPaidAmount)) || 0;
+                const origTot = (typeof originalTotal === 'number' ? originalTotal : parseFloat(originalTotal)) || paid;
+                const adjustmentRow = document.getElementById('summaryAdjustmentRow');
+                const adjustmentLabel = document.getElementById('summaryAdjustmentLabel');
+                const adjustmentEl = document.getElementById('summaryAdjustment');
+                const editPaySection = document.getElementById('paymentSection');
+                const editNotice = document.getElementById('editModeNotice');
+                const addDueBadge = document.getElementById('additionalDueBadge');
+
+                if (isPayAtGate) {
+                    if (adjustmentRow) {
+                        adjustmentRow.classList.remove('hidden');
+                        adjustmentLabel.innerText = 'Pay at Gate (Adjusted):';
+                        adjustmentEl.className = 'font-bold text-caution-700 tnum';
+                        adjustmentEl.innerText = 'LKR ' + total.toFixed(2);
+                    }
+                    if (editPaySection) editPaySection.classList.add('hidden');
+                    if (submitBtnText) submitBtnText.innerText = `Save Changes (Pay LKR ${total.toFixed(2)} at Gate)`;
+                    if (editNotice) editNotice.innerText = `Your check-in payment will be adjusted to LKR ${total.toFixed(2)} at the entrance barrier.`;
+                } else {
+                    const diff = total - paid;
+                    if (diff > 0.01) {
+                        if (adjustmentRow) {
+                            adjustmentRow.classList.remove('hidden');
+                            adjustmentLabel.innerText = 'Additional Due:';
+                            adjustmentEl.className = 'font-bold text-caution-700 tnum';
+                            adjustmentEl.innerText = '+LKR ' + diff.toFixed(2);
+                        }
+                        if (editPaySection) editPaySection.classList.remove('hidden');
+                        if (addDueBadge) addDueBadge.innerText = '+LKR ' + diff.toFixed(2);
+                        if (submitBtnText) submitBtnText.innerText = `Pay Additional LKR ${diff.toFixed(2)} & Save`;
+                        if (editNotice) editNotice.innerText = `Your updated schedule or add-on amenities require an additional payment of LKR ${diff.toFixed(2)}. Please confirm payment details below.`;
+                    } else if (diff < -0.01) {
+                        const refundAmount = Math.abs(diff);
+                        if (adjustmentRow) {
+                            adjustmentRow.classList.remove('hidden');
+                            adjustmentLabel.innerText = 'Refund to Card:';
+                            adjustmentEl.className = 'font-bold text-go-600 tnum';
+                            adjustmentEl.innerText = '-LKR ' + refundAmount.toFixed(2);
+                        }
+                        if (editPaySection) editPaySection.classList.add('hidden');
+                        if (submitBtnText) submitBtnText.innerText = `Save Changes & Refund LKR ${refundAmount.toFixed(2)}`;
+                        if (editNotice) editNotice.innerText = `Duration reduced or amenities removed. An automatic refund of LKR ${refundAmount.toFixed(2)} will be credited back to your original payment card upon saving.`;
+                    } else {
+                        if (adjustmentRow) adjustmentRow.classList.add('hidden');
+                        if (editPaySection) editPaySection.classList.add('hidden');
+                        if (submitBtnText) submitBtnText.innerText = 'Save Reservation Changes';
+                        if (editNotice) editNotice.innerText = 'No price change for this updated time window. Click below to save your changes.';
+                    }
+                }
+            } else {
+                if (submitBtnText) {
+                    submitBtnText.innerText = 'Confirm Booking';
+                }
+                const paymentSection = document.getElementById('paymentSection');
+                if (paymentSection) paymentSection.classList.toggle('hidden', total <= 0);
+            }
+            const paymentSection = document.getElementById('paymentSection');
+            const cardRequired = paymentSection && !paymentSection.classList.contains('hidden') && selectedPayment === 'CREDIT_CARD';
+            document.querySelectorAll('#cardFields input').forEach(input => {
+                input.disabled = !cardRequired;
+                if (!cardRequired) input.setCustomValidity('');
+            });
+        }
+
+        function isValidLuhn(val) {
+            const clean = (val || '').replace(/\D/g, '');
+            if (clean.length < 13 || clean.length > 16) return false;
+            let sum = 0;
+            let alternate = false;
+            for (let i = clean.length - 1; i >= 0; i--) {
+                let n = parseInt(clean.charAt(i), 10);
+                if (alternate) {
+                    n *= 2;
+                    if (n > 9) n = (n % 10) + 1;
+                }
+                sum += n;
+                alternate = !alternate;
+            }
+            return sum % 10 === 0;
+        }
+
+        function detectCardBrand(val) {
+            const clean = (val || '').replace(/\D/g, '');
+            if (/^4/.test(clean)) return 'VISA';
+            if (/^(5[1-5]|2[2-7])/.test(clean)) return 'MASTERCARD';
+            if (/^3[47]/.test(clean)) return 'AMEX';
+            if (/^(6011|65|64[4-9]|622)/.test(clean)) return 'DISCOVER';
+            return null;
+        }
+
+        function handleCardNumberInput(input) {
+            let raw = input.value.replace(/\D/g, '');
+            if (raw.length > 16) raw = raw.substring(0, 16);
+
+            let formatted = raw.match(/.{1,4}/g)?.join(' ') || raw;
+            input.value = formatted;
+
+            const brand = detectCardBrand(raw);
+            const brandLabel = document.getElementById('cardBrandLabel');
+            const brandVisa = document.getElementById('brandVisa');
+            const brandMastercard = document.getElementById('brandMastercard');
+            const brandAmex = document.getElementById('brandAmex');
+            const brandDiscover = document.getElementById('brandDiscover');
+            const checkIcon = document.getElementById('cardValidIcon');
+            const feedback = document.getElementById('cardNumberFeedback');
+
+            if (brandVisa) brandVisa.className = 'fa-brands fa-cc-visa text-base transition text-slate-500';
+            if (brandMastercard) brandMastercard.className = 'fa-brands fa-cc-mastercard text-base transition text-slate-500';
+            if (brandAmex) brandAmex.className = 'fa-brands fa-cc-amex text-base transition text-slate-500';
+            if (brandDiscover) brandDiscover.className = 'fa-brands fa-cc-discover text-base transition text-slate-500';
+
+            if (brand === 'VISA' && brandVisa) {
+                brandVisa.className = 'fa-brands fa-cc-visa text-base transition text-caution-700';
+                if (brandLabel) { brandLabel.innerText = 'Visa'; brandLabel.classList.remove('hidden'); }
+            } else if (brand === 'MASTERCARD' && brandMastercard) {
+                brandMastercard.className = 'fa-brands fa-cc-mastercard text-base transition text-caution-700';
+                if (brandLabel) { brandLabel.innerText = 'Mastercard'; brandLabel.classList.remove('hidden'); }
+            } else if (brand === 'AMEX' && brandAmex) {
+                brandAmex.className = 'fa-brands fa-cc-amex text-base transition text-caution-700';
+                if (brandLabel) { brandLabel.innerText = 'American Express'; brandLabel.classList.remove('hidden'); }
+            } else if (brand === 'DISCOVER' && brandDiscover) {
+                brandDiscover.className = 'fa-brands fa-cc-discover text-base transition text-caution-700';
+                if (brandLabel) { brandLabel.innerText = 'Discover'; brandLabel.classList.remove('hidden'); }
+            } else {
+                if (brandLabel) brandLabel.classList.add('hidden');
+            }
+
+            if (raw.length >= 13) {
+                if (isValidLuhn(raw)) {
+                    input.classList.remove('input-error');
+                    if (checkIcon) checkIcon.classList.remove('hidden');
+                    if (feedback) {
+                        feedback.classList.remove('hidden', 'text-[#C8281C]');
+                        feedback.classList.add('text-go-600', 'font-semibold');
+                        feedback.innerText = 'Valid card number';
+                    }
+                } else {
+                    input.classList.add('input-error');
+                    if (checkIcon) checkIcon.classList.add('hidden');
+                    if (feedback) {
+                        feedback.classList.remove('hidden', 'text-go-600');
+                        feedback.classList.add('text-[#C8281C]', 'font-semibold');
+                        feedback.innerText = 'Invalid card number (checksum verification failed)';
+                    }
+                }
+            } else {
+                input.classList.remove('input-error');
+                if (checkIcon) checkIcon.classList.add('hidden');
+                if (feedback) feedback.classList.add('hidden');
+            }
+        }
+
+        function handleExpiryInput(input) {
+            let raw = input.value.replace(/\D/g, '');
+            if (raw.length > 4) raw = raw.substring(0, 4);
+
+            if (raw.length === 1 && parseInt(raw.charAt(0), 10) > 1) {
+                raw = '0' + raw;
+            }
+
+            if (raw.length >= 2) {
+                input.value = raw.substring(0, 2) + '/' + raw.substring(2);
+            } else {
+                input.value = raw;
+            }
+
+            const feedback = document.getElementById('expiryFeedback');
+            if (raw.length === 4) {
+                const month = parseInt(raw.substring(0, 2), 10);
+                const year = 2000 + parseInt(raw.substring(2, 4), 10);
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                const currentMonth = now.getMonth() + 1;
+
+                if (month < 1 || month > 12) {
+                    input.classList.add('input-error');
+                    if (feedback) {
+                        feedback.classList.remove('hidden', 'text-go-600');
+                        feedback.classList.add('text-[#C8281C]', 'font-semibold');
+                        feedback.innerText = 'Month must be 01-12';
+                    }
+                } else if (year < currentYear || (year === currentYear && month < currentMonth)) {
+                    input.classList.add('input-error');
+                    if (feedback) {
+                        feedback.classList.remove('hidden', 'text-go-600');
+                        feedback.classList.add('text-[#C8281C]', 'font-semibold');
+                        feedback.innerText = 'Card has expired';
+                    }
+                } else {
+                    input.classList.remove('input-error');
+                    if (feedback) {
+                        feedback.classList.remove('hidden', 'text-[#C8281C]');
+                        feedback.classList.add('text-go-600', 'font-semibold');
+                        feedback.innerText = 'Valid expiry';
+                    }
+                }
+            } else {
+                input.classList.remove('input-error');
+                if (feedback) feedback.classList.add('hidden');
+            }
+        }
+
+        function handleCvcInput(input) {
+            input.value = input.value.replace(/\D/g, '').substring(0, 4);
+            const feedback = document.getElementById('cvcFeedback');
+            if (input.value.length >= 3) {
+                input.classList.remove('input-error');
+                if (feedback) {
+                    feedback.classList.remove('hidden', 'text-[#C8281C]');
+                    feedback.classList.add('text-go-600', 'font-semibold');
+                    feedback.innerText = 'Valid CVC';
+                }
+            } else {
+                input.classList.remove('input-error');
+                if (feedback) feedback.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('reservationForm')?.addEventListener('submit', function(e) {
+            syncScheduleTimestamps(); // Ensure hidden fields are up to date!
+            const arrivalValue = document.getElementById('arrivalTime')?.value;
+            const arrivalInput = document.getElementById('arrivalTimeInput');
+            const selectedBay = document.getElementById('parkingSpaceSelect');
+            const arrival = arrivalValue ? new Date(arrivalValue) : null;
+            if (!arrival || arrival.getTime() < Date.now() - (5 * 60 * 1000)) {
+                e.preventDefault();
+                if (arrivalInput) {
+                    arrivalInput.setCustomValidity('Choose an arrival time that is still in the future.');
+                    arrivalInput.reportValidity();
+                    arrivalInput.focus();
+                }
+                return;
+            }
+            if (arrivalInput) arrivalInput.setCustomValidity('');
+            if (!selectedBay || !selectedBay.value) {
+                e.preventDefault();
+                selectedBay?.setCustomValidity('Choose an available parking bay before confirming.');
+                selectedBay?.reportValidity();
+                return;
+            }
+            selectedBay.setCustomValidity('');
+            const paySec = document.getElementById('paymentSection');
+            const payMethod = document.getElementById('paymentMethodInput')?.value || 'CREDIT_CARD';
+
+            if (paySec && !paySec.classList.contains('hidden') && payMethod === 'CREDIT_CARD') {
+                const cardholderInput = document.getElementById('cardholderName');
+                const cardNumInput = document.getElementById('cardNumber');
+                const expiryInput = document.getElementById('expiryDate');
+                const cvcInput = document.getElementById('cvc');
+                [cardholderInput, cardNumInput, expiryInput, cvcInput].forEach(input => input?.setCustomValidity(''));
+
+                if (cardholderInput && !cardholderInput.value.trim()) {
+                    e.preventDefault();
+                    cardholderInput.setCustomValidity('Enter the cardholder full name.');
+                    cardholderInput.reportValidity();
+                    cardholderInput.focus();
+                    return;
+                }
+
+                const cleanCard = cardNumInput ? cardNumInput.value.replace(/\D/g, '') : '';
+                if (!isValidLuhn(cleanCard)) {
+                    e.preventDefault();
+                    cardNumInput.setCustomValidity('Check the card number and try again.');
+                    cardNumInput.reportValidity();
+                    cardNumInput.focus();
+                    return;
+                }
+
+                const cleanExpiry = expiryInput ? expiryInput.value.replace(/\D/g, '') : '';
+                if (cleanExpiry.length !== 4) {
+                    e.preventDefault();
+                    expiryInput.setCustomValidity('Enter a valid future expiry date in MM/YY format.');
+                    expiryInput.reportValidity();
+                    expiryInput.focus();
+                    return;
+                }
+                const m = parseInt(cleanExpiry.substring(0, 2), 10);
+                const y = 2000 + parseInt(cleanExpiry.substring(2, 4), 10);
+                const now = new Date();
+                if (m < 1 || m > 12 || y < now.getFullYear() || (y === now.getFullYear() && m < (now.getMonth() + 1))) {
+                    e.preventDefault();
+                    expiryInput.setCustomValidity('This card has expired. Enter a future expiry date.');
+                    expiryInput.reportValidity();
+                    expiryInput.focus();
+                    return;
+                }
+
+                const cleanCvc = cvcInput ? cvcInput.value.replace(/\D/g, '') : '';
+                if (cleanCvc.length < 3 || cleanCvc.length > 4) {
+                    e.preventDefault();
+                    cvcInput.setCustomValidity('Enter a 3 or 4 digit security code.');
+                    cvcInput.reportValidity();
+                    cvcInput.focus();
+                    return;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

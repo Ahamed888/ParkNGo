@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 206">
+<title>compact viewed directly from above</title>
+<defs>
+ <linearGradient id="paint"><stop stop-color="#806123"/><stop offset=".14" stop-color="#c79737"/><stop offset=".34" stop-color="#f4d17d"/><stop offset=".57" stop-color="#c79737"/><stop offset=".85" stop-color="#c79737"/><stop offset="1" stop-color="#806123"/></linearGradient>
+ <linearGradient id="glass" x2=".7" y2="1"><stop stop-color="#0b151b"/><stop offset=".45" stop-color="#30454f"/><stop offset=".49" stop-color="#3e5560"/><stop offset=".51" stop-color="#21343d"/><stop offset="1" stop-color="#101e27"/></linearGradient>
+ <linearGradient id="bonnet" x2="0" y2="1"><stop stop-color="#f4d17d" stop-opacity=".25"/><stop offset="1" stop-color="#000" stop-opacity=".08"/></linearGradient>
+</defs>
+<!-- Tyres project beyond the body only at the axles. -->
+<g fill="#111618" stroke="#060b0d" stroke-width="1.5"><rect x="13" y="43" width="10" height="32" rx="3"/><rect x="97" y="43" width="10" height="32" rx="3"/><rect x="13" y="130" width="10" height="32" rx="3"/><rect x="97" y="130" width="10" height="32" rx="3"/></g>
+<path d="M34 9 Q60 3 86 9 Q99 13 102 37 L104 66 L103 154 Q101 185 89 194 Q60 199 31 194 Q19 185 17 154 L16 66 L18 37 Q21 13 34 9Z" fill="url(#paint)" stroke="#162329" stroke-width="2"/>
+<!-- Recessed grille, bumper, contoured hood and separate headlamp lenses. -->
+<path d="M31 13Q60 6 89 13L86 19Q60 15 34 19Z" fill="#1a2529"/>
+<path d="M41 12h38M43 15h34" stroke="#9faeac" stroke-width="1" opacity=".7"/>
+<path d="M28 20Q60 12 92 20L91 30Q60 24 29 30Z" fill="#c79737"/>
+<path d="M28 31Q60 23 92 31L87 64Q60 57 33 64Z" fill="url(#bonnet)" stroke="#806123" stroke-width=".8"/>
+<path d="M34 32 38 57M86 32 82 57" stroke="#f4d17d" opacity=".55"/>
+<g fill="#e4e9dc" stroke="#737f79"><path d="m24 20 15-3 1 8-16 5Z"/><path d="m96 20-15-3-1 8 16 5Z"/></g>
+<path d="m25 25 13-4m57 4-13-4" stroke="#fffdea" stroke-width="2"/>
+<path d="M21 33 20 40M99 33l1 7" stroke="#ce9136" stroke-width="2"/>
+<!-- Windshield, A pillars, roof, rear glass; all are distinct physical panels. -->
+<path d="M33 66Q60 58 87 66L94 96Q60 87 26 96Z" fill="url(#glass)" stroke="#131e22" stroke-width="2"/>
+<path d="M35 69Q60 62 85 69" fill="none" stroke="#9baeb0" opacity=".65"/>
+<path d="m30 92 26-3m9 0 24 3" stroke="#070e12" stroke-width="1.4"/>
+<path d="M34 98Q60 92 86 98L87 146Q60 140 33 146Z" fill="url(#paint)" stroke="#806123"/>
+<path d="M38 103 38 139M82 103v36" stroke="#f4d17d" opacity=".4" fill="none"/>
+
+<path d="M33 149Q60 143 87 149L92 175Q60 183 28 175Z" fill="url(#glass)" stroke="#172329" stroke-width="2"/>
+<g fill="none" stroke="#8b9e9e" stroke-width=".7" opacity=".5"><path d="M34 158h52M32 164h56M31 170h58"/></g>
+<!-- Side windows, B pillars, door seams and flush handles. -->
+<g fill="url(#glass)" stroke="#172329" stroke-width="1.2"><path d="m25 89 6 11-1 26-8-3Z"/><path d="m22 129 8 2 0 13-7 14Z"/><path d="m95 89-6 11 1 26 8-3Z"/><path d="m98 129-8 2 0 13 7 14Z"/></g>
+<path d="M19 86 18 124 20 155M101 86l1 38-2 31M18 127l5 2M102 127l-5 2" fill="none" stroke="#806123"/>
+<path d="M19 118v8M19 155v8M101 118v8M101 155v8" stroke="#f4d17d" stroke-width="2"/>
+<!-- Mirrors have dark undersides and painted caps. -->
+<g stroke="#182126"><path d="m20 82-13 4-1 8 15-2Z" fill="#c79737"/><path d="m100 82 13 4 1 8-15-2Z" fill="#c79737"/></g>
+<path d="m7 93 12-3m94 3-12-3" stroke="#090e11" stroke-width="2"/>
+<path d="M28 183Q60 188 92 183L88 188Q60 194 32 188Z" fill="url(#bonnet)" stroke="#806123"/>
+<path d="M28 183Q60 189 92 183" fill="none" stroke="#f4d17d" stroke-width="1.4"/>
+<g fill="#b9232f" stroke="#661b23"><path d="m23 180 18 3-1 6-16-3Z"/><path d="m97 180-18 3 1 6 16-3Z"/></g>
+<path d="m25 182 13 3m57-3-13 3" stroke="#f06661" stroke-width="2"/>
+<path d="M36 194Q60 198 84 194" fill="none" stroke="#182328" stroke-width="3"/>
+<rect x="48" y="187" width="24" height="5" rx="1" fill="#c1c9c0"/>
+<path d="M54 151h12" stroke="#a6222f" stroke-width="2"/>
+</svg>

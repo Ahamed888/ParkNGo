@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Notifications')}">
+    <title>Notifications — ParkNGo</title>
+</head>
+<body class="bg-mist text-asphalt min-h-screen flex flex-col font-sans antialiased">
+    <div class="flex flex-1 min-h-screen">
+        <!-- Unified Master Sidebar -->
+        <div th:replace="~{layout/app :: sidebar('CUSTOMER', 'notifications')}"></div>
+
+        <!-- Main Layout -->
+        <div class="flex-1 md:pl-64 flex flex-col min-w-0 min-h-screen">
+            <div th:replace="~{layout/app :: topbar('', 'CUSTOMER')}"></div>
+
+            <main class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div th:replace="~{ui/flash :: flash}"></div>
+
+                <!-- Page Title Bar -->
+                <div class="bg-white p-6 rounded-2xl border border-[#DDE3EA] shadow-1">
+                    <h1 class="text-2xl font-bold font-heading text-asphalt">Notifications &amp; Activity Inbox</h1>
+                    <p class="text-xs text-[#5A6A80] mt-0.5">Status updates on your parking reservations, payments, and account alerts.</p>
+                </div>
+
+                <!-- Empty State -->
+                <div th:if="${notifications.isEmpty()}" class="bg-white rounded-2xl border border-[#DDE3EA] p-8 shadow-1">
+                    <div th:replace="~{ui/empty :: state('fa-bell-slash', 'All caught up!', 'You have no unread notifications or account alerts at this time.', 'View my bookings', '/customer/reservations')}"></div>
+                </div>
+
+                <!-- Notifications List -->
+                <div th:if="${!notifications.isEmpty()}" class="space-y-3">
+                    <article th:each="n : ${notifications}" 
+                             th:class="'rounded-2xl p-5 border shadow-1 transition-all flex items-start justify-between gap-4 ' + 
+                                      (${n.isRead} ? 'bg-white border-[#DDE3EA]' : 'bg-info-50 border-info-600')">
+                        <div class="flex items-start gap-3.5">
+                            <div th:class="'w-10 h-10 rounded-full flex items-center justify-center text-base flex-shrink-0 ' + 
+                                          (${n.isRead} ? 'bg-[#F5F7FA] text-[#5A6A80]' : 'bg-info-600 text-white shadow-1')">
+                                <i class="fa-solid fa-bell"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-bold text-asphalt" th:text="${n.title}">Reservation Confirmed</h3>
+                                    <span th:if="${!n.isRead}" class="pill pill-info font-bold">New</span>
+                                </div>
+                                <p class="text-xs text-ink-700 mt-1 leading-relaxed" th:text="${n.message}">Your reservation for Space A01 has been confirmed.</p>
+                                <span class="text-[11px] text-[#5A6A80] block mt-1.5 tnum" th:text="${#temporals.format(n.createdAt, 'dd MMM yyyy @ HH:mm')}">20 Aug 2026, 14:30</span>
+                            </div>
+                        </div>
+
+                        <div th:if="${!n.isRead}">
+                            <form th:action="@{/customer/notification/{id}/read(id=${n.id})}" method="post">
+                                <button type="submit" class="btn btn-ghost btn-sm text-info-600">
+                                    Mark read
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

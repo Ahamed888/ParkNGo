@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Payment History')}">
+    <title>Payment History — ParkNGo</title>
+</head>
+<body class="bg-mist text-asphalt min-h-screen flex flex-col font-sans antialiased">
+    <div class="flex flex-1 min-h-screen">
+        <!-- Unified Master Sidebar -->
+        <div th:replace="~{layout/app :: sidebar('CUSTOMER', 'payments')}"></div>
+
+        <!-- Main Layout -->
+        <div class="flex-1 md:pl-64 flex flex-col min-w-0 min-h-screen">
+            <div th:replace="~{layout/app :: topbar('Payment History', 'CUSTOMER')}"></div>
+
+            <main class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div th:replace="~{ui/flash :: flash}"></div>
+
+                <!-- Page Title Bar -->
+                <div class="bg-white p-6 rounded-2xl border border-[#DDE3EA] shadow-1">
+                    <h1 class="text-2xl font-bold font-heading text-asphalt">Payment History &amp; Ledger</h1>
+                    <p class="text-xs text-[#5A6A80] mt-0.5">View your past transaction records, invoice receipts, and refund statuses.</p>
+                </div>
+
+                <!-- 3 KPI Metric Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="p-5 rounded-xl bg-white border border-[#DDE3EA] shadow-xs flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-widest text-[#5A6A80] block mb-1">Total Spent</span>
+                            <h3 class="text-2xl font-black text-asphalt font-num">
+                                LKR <span th:text="${#numbers.formatDecimal(totalSpent != null ? totalSpent : 0, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                            </h3>
+                            <p class="text-xs text-[#5A6A80] mt-1">Lifetime payment volume</p>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                    </div>
+
+                    <div class="p-5 rounded-xl bg-white border border-[#DDE3EA] shadow-xs flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-widest text-[#5A6A80] block mb-1">Total Transactions</span>
+                            <h3 class="text-2xl font-black text-asphalt font-num" th:text="${totalTransactions != null ? totalTransactions : (payments != null ? payments.size() : 0)}">0</h3>
+                            <p class="text-xs text-[#5A6A80] mt-1">Completed transactions</p>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-go-50 text-go-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                    </div>
+
+                    <div class="p-5 rounded-xl bg-white border border-[#DDE3EA] shadow-xs flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-widest text-[#5A6A80] block mb-1">Ledger Status</span>
+                            <h3 class="text-2xl font-black text-asphalt font-num">Verified</h3>
+                            <p class="text-xs text-[#5A6A80] mt-1">256-bit encrypted log</p>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaction Table Container -->
+                <div class="bg-white rounded-2xl border border-[#DDE3EA] shadow-1 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-[#EDF1F5] flex items-center justify-between">
+                        <h2 class="text-base font-bold font-heading text-asphalt">Transaction Records</h2>
+                        <span class="text-xs text-[#5A6A80] tnum" th:text="${(totalTransactions != null ? totalTransactions : (payments != null ? payments.size() : 0)) + ' Records'}">0 Records</span>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div th:if="${payments == null or payments.isEmpty()}" class="p-8">
+                        <div th:replace="~{ui/empty :: state('fa-receipt', 'No payment records found', 'You have no payment transaction history on file.', 'Reserve parking space', '/customer/reservation/create')}"></div>
+                    </div>
+
+                    <!-- Table -->
+                    <div th:if="${payments != null and !payments.isEmpty()}" class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-asphalt">
+                            <thead class="bg-[#F5F7FA] uppercase tracking-wider text-[#5A6A80] font-semibold">
+                                <tr>
+                                    <th class="px-6 py-3.5">Date &amp; Time</th>
+                                    <th class="px-6 py-3.5">Transaction Code</th>
+                                    <th class="px-6 py-3.5">Amount</th>
+                                    <th class="px-6 py-3.5">Method &amp; Details</th>
+                                    <th class="px-6 py-3.5">Status</th>
+                                    <th class="px-6 py-3.5 text-right">Pass</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#EDF1F5] font-medium">
+                                <tr th:each="p : ${payments}" class="hover:bg-[#F5F7FA]/60 transition-colors">
+                                    <td class="px-6 py-4 text-[#5A6A80] whitespace-nowrap tnum" th:text="${p.createdAt != null ? #temporals.format(p.createdAt, 'yyyy-MM-dd HH:mm') : '—'}">2026-08-31 12:00</td>
+                                    <td class="px-6 py-4 font-mono font-bold text-info-600 whitespace-nowrap" th:text="${p.transactionCode != null ? p.transactionCode : '—'}">TXN-PARK-89231A</td>
+                                    <td class="px-6 py-4 font-bold whitespace-nowrap text-sm">
+                                        <div th:replace="~{ui/money :: lkr(${p.amount != null ? p.amount : 0})}"></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <span class="pill pill-neutral font-bold uppercase" th:text="${p.cardBrand != null ? p.cardBrand : (p.paymentMethod != null ? p.paymentMethod : 'CARD')}">CARD</span>
+                                            <span class="font-mono text-[#5A6A80]" th:text="${p.maskedCardNumber != null ? p.maskedCardNumber : '•••• 4242'}">•••• 4242</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div th:replace="~{ui/status :: payment(${p.status})}"></div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right whitespace-nowrap">
+                                        <a th:if="${p.reservationId != null}" th:href="@{/customer/reservation/{id}(id=${p.reservationId})}" class="btn btn-ghost btn-sm text-info-600">
+                                            View pass &rarr;
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div th:if="${totalPages != null and totalPages > 1}" class="p-4 border-t border-[#EDF1F5]">
+                        <div th:replace="~{ui/pager :: pager(${currentPage}, ${totalPages}, '/customer/payments')}"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

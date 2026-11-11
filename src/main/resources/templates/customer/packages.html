@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Memberships')}"></head>
+<body class="bg-mist text-asphalt min-h-screen flex font-sans antialiased">
+<div th:replace="~{layout/app :: sidebar('CUSTOMER', 'packages')}"></div>
+<div class="flex-1 md:pl-64 min-w-0">
+  <div th:replace="~{layout/app :: topbar('', 'CUSTOMER')}"></div>
+  <main class="p-6 max-w-7xl mx-auto space-y-6">
+    <div th:replace="~{ui/flash :: flash}"></div>
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div><h1 class="text-2xl font-bold font-heading">Memberships</h1><p class="text-sm text-slate-500">Choose benefits that match where and how you park.</p></div>
+      <a th:href="@{/customer/subscriptions}" class="btn btn-secondary btn-md">My Memberships</a>
+    </div>
+    <div th:if="${#lists.isEmpty(packages)}" class="bg-white rounded-2xl border border-line-200 p-8">
+      <div th:replace="~{ui/empty :: state('fa-box-open', 'No packages available', 'Check back soon for available parking packages.', 'View my bookings', '/customer/reservations')}"></div>
+    </div>
+    <div th:if="${!#lists.isEmpty(packages)}" class="space-y-5">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+      <div id="packageFilters" class="flex flex-wrap gap-2" role="group" aria-label="Filter packages">
+        <button type="button" class="package-filter is-active" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" class="package-filter" data-filter="unlimited" aria-pressed="false">Unlimited Visits</button>
+        <button type="button" class="package-filter" data-filter="limited" aria-pressed="false">Limited Visits</button>
+        <button type="button" class="package-filter" data-filter="30" aria-pressed="false">30 Days</button>
+        <button type="button" class="package-filter" data-filter="90" aria-pressed="false">90 Days</button>
+      </div>
+      <label class="text-sm text-slate-600">Sort by <select id="packageSort" class="ml-2 rounded-lg border border-line-200 bg-white px-3 py-2 text-sm text-asphalt"><option value="default">Default</option><option value="price-asc">Price: Low to High</option><option value="price-desc">Price: High to Low</option><option value="validity-asc">Shortest Validity</option><option value="validity-desc">Longest Validity</option><option value="discount-desc">Highest Parking Discount</option></select></label>
+      </div>
+      <p id="packageFilterEmpty" class="hidden text-sm text-slate-500">No packages match this filter.</p>
+      <div id="packageGrid" class="package-grid">
+        <article th:each="pkg : ${packages}" class="package-card" th:attr="data-visits=${pkg.visitCount != null ? 'limited' : 'unlimited'},data-validity=${pkg.validityDays},data-price=${pkg.price},data-discount=${pkg.parkingDiscountPercentage}">
+          <div class="space-y-4">
+            <div class="flex justify-end"><span class="pill pill-go" th:text="${pkg.benefits.size() + ' membership benefits'}">Benefits</span></div>
+            <div><h2 class="text-xl font-bold font-heading leading-tight" th:text="${pkg.name}">Package</h2><p class="text-sm text-slate-500 mt-2 line-clamp-2" th:text="${pkg.description}">Description</p></div>
+            <div class="border-y border-line-200 py-3"><div class="text-2xl font-bold font-num"><span th:replace="~{ui/money :: lkr(${pkg.price})}"></span></div><p class="text-xs text-slate-500">Package price</p></div>
+            <div class="text-xs text-slate-600"><p class="font-semibold text-asphalt">Included benefits</p><ul class="list-disc pl-4 mt-1"><li th:each="benefit : ${pkg.benefits}" th:text="${benefit.displayDescription}">Benefit</li><li th:if="${pkg.benefits.isEmpty() and pkg.parkingDiscountPercentage > 0}" th:text="${pkg.parkingDiscountPercentage + '% off eligible parking'}">Discount</li></ul></div>
+            <dl class="grid grid-cols-2 gap-3 text-sm"><div><dt class="text-slate-500">Validity</dt><dd class="font-semibold" th:text="${pkg.validityDays + ' days'}">Days</dd></div><div><dt class="text-slate-500">Complexes</dt><dd class="font-semibold" th:text="${pkg.allFacilities ? 'All active' : pkg.facilities.size()} ">Complexes</dd></div></dl>
+            <div class="text-xs text-slate-600"><p class="font-semibold text-asphalt">Applicable parking complexes</p><p th:if="${pkg.allFacilities}">All parking complexes</p><p th:unless="${pkg.allFacilities}" th:text="${#strings.listJoin(pkg.facilities.![name], ', ')}">Complexes</p></div>
+            <div class="text-xs text-slate-600" th:if="${!pkg.includedServiceItems.isEmpty()}"><p class="font-semibold text-asphalt">Included services</p><p th:text="${#strings.listJoin(pkg.includedServiceItems.![name], ', ')}">Services</p></div>
+          </div>
+          <a th:href="@{/customer/package/{id}(id=${pkg.id})}" class="btn btn-secondary btn-block btn-md mt-5">Join Membership</a>
+        </article>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+(() => {
+  const buttons = document.querySelectorAll('#packageFilters button');
+  const cards = document.querySelectorAll('#packageGrid .package-card');
+  const empty = document.getElementById('packageFilterEmpty');
+  const grid = document.getElementById('packageGrid');
+  const sort = document.getElementById('packageSort');
+  const originalOrder = new Map(Array.from(cards, (card, index) => [card, index]));
+  let filter = 'all';
+  function refresh() {
+    let shown = 0;
+    cards.forEach(card => {
+      const days = Number(card.dataset.validity);
+      const visible = filter === 'all' || card.dataset.visits === filter || ((filter === '30' || filter === '90') && days === Number(filter));
+      card.hidden = !visible;
+      if (visible) shown++;
+    });
+    empty.classList.toggle('hidden', shown !== 0);
+    const comparisons = {
+      'price-asc': (a, b) => Number(a.dataset.price) - Number(b.dataset.price),
+      'price-desc': (a, b) => Number(b.dataset.price) - Number(a.dataset.price),
+      'validity-asc': (a, b) => Number(a.dataset.validity) - Number(b.dataset.validity),
+      'validity-desc': (a, b) => Number(b.dataset.validity) - Number(a.dataset.validity),
+      'discount-desc': (a, b) => Number(b.dataset.discount) - Number(a.dataset.discount)
+    };
+    Array.from(cards).sort((a, b) => (comparisons[sort.value]?.(a, b) ?? 0) || originalOrder.get(a) - originalOrder.get(b)).forEach(card => grid.appendChild(card));
+  }
+  buttons.forEach(button => button.addEventListener('click', () => {
+    filter = button.dataset.filter;
+    buttons.forEach(item => { const active = item === button; item.classList.toggle('is-active', active); item.setAttribute('aria-pressed', String(active)); });
+    refresh();
+  }));
+  sort.addEventListener('change', refresh);
+})();
+</script>
+</body>
+</html>

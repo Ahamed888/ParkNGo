@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Payment Checkout')}">
+    <title>Payment Checkout &mdash; ParkNGo</title>
+</head>
+<body class="bg-mist text-asphalt min-h-screen flex flex-col font-sans antialiased">
+    <div class="flex flex-1 min-h-screen">
+        <!-- Unified Master Sidebar -->
+        <div th:replace="~{layout/app :: sidebar('CUSTOMER', 'reservations')}"></div>
+
+        <!-- Main Layout -->
+        <div class="flex-1 md:pl-64 flex flex-col min-w-0 min-h-screen">
+            <div th:replace="~{layout/app :: topbar('', 'CUSTOMER')}"></div>
+
+            <main class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div th:replace="~{ui/flash :: flash}"></div>
+
+                <!-- Page Header -->
+        <div class="mb-6">
+            <a href="/customer/reservations" class="text-xs font-semibold text-caution-700 hover:underline mb-1 inline-flex items-center gap-1">
+                <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                <span>Back to My Bookings</span>
+            </a>
+            <h1 class="text-2xl font-bold font-heading text-asphalt">Complete Your Payment</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Select your payment method below to guarantee your reserved parking space.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left: Order Summary (5 Cols) -->
+            <div class="lg:col-span-5 space-y-4">
+                <div class="bg-white p-6 rounded-2xl border border-line-200 shadow-1 space-y-4">
+                    <div class="flex items-center justify-between border-b border-line-100 pb-3">
+                        <h2 class="text-base font-bold font-heading text-asphalt flex items-center gap-2">
+                            <i class="fa-solid fa-receipt text-caution-700"></i>
+                            <span>Price Summary</span>
+                        </h2>
+                        <span class="pill pill-info">Order Overview</span>
+                    </div>
+
+                    <!-- Facility & Space Details -->
+                    <div class="bg-mist p-4 rounded-[10px] border border-line-100 space-y-2 text-xs text-slate-500">
+                        <div class="flex justify-between">
+                            <span>Parking Facility:</span>
+                            <span class="font-bold text-asphalt" th:text="${facilityName}">Downtown Parking Complex</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Allocated Space:</span>
+                            <span class="font-bold text-caution-700 font-num" th:text="${spaceNumber}">Space L1S01</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Estimated Duration:</span>
+                            <span class="font-semibold text-asphalt" th:text="${duration}">2.0 hrs</span>
+                        </div>
+                    </div>
+
+                    <!-- Numerical Breakdown -->
+                    <div class="space-y-2.5 text-xs text-ink-700">
+                        <div class="flex justify-between">
+                            <span>Base Parking Charge:</span>
+                            <span id="baseAmountDisplay" class="font-bold text-asphalt tnum" th:text="${'LKR ' + #numbers.formatDecimal(amount != null ? amount : 500.00, 1, 'COMMA', 2, 'POINT')}">LKR 500.00</span>
+                        </div>
+                        <div class="flex justify-between text-go-600">
+                            <span>Service &amp; Booking Fee:</span>
+                            <span class="font-bold">FREE (LKR 0.00)</span>
+                        </div>
+                        <div id="discountRow" class="flex justify-between text-go-600 hidden">
+                            <span id="discountLabel">Applied Discount:</span>
+                            <span id="discountValue" class="font-bold">-LKR 0.00</span>
+                        </div>
+
+                        <div class="border-t border-line-100 pt-3 flex items-baseline justify-between text-sm font-bold text-asphalt">
+                            <span>Total Payable:</span>
+                            <span id="displayTotal" class="text-2xl font-bold font-num text-caution-700 tnum" th:text="${'LKR ' + #numbers.formatDecimal(amount != null ? amount : 500.00, 1, 'COMMA', 2, 'POINT')}">LKR 500.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Guarantees Notice -->
+                    <div class="pt-3 border-t border-line-100 flex items-center justify-between text-xs text-slate-500">
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-shield-halved text-go-600"></i>
+                            <span>Free cancellation until start</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-clock text-caution-700"></i>
+                            <span>15-min early entry window</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Payment Method Selector (7 Cols) -->
+            <div class="lg:col-span-7">
+                <div class="bg-white p-6 rounded-2xl border border-line-200 shadow-1 space-y-6">
+                    <h2 class="text-base font-bold font-heading text-asphalt">Choose Payment Method</h2>
+
+                    <!-- Method Selection Segmented Tabs -->
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" onclick="selectPaymentTab('CARD')" id="tabBtnCARD"
+                                class="method-tab active p-3 rounded-[10px] border-2 border-info-600 bg-primary/10 text-caution-700 text-xs font-bold transition-all text-center flex flex-col items-center gap-1">
+                            <i class="fa-solid fa-credit-card text-base"></i>
+                            <span>Card</span>
+                        </button>
+
+                        <button type="button" onclick="selectPaymentTab('COUPON')" id="tabBtnCOUPON"
+                                class="method-tab p-3 rounded-[10px] border border-line-200 bg-white text-ink-700 text-xs font-bold transition-all text-center flex flex-col items-center gap-1 hover:border-info-600">
+                            <i class="fa-solid fa-tags text-base text-caution-700"></i>
+                            <span>Discount Code</span>
+                        </button>
+
+                        <button type="button" onclick="selectPaymentTab('CASH')" id="tabBtnCASH"
+                                class="method-tab p-3 rounded-[10px] border border-line-200 bg-white text-ink-700 text-xs font-bold transition-all text-center flex flex-col items-center gap-1 hover:border-info-600">
+                            <i class="fa-solid fa-money-bill-wave text-base text-go-600"></i>
+                            <span>Pay at Gate</span>
+                        </button>
+                    </div>
+
+                    <!-- 1. CARD FORM -->
+                    <div id="sectionCARD" class="method-section space-y-4">
+                        <form th:action="@{/payment/process}" method="post" class="space-y-4">
+                            <input type="hidden" name="reservationId" th:value="${reservationId}" />
+                            <input type="hidden" id="cardAmountInput" name="amount" th:value="${amount != null ? amount : 500.00}" />
+                            <input type="hidden" name="paymentMethod" value="CREDIT_CARD" />
+
+                            <div class="field">
+                                <label class="label label-required">Cardholder Name</label>
+                                <input type="text" id="paymentCardholderName" name="cardholderName" placeholder="e.g. A.B. Perera" required minlength="2" maxlength="50" autocomplete="cc-name"
+                                       title="Enter the name shown on the card."
+                                       class="input">
+                                <p th:if="${paymentFieldErrors != null and paymentFieldErrors.containsKey('cardholderName')}" class="field-error" th:text="${paymentFieldErrors.get('cardholderName')}"></p>
+                            </div>
+
+                            <div class="field">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="label label-required">Card Number</label>
+                                    <span id="cardBrandBadge" class="pill pill-neutral">Card</span>
+                                </div>
+                                <div class="relative">
+                                    <input type="text" id="cardNumberInput" name="cardNumber" placeholder="4242 4242 4242 4242" required inputmode="numeric" autocomplete="cc-number" data-card-number="true" data-card-max-digits="16"
+                                           oninput="handleCardInput(this)" minlength="13" maxlength="19"
+                                           class="input font-mono">
+                                    <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500" id="cardIcon">
+                                        <i class="fa-solid fa-credit-card"></i>
+                                    </div>
+                                </div>
+                                <div id="cardValidationHint" class="text-xs mt-1 hidden"></div>
+                                <p th:if="${paymentFieldErrors != null and paymentFieldErrors.containsKey('cardNumber')}" class="field-error" th:text="${paymentFieldErrors.get('cardNumber')}"></p>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="field">
+                                    <label class="label label-required">Expiry Date</label>
+                                    <input type="text" id="paymentExpiryDate" name="expiryDate" placeholder="MM/YY" maxlength="5" required inputmode="numeric" autocomplete="cc-exp" data-expiry="true"
+                                           pattern="^(0[1-9]|1[0-2])\/([0-9]{2})$" title="Enter a valid future expiry date in MM/YY format."
+                                           class="input text-center font-mono">
+                                    <p th:if="${paymentFieldErrors != null and paymentFieldErrors.containsKey('expiryDate')}" class="field-error" th:text="${paymentFieldErrors.get('expiryDate')}"></p>
+                                </div>
+                                <div class="field">
+                                    <label class="label label-required">CVC / CVV</label>
+                                    <input type="password" id="paymentCvc" name="cvc" placeholder="CVC" minlength="3" maxlength="4" pattern="[0-9]{3,4}" required inputmode="numeric" autocomplete="cc-csc" data-digits-only="true"
+                                           title="3 or 4 digit security code"
+                                           class="input text-center font-mono">
+                                    <p th:if="${paymentFieldErrors != null and paymentFieldErrors.containsKey('cvc')}" class="field-error" th:text="${paymentFieldErrors.get('cvc')}"></p>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="cardSubmitBtn" class="btn btn-primary btn-block btn-lg gap-2 mt-4">
+                                <i class="fa-solid fa-lock text-xs"></i>
+                                <span th:text="${'Pay Now LKR ' + #numbers.formatDecimal(amount != null ? amount : 500.00, 1, 'COMMA', 2, 'POINT')}">Pay Now LKR 500.00</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- 2. COUPON SECTION -->
+                    <div id="sectionCOUPON" class="method-section hidden space-y-4">
+                        <div class="callout callout-caution text-xs space-y-1">
+                            <span class="font-bold block text-caution-700">Apply Discount Code</span>
+                            <p>Enter your discount code below and click <strong>Apply</strong> to calculate your final discount.</p>
+                        </div>
+
+                        <div class="field space-y-2">
+                            <label class="label">Discount Code</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="couponCodeInput" maxlength="50" pattern="[A-Za-z0-9_-]+" data-uppercase="true" placeholder="e.g. EARLYBIRD, WEEKEND25"
+                                       class="input uppercase font-mono font-bold flex-1">
+                                <button type="button" onclick="applyCouponCode()" class="btn btn-secondary btn-md gap-1">
+                                    <i class="fa-solid fa-tag text-xs"></i>
+                                    <span>Apply</span>
+                                </button>
+                            </div>
+                            <div id="couponFeedback" class="text-xs font-semibold mt-1 hidden"></div>
+                        </div>
+
+                        <div class="pt-3 border-t border-line-100">
+                            <form th:action="@{/payment/process}" method="post" class="space-y-4">
+                                <input type="hidden" name="reservationId" th:value="${reservationId}" />
+                                <input type="hidden" name="paymentMethod" value="COUPON" />
+                                <input type="hidden" id="couponAppliedCode" name="cardNumber" value="" />
+                                <input type="hidden" id="couponFinalAmount" name="amount" th:value="${amount != null ? amount : 500.00}" />
+
+                                <button type="submit" id="couponSubmitBtn" class="btn btn-primary btn-block btn-lg gap-2">
+                                    <i class="fa-solid fa-circle-check text-xs"></i>
+                                    <span id="couponSubmitText">Confirm booking with discount</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- 3. CASH AT ENTRY SECTION -->
+                    <div id="sectionCASH" class="method-section hidden space-y-4">
+                        <div class="callout callout-go space-y-2">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-full bg-go-600 text-white flex items-center justify-center text-sm flex-shrink-0">
+                                    <i class="fa-solid fa-money-bill-wave"></i>
+                                </div>
+                                <h3 class="font-bold text-sm text-[#047857]">Pay Cash to Attendant at Gate Entry</h3>
+                            </div>
+                            <ul class="space-y-1 text-xs text-[#047857] pl-1">
+                                <li>Parking bay is immediately reserved and guaranteed.</li>
+                                <li>Show your vehicle plate or booking pass at the entrance barrier.</li>
+                                <li>Pay cash directly to the gate attendant upon arrival.</li>
+                            </ul>
+                        </div>
+
+                        <form th:action="@{/payment/process}" method="post">
+                            <input type="hidden" name="reservationId" th:value="${reservationId}" />
+                            <input type="hidden" name="paymentMethod" value="CASH_ON_ENTRY" />
+                            <input type="hidden" id="cashAmountInput" name="amount" th:value="${amount != null ? amount : 500.00}" />
+
+                            <button type="submit" class="btn btn-primary btn-block btn-lg gap-2">
+                                <i class="fa-solid fa-hand-holding-dollar text-xs"></i>
+                                <span>Confirm reservation (Pay Cash at Gate)</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

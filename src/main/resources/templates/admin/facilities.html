@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head('Parking Complexes - ParkNGo Admin')}"></head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex">
+
+    <!-- Console Sidebar -->
+    <aside th:replace="~{layout/app :: sidebar('ADMIN', 'facilities')}"></aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen bg-mist">
+        
+        <!-- Console Topbar -->
+        <header th:replace="~{layout/app :: topbar('Parking Complexes Network', 'ADMIN')}"></header>
+
+        <!-- Main Body -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+            
+            <!-- Flash Alerts -->
+            <div th:replace="~{ui/flash :: alerts}"></div>
+
+            <!-- Newly-created facility staff credentials (shown once after creation) -->
+            <section th:if="${staffLoginEmail != null and staffLoginPassword != null}"
+                     class="rounded-xl border border-go-200 bg-white shadow-1 overflow-hidden"
+                     aria-labelledby="staffCredentialsHeading">
+                <div class="flex items-start gap-3 border-b border-go-100 bg-go-50 px-5 py-4">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-go-100 text-go-700">
+                        <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h3 id="staffCredentialsHeading" class="font-heading text-base font-black text-asphalt">
+                            Staff login created
+                        </h3>
+                        <p class="mt-1 text-sm text-slate-600">
+                            Assigned to <strong th:text="${createdFacilityName}">Parking complex</strong>. Save these credentials and provide them to the relevant staff member.
+                        </p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
+                    <div class="rounded-lg border border-line-200 bg-slate-50 p-4">
+                        <span class="block text-[11px] font-bold uppercase tracking-widest text-slate-500">Staff email</span>
+                        <code class="mt-2 block break-all text-sm font-bold text-asphalt" th:text="${staffLoginEmail}">facility1@staff.parkngo.local</code>
+                    </div>
+                    <div class="rounded-lg border border-line-200 bg-slate-50 p-4">
+                        <span class="block text-[11px] font-bold uppercase tracking-widest text-slate-500">Temporary password</span>
+                        <code class="mt-2 block break-all text-sm font-bold text-asphalt" th:text="${staffLoginPassword}">ParkNGo@Staff1</code>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-3 border-t border-line-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p class="text-xs text-slate-500">This information is shown only after creation. The staff account can access only its assigned complex.</p>
+                    <a th:href="@{/login}" target="_blank" rel="noopener"
+                       class="inline-flex items-center justify-center gap-2 rounded-lg bg-asphalt px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-800">
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        Open staff login
+                    </a>
+                </div>
+            </section>
+
+            <!-- Page Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-line-200">
+                <div>
+                    <h2 class="text-2xl font-black text-asphalt font-heading tracking-tight">Parking Complexes</h2>
+                    <p class="text-sm text-slate-500 mt-1">Configure multi-story garages, operating schedules, capacity thresholds, and live facility metrics.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="/admin/services" class="px-4 py-2 rounded-lg text-sm font-bold bg-white border border-line-200 hover:bg-slate-50 text-asphalt transition shadow-xs flex items-center gap-2">
+                        <i class="fa-solid fa-wrench text-teal-600"></i>
+                        <span>Manage Services</span>
+                    </a>
+                    <a href="/admin/facility/add" class="px-4 py-2 rounded-lg text-sm font-bold bg-primary hover:bg-primary-hover text-asphalt transition shadow-xs flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Add New Complex</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Metric KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <div class="p-5 rounded-xl bg-white border border-line-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-1">Total Facilities</span>
+                        <h3 class="text-3xl font-black text-asphalt font-num flex items-baseline gap-1">
+                            <span th:text="${activeFacilities}">0</span>
+                            <span class="text-slate-400 text-lg font-medium"> / <span th:text="${totalFacilities}">0</span></span>
+                        </h3>
+                        <span class="text-xs text-indigo-600 font-bold mt-1 inline-block">Active / Total Locations</span>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-building-circle-check"></i>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-xl bg-white border border-line-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-1">Total Capacity</span>
+                        <h3 class="text-3xl font-black text-asphalt font-num" th:text="${#numbers.formatInteger(totalBays, 1, 'COMMA')}">0</h3>
+                        <span class="text-xs text-info-600 font-bold mt-1 inline-block">Network Spaces</span>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-info-50 text-info-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-square-parking"></i>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-xl bg-white border border-line-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-1">Occupied Spaces</span>
+                        <h3 class="text-3xl font-black text-asphalt font-num" th:text="${#numbers.formatInteger(totalOccupancy, 1, 'COMMA')}">0</h3>
+                        <span class="text-xs text-stop-600 font-bold mt-1 inline-block">Live Parked Vehicles</span>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-stop-50 text-stop-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-car-side"></i>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-xl bg-white border border-line-200 shadow-xs flex items-center justify-between relative overflow-hidden">
+                    <!-- Accent bar for occupancy -->
+                    <div class="absolute bottom-0 left-0 h-1 bg-go-500 transition-all" th:style="'width: ' + ${avgOccupancyPercent} + '%'" th:classappend="${avgOccupancyPercent > 90 ? 'bg-stop-500' : (avgOccupancyPercent > 75 ? 'bg-caution-500' : 'bg-go-500')}"></div>
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-1">Avg Occupancy Rate</span>
+                        <h3 class="text-3xl font-black text-asphalt font-num" th:text="${avgOccupancyPercent + '%'}">0%</h3>
+                        <span class="text-xs text-go-600 font-bold mt-1 inline-block">System Load</span>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-go-50 text-go-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="p-4 rounded-xl bg-white border border-line-200 shadow-xs">
+                <form th:action="@{/admin/facilities}" method="get" class="flex flex-col sm:flex-row items-center gap-3">
+                    <div class="relative flex-1 w-full">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" name="keyword" th:value="${keyword}" placeholder="Search complex by name or location address..."
+                               class="w-full pl-9 pr-4 py-2.5 rounded-lg bg-slate-50 border border-line-200 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-asphalt hover:bg-slate-800 text-white font-bold text-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-filter"></i>
+                            <span>Search</span>
+                        </button>
+                        <a th:if="${keyword != null and !keyword.isEmpty()}" th:href="@{/admin/facilities}" class="px-5 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold transition">
+                            Clear
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Facilities Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" th:if="${!#lists.isEmpty(facilities)}">
+                <article th:each="facility : ${facilities}" 
+                         class="p-5 rounded-xl bg-white border transition flex flex-col justify-between shadow-xs hover:shadow-md"
+                         th:classappend="${facility.isActive() ? 'border-line-200' : 'border-stop-200 bg-stop-50'}">
+                    <div>
+                        <!-- Card Top Header -->
+                        <div class="flex items-start justify-between gap-3 mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-lg flex items-center justify-center text-xl shrink-0"
+                                     th:classappend="${facility.isActive() ? 'bg-asphalt text-white' : 'bg-stop-100 text-stop-700'}">
+                                    <i class="fa-solid fa-building"></i>
+                                </div>
+                                <div>
+                                    <a th:href="@{/admin/facilities/{id}(id=${facility.id})}" 
+                                       class="text-base font-black text-asphalt hover:text-info-600 transition line-clamp-1 flex items-center gap-1.5 font-heading">
+                                        <span th:text="${facility.name}">Downtown Complex</span>
+                                    </a>
+                                    <a th:href="'tel:' + ${facility.contactNumber}" class="text-xs font-medium text-slate-500 hover:text-asphalt transition flex items-center gap-1 mt-0.5">
+                                        <i class="fa-solid fa-phone text-[10px]"></i>
+                                        <span th:text="${facility.contactNumber}">+94112345678</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end gap-1.5">
+                                <!-- Active/Inactive Badge -->
+                                <span th:if="${facility.isActive()}" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-go-100 text-emerald-700 border border-go-200">
+                                    Active
+                                </span>
+                                <span th:unless="${facility.isActive()}" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-stop-100 text-stop-700 border border-stop-200">
+                                    Inactive
+                                </span>
+                                <!-- Open/Closed Badge -->
+                                <span th:if="${facility.isOpenNow()}" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-sky-100 text-sky-700 border border-sky-200">
+                                    Open
+                                </span>
+                                <span th:unless="${facility.isOpenNow()}" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-100 text-slate-500 border border-line-200">
+                                    Closed
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Address & Hours -->
+                        <div class="space-y-2 mb-5">
+                            <p class="text-xs font-medium text-slate-600 flex items-center gap-2 bg-slate-50 p-3 rounded-lg border border-line-100">
+                                <i class="fa-solid fa-location-dot text-slate-400 shrink-0"></i>
+                                <span class="line-clamp-1" th:text="${facility.address}">123 Main St, Colombo</span>
+                            </p>
+                            <p class="text-xs font-medium text-slate-600 flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-line-100">
+                                <span class="flex items-center gap-1.5 text-slate-500">
+                                    <i class="fa-regular fa-clock text-slate-400"></i>
+                                    <span>Operating Hours:</span>
+                                </span>
+                                <span class="font-bold text-asphalt" th:text="${facility.getOperatingHoursFormatted()}">06:00 - 23:00</span>
+                            </p>
+                            <p class="text-xs font-medium text-slate-600 flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-line-100">
+                                <span class="flex items-center gap-1.5 text-slate-500">
+                                    <i class="fa-solid fa-layer-group text-slate-400"></i>
+                                    <span>Floor Levels:</span>
+                                </span>
+                                <span class="font-bold text-asphalt" th:text="${facility.totalFloors + ' Level' + (facility.totalFloors > 1 ? 's' : '')}">1 Level</span>
+                            </p>
+                        </div>
+
+                        <!-- Description -->
+                        <p th:if="${facility.description != null and !facility.description.isEmpty()}" 
+                           class="text-xs text-slate-500 mb-5 line-clamp-2 italic" 
+                           th:text="${facility.description}">
+                            Multi-level parking complex.
+                        </p>
+
+                        <!-- Capacity & Occupancy Meter -->
+                        <div class="bg-white p-4 rounded-xl border border-line-200 text-xs mb-5 space-y-3 shadow-1">
+                            <div class="flex items-center justify-between text-slate-500 font-medium">
+                                <span>Capacity: <strong class="text-asphalt" th:text="${facility.totalCapacity + ' Spaces'}">100 Spaces</strong></span>
+                                <span>Configured: <strong class="text-info-600" th:text="${(spacesCountMap.get(facility.id) != null ? spacesCountMap.get(facility.id) : 0) + ' Slots'}">100 Slots</strong></span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                <div class="h-2.5 rounded-full transition-all"
+                                     th:classappend="${facility.getOccupancyPercentage() > 90 ? 'bg-stop-500' : (facility.getOccupancyPercentage() > 75 ? 'bg-caution-500' : 'bg-info-600')}"
+                                     th:style="'width: ' + ${facility.getOccupancyPercentage()} + '%'"></div>
+                            </div>
+                            <div class="flex items-center justify-between text-[11px] font-bold">
+                                <span class="text-slate-600" th:text="${facility.currentOccupancy + ' Occupied'}">20 Occupied</span>
+                                <span th:class="${facility.getOccupancyPercentage() > 90 ? 'text-stop-600' : (facility.getOccupancyPercentage() > 75 ? 'text-caution-600' : 'text-info-600')}" 
+                                      th:text="${facility.getOccupancyPercentage() + '% Filled'}">20% Filled</span>
+                            </div>
+                        </div>
+
+                        <!-- On-site Services / Amenities List -->
+                        <div class="mb-5">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Available Amenities</span>
+                                <a th:href="@{/admin/service/add(facilityId=${facility.id})}" class="text-[10px] font-bold text-info-600 hover:underline flex items-center gap-1">
+                                    <i class="fa-solid fa-plus"></i> Add
+                                </a>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span th:if="${servicesMap.get(facility.id) != null and servicesMap.get(facility.id).isEmpty()}" class="text-xs text-slate-400 italic">No amenities listed</span>
+                                <span th:each="svc : ${servicesMap.get(facility.id)}" 
+                                      class="px-2 py-1 bg-slate-100 text-slate-600 border border-line-200 rounded text-[10px] font-bold flex items-center gap-1">
+                                    <i class="fa-solid fa-check text-go-500"></i>
+                                    <span th:text="${svc.name}">Wash</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Actions -->
+                    <div class="pt-4 border-t border-line-100 flex items-center gap-2">
+                        <a th:href="@{/admin/facilities/{id}(id=${facility.id})}" class="flex-1 text-center py-2 bg-slate-100 hover:bg-slate-200 text-asphalt rounded-lg text-xs font-bold transition">
+                            View Details
+                        </a>
+                        <a th:href="@{/admin/facilities/edit/{id}(id=${facility.id})}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition" title="Edit Facility">
+                            <i class="fa-solid fa-pen"></i>
+                        </a>
+                        <form th:action="@{/admin/facilities/{id}/toggle-status(id=${facility.id})}" method="post" class="inline">
+                            <button type="submit" 
+                                    th:class="${facility.isActive() ? 'px-3 py-2 bg-stop-50 hover:bg-stop-100 text-stop-700 border border-stop-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5' : 'px-3 py-2 bg-go-50 hover:bg-go-100 text-go-700 border border-go-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5'}"
+                                    th:title="${facility.isActive() ? 'Deactivate complex' : 'Activate complex'}">
+                                <i th:class="${facility.isActive() ? 'fa-solid fa-power-off text-stop-600' : 'fa-solid fa-check text-go-600'}"></i>
+                                <span th:text="${facility.isActive() ? 'Deactivate' : 'Activate'}">Toggle</span>
+                            </button>
+                        </form>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${#lists.isEmpty(facilities)}" class="p-12 rounded-xl bg-white border border-line-200 border-dashed text-center">
+                <div class="w-16 h-16 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center text-3xl mx-auto mb-4">
+                    <i class="fa-solid fa-building-circle-xmark"></i>
+                </div>
+                <h3 class="text-base font-bold text-asphalt font-heading mb-1">No Parking Complexes Found</h3>
+                <p class="text-sm text-slate-500 mb-6 max-w-md mx-auto">There are no facilities matching your current search criteria or the network is empty.</p>
+                <a href="/admin/facility/add" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-asphalt text-white font-bold text-sm hover:bg-slate-800 transition shadow-xs">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Register Complex</span>
+                </a>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>

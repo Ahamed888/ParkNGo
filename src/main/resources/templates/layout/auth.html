@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- AUTHENTICATION BRANDING PANEL (Left side on desktop split view) -->
+    <div th:fragment="brandPanel" class="hidden lg:flex lg:w-5/12 bg-asphalt p-12 flex-col justify-between relative overflow-hidden text-white border-r border-line-200">
+        
+        <!-- Parking Specific Visual Decor (Floor/Zone Indicators) -->
+        <div class="absolute right-0 top-0 bottom-0 w-64 pointer-events-none opacity-20">
+            <!-- Bay Grid lines -->
+            <div class="absolute inset-0" style="background-image: repeating-linear-gradient(180deg, transparent, transparent 40px, #F5B800 40px, #F5B800 42px); transform: skewY(-20deg) scale(1.5); right: -50px; width: 200px;"></div>
+            <div class="absolute inset-0" style="background-image: repeating-linear-gradient(180deg, transparent, transparent 40px, #F5B800 40px, #F5B800 42px); transform: skewY(-20deg) scale(1.5); right: 100px; width: 200px;"></div>
+        </div>
+        
+        <div class="absolute -right-6 -bottom-10 text-[160px] font-extrabold text-[#1C2830] font-num select-none pointer-events-none leading-none">
+            A01
+        </div>
+        <div class="absolute right-12 top-24 opacity-30 select-none pointer-events-none">
+            <div class="text-[80px] font-extrabold text-primary font-num leading-none">LEVEL 3</div>
+            <div class="text-3xl font-bold tracking-[0.2em] text-slate-500 uppercase ml-2">Premium Zone</div>
+        </div>
+
+        <!-- Top Brand Mark -->
+        <div class="relative z-10">
+            <a href="/" class="flex items-center space-x-3 group">
+                <span th:replace="~{ui/brand :: mark('w-10 h-10 shrink-0')}"></span>
+                <div class="flex flex-col">
+                    <span class="text-xl font-bold tracking-tight font-heading text-white">
+                        Park<span class="parkngo-brand-n">N</span>Go
+                    </span>
+                    <span class="text-[10px] tracking-wider text-slate-400 uppercase font-medium">
+                        Enterprise Operations
+                    </span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Center Content & Promises -->
+        <div class="relative z-10 my-auto py-8 space-y-6">
+            <div class="space-y-2">
+                <span class="inline-block px-2 py-1 rounded bg-asphalt-800 border border-[#2A3B4C] text-[10px] uppercase tracking-widest font-bold text-primary font-num mb-2">
+                    Commercial Network
+                </span>
+                <h2 class="text-3xl font-extrabold text-white tracking-tight font-heading leading-snug">
+                    Secure your bay.
+                </h2>
+                <p class="text-slate-400 text-sm leading-relaxed max-w-md">
+                    Sri Lanka's automated parking management platform for large multi-level commercial complexes.
+                </p>
+            </div>
+
+            <!-- Authentic Promises - Parking Visuals -->
+            <div class="space-y-5 pt-6 border-t border-line-200">
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-asphalt-800 border border-slate-700/50 text-primary flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-square-parking text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-white uppercase tracking-wider mb-0.5">Automated Bay Allocation</div>
+                        <div class="text-[11px] text-slate-400 leading-relaxed">Real-time capacity tracking ensures guaranteed bay availability upon your arrival.</div>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-asphalt-800 border border-slate-700/50 text-go-400 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-car-on text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-white uppercase tracking-wider mb-0.5">Vehicle Profiling</div>
+                        <div class="text-[11px] text-slate-400 leading-relaxed">License plate recognition and active queue management for seamless entry/exit.</div>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-asphalt-800 border border-slate-700/50 text-info-400 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-building-shield text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-white uppercase tracking-wider mb-0.5">Multi-Facility Access</div>
+                        <div class="text-[11px] text-slate-400 leading-relaxed">Unified access across Colombo Central, Kandy City Center and Galle Fort complexes.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Network Status -->
+        <div class="relative z-10 pt-4 border-t border-line-200 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+            <div class="flex items-center gap-2 px-2 py-1 bg-asphalt-800 rounded border border-[#2A3B4C]">
+                <span class="w-1.5 h-1.5 rounded-full bg-go-500 animate-pulse"></span>
+                <span class="text-white">Active Grid</span>
+            </div>
+            <div class="flex gap-3">
+                <span class="flex items-center gap-1"><i class="fa-solid fa-check text-go-500"></i> CMB</span>
+                <span class="flex items-center gap-1"><i class="fa-solid fa-check text-go-500"></i> KDY</span>
+                <span class="flex items-center gap-1"><i class="fa-solid fa-check text-go-500"></i> GAL</span>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

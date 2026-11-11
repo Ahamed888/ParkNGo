@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Membership Details')}"></head>
+<body class="bg-mist text-asphalt min-h-screen flex font-sans antialiased">
+<div th:replace="~{layout/app :: sidebar('CUSTOMER', 'packages')}"></div>
+<div class="flex-1 md:pl-64 min-w-0">
+  <div th:replace="~{layout/app :: topbar('', 'CUSTOMER')}"></div>
+  <main class="p-6 max-w-4xl mx-auto space-y-5">
+    <a th:href="@{/customer/packages}" class="text-sm font-semibold text-info-600">← All memberships</a>
+    <div class="bg-white rounded-2xl border border-line-200 shadow-1 p-6 sm:p-8 space-y-6">
+      <div><h1 class="text-3xl font-bold font-heading" th:text="${package.name}">Package</h1><p class="text-sm text-slate-600 mt-3 whitespace-pre-line" th:text="${package.description}">Description</p></div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 border-y border-line-200 py-5 text-sm">
+        <div><p class="text-slate-500">Membership price</p><div class="font-bold font-num text-lg" th:replace="~{ui/money :: lkr(${package.price})}"></div></div>
+        <div><p class="text-slate-500">Validity</p><p class="font-bold" th:text="${package.validityDays + ' days'}">Days</p></div>
+        <div><p class="text-slate-500">Parking discount</p><p class="font-bold" th:text="${package.parkingDiscountPercentage + '%'}">Discount</p></div>
+        <div><p class="text-slate-500">Visits</p><p class="font-bold" th:text="${package.visitCount != null ? package.visitCount : 'Unlimited'}">Unlimited</p></div>
+      </div>
+      <div><h2 class="font-bold">Applicable parking complexes</h2><p th:if="${package.allFacilities}" class="text-sm text-slate-600 mt-1">All parking complexes</p><ul th:unless="${package.allFacilities}" class="list-disc pl-5 text-sm text-slate-600 mt-1"><li th:each="facility : ${package.facilities}" th:text="${facility.name}">Complex</li></ul></div>
+      <div><h2 class="font-bold">Membership benefits</h2><p th:if="${package.benefits.isEmpty()}" class="text-sm text-slate-500 mt-1">No additional benefits configured.</p><ul class="list-disc pl-5 text-sm text-slate-600 mt-1"><li th:each="benefit : ${package.benefits}" th:text="${benefit.displayDescription}">Benefit</li></ul></div>
+      <a th:href="@{/customer/package/subscribe/{id}(id=${package.id})}" class="btn btn-primary btn-md">Join Membership</a>
+    </div>
+  </main>
+</div>
+</body>
+</html>

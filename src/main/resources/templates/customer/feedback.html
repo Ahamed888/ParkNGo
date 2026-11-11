@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('My Reviews')}">
+    <title>My Reviews — ParkNGo</title>
+</head>
+<body class="bg-mist text-asphalt min-h-screen flex flex-col font-sans antialiased">
+    <div class="flex flex-1 min-h-screen">
+        <!-- Unified Master Sidebar -->
+        <div th:replace="~{layout/app :: sidebar('CUSTOMER', 'feedback')}"></div>
+
+        <!-- Main Layout -->
+        <div class="flex-1 md:pl-64 flex flex-col min-w-0 min-h-screen">
+            <div th:replace="~{layout/app :: topbar('', 'CUSTOMER')}"></div>
+
+            <main class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div th:replace="~{ui/flash :: flash}"></div>
+
+                <!-- Page Title Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#DDE3EA] shadow-1">
+                    <div>
+                        <h1 class="text-2xl font-bold font-heading text-asphalt">My Reviews &amp; Feedback</h1>
+                        <p class="text-xs text-[#5A6A80] mt-0.5">Review your ratings and administrative replies from facility management.</p>
+                    </div>
+
+                    <a href="/customer/reservations" class="btn btn-primary btn-md gap-2">
+                        <i class="fa-solid fa-star text-primary-100 text-xs"></i>
+                        <span>Completed bookings to rate</span>
+                    </a>
+                </div>
+
+                <!-- Empty State -->
+                <div th:if="${feedback.isEmpty()}" class="bg-white rounded-2xl border border-[#DDE3EA] p-8 shadow-1">
+                    <div th:replace="~{ui/empty :: state('fa-star', 'No feedback submitted yet', 'After completing any parking stay, you can leave a star rating and review to help us improve.', 'View completed bookings', '/customer/reservations')}"></div>
+                </div>
+
+                <!-- Reviews List -->
+                <div th:if="${!feedback.isEmpty()}" class="space-y-4">
+                    <article th:each="item : ${feedback}" class="bg-white rounded-2xl border border-[#DDE3EA] p-6 shadow-1 space-y-4">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <span class="text-xs font-bold text-info-600 uppercase"
+                                      th:text="${item.reservation != null ? (item.reservation.vehicle != null ? 'Vehicle: ' + item.reservation.vehicle.registrationNumber : 'Reservation') : 'Reservation unavailable'}">Vehicle: ABC-1234</span>
+                                <span class="block text-xs text-[#5A6A80] mt-0.5 tnum"
+                                      th:if="${item.reservation != null and item.reservation.arrivalTime != null}"
+                                      th:text="${'Parking stay: ' + #temporals.format(item.reservation.arrivalTime, 'dd MMM yyyy, HH:mm')}">Parking stay</span>
+                                <div class="flex items-center gap-1 mt-1 text-primary-100 text-sm">
+                                    <span th:each="i : ${#numbers.sequence(1, item.rating)}"><i class="fa-solid fa-star"></i></span>
+                                    <span th:if="${item.rating < 5}" th:each="i : ${#numbers.sequence(item.rating + 1, 5)}"><i class="fa-regular fa-star text-[#DDE3EA]"></i></span>
+                                    <span class="text-xs font-bold text-asphalt ml-1.5 tnum" th:text="${item.rating + ' / 5'}">5 / 5</span>
+                                </div>
+                            </div>
+                            <span class="text-xs text-[#5A6A80] font-medium tnum" th:text="${#temporals.format(item.createdAt, 'dd MMM yyyy')}">20 Aug 2026</span>
+                        </div>
+
+                        <p class="text-xs text-asphalt leading-relaxed bg-[#F5F7FA] p-4 rounded-[10px] border border-[#EDF1F5]" th:text="${item.comment}">
+                            Great parking service! Fast check-in and clean spaces.
+                        </p>
+
+                        <!-- Admin Reply Thread -->
+                        <div th:if="${item.adminResponse != null and !item.adminResponse.isEmpty()}" class="rounded-[10px] bg-info-50 border border-[#DCE6FF] p-4 space-y-1">
+                            <div class="flex items-center gap-2 text-info-600 text-xs font-bold">
+                                <i class="fa-solid fa-shield"></i>
+                                <span>Management Response:</span>
+                            </div>
+                            <p class="text-xs text-asphalt" th:text="${item.adminResponse}">
+                                Thank you for your feedback! We look forward to serving you again.
+                            </p>
+                        </div>
+
+                        <div class="flex items-center justify-between border-t border-[#EDF1F5] pt-4 text-xs">
+                            <div th:if="${item.adminResponse != null and !item.adminResponse.isEmpty()}" class="inline-flex items-center gap-1.5 text-[#5A6A80]">
+                                <i class="fa-solid fa-lock text-[#5A6A80]"></i>
+                                <span>Management responded &bull; Record is locked</span>
+                            </div>
+                            <div th:if="${item.adminResponse == null || item.adminResponse.isEmpty()}" class="text-[#5A6A80]">
+                                <span>Awaiting management review</span>
+                            </div>
+                            <div th:if="${item.adminResponse == null || item.adminResponse.isEmpty()}" class="flex gap-2">
+                                <a th:href="@{/customer/feedback/edit/{id}(id=${item.id})}" class="btn btn-secondary btn-sm">
+                                    <i class="fa-solid fa-pen text-[10px]"></i><span>Edit</span>
+                                </a>
+                                <form th:action="@{/customer/feedback/delete/{id}(id=${item.id})}" method="post"
+                                      data-confirm="Delete this feedback?"
+                                      data-confirm-btn="Delete feedback"
+                                      data-confirm-tone="danger">
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fa-solid fa-trash text-[10px]"></i><span>Delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

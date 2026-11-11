@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head('User Management - ParkNGo Admin')}"></head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex">
+
+    <!-- Console Sidebar -->
+    <aside th:replace="~{layout/app :: sidebar('ADMIN', 'users')}"></aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen bg-mist">
+        
+        <!-- Console Topbar -->
+        <header th:replace="~{layout/app :: topbar('User Management Directory', 'ADMIN')}"></header>
+
+        <!-- Main Body -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+            
+            <!-- Flash Alerts -->
+            <div th:replace="~{ui/flash :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-line-200">
+                <div>
+                    <h2 class="text-2xl font-black text-asphalt font-heading tracking-tight">System User Directory</h2>
+                    <p class="text-sm text-slate-500 mt-1">Manage customer accounts, gate staff operator privileges, and system administrator credentials.</p>
+                </div>
+                <div>
+                    <a href="/admin/user/add" class="px-5 py-2.5 rounded-lg text-sm font-bold bg-primary hover:bg-primary-hover text-asphalt transition flex items-center gap-2 shadow-xs">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>Create New User</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Metric KPI Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="p-4 rounded-xl bg-white border border-line-200 shadow-xs">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Total System Accounts</span>
+                    <h3 class="text-2xl font-black text-asphalt font-num" th:text="${totalCount}">0</h3>
+                </div>
+                <div class="p-4 rounded-xl bg-white border border-line-200 shadow-xs relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-info-500"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-info-600 block mb-1 mt-1">Customers</span>
+                    <h3 class="text-2xl font-black text-info-600 font-num" th:text="${customerCount}">0</h3>
+                </div>
+                <div class="p-4 rounded-xl bg-white border border-line-200 shadow-xs relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-go-500"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-go-600 block mb-1 mt-1">Gate Staff Operators</span>
+                    <h3 class="text-2xl font-black text-go-600 font-num" th:text="${staffCount}">0</h3>
+                </div>
+                <div class="p-4 rounded-xl bg-white border border-line-200 shadow-xs relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-primary-500"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-asphalt block mb-1 mt-1">Administrators</span>
+                    <h3 class="text-2xl font-black text-asphalt font-num" th:text="${adminCount}">0</h3>
+                </div>
+            </div>
+
+            <!-- Filter & Table Card -->
+            <div class="rounded-xl bg-white border border-line-200 overflow-hidden shadow-xs">
+                <div class="p-5 border-b border-line-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+                    <div class="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                        <button type="button" onclick="filterRole('ALL', this)" class="user-filter active px-4 py-2 rounded-lg bg-asphalt text-white transition">All Users</button>
+                        <button type="button" onclick="filterRole('CUSTOMER', this)" class="user-filter px-4 py-2 rounded-lg bg-white border border-line-200 text-slate-600 hover:bg-slate-50 transition">Customers</button>
+                        <button type="button" onclick="filterRole('STAFF', this)" class="user-filter px-4 py-2 rounded-lg bg-white border border-line-200 text-slate-600 hover:bg-slate-50 transition">Staff</button>
+                        <button type="button" onclick="filterRole('ADMIN', this)" class="user-filter px-4 py-2 rounded-lg bg-white border border-line-200 text-slate-600 hover:bg-slate-50 transition">Admins</button>
+                    </div>
+                    <div class="relative sm:w-72">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                        <input type="text" id="userSearch" onkeyup="searchUsers()" placeholder="Search name or email..."
+                               class="w-full rounded-lg bg-white border border-line-200 pl-9 pr-4 py-2.5 text-sm font-bold text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition shadow-xs">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-asphalt">
+                        <thead class="bg-slate-50 border-b border-line-200 text-slate-500 font-bold uppercase text-[10px] tracking-widest">
+                            <tr>
+                                <th class="px-5 py-4">User Identity</th>
+                                <th class="px-5 py-4">Contact & Shift</th>
+                                <th class="px-5 py-4">Assigned Role</th>
+                                <th class="px-5 py-4">Status</th>
+                                <th class="px-5 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-line-100 font-medium bg-white">
+                            <tr th:each="user : ${users}" class="user-row hover:bg-slate-50 transition" th:data-role="${user.role.name}">
+                                <!-- User Name & Email -->
+                                <td class="px-5 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-sm shrink-0 border border-line-200">
+                                            <i class="fa-solid fa-user text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <span class="font-black text-asphalt block text-base font-heading" th:text="${user.fullName}">Alex Johnson</span>
+                                            <span class="text-slate-500 text-xs font-mono font-semibold" th:text="${user.email}">alex@example.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Phone & Shift -->
+                                <td class="px-5 py-4">
+                                    <div class="text-asphalt font-mono font-bold" th:text="${user.phone}">+94771234567</div>
+                                    <div th:if="${user.shiftHours != null && !user.shiftHours.isBlank()}" class="text-[11px] text-slate-500 font-bold flex items-center gap-1 mt-1">
+                                        <i class="fa-regular fa-clock text-primary"></i>
+                                        <span th:text="${user.shiftHours}">08:00 - 16:00</span>
+                                    </div>
+                                    <div th:unless="${user.shiftHours != null && !user.shiftHours.isBlank()}" class="text-[11px] text-slate-400 mt-1">
+                                        No active shift
+                                    </div>
+                                </td>
+
+                                <!-- Role Badge -->
+                                <td class="px-5 py-4">
+                                    <span th:class="'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase border ' + 
+                                                   (${user.role.name == 'ADMIN'} ? 'bg-purple-50 text-purple-700 border-purple-200' : 
+                                                   (${user.role.name == 'STAFF'} ? 'bg-go-50 text-emerald-700 border-go-200' : 'bg-sky-50 text-sky-700 border-sky-200'))"
+                                          th:text="${user.role.name}">CUSTOMER</span>
+                                </td>
+
+                                <!-- Status -->
+                                <td class="px-5 py-4">
+                                    <span th:class="'inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest ' + 
+                                                   (${user.status.name() == 'ACTIVE'} ? 'text-go-600' : 
+                                                   (${user.status.name() == 'INACTIVE'} ? 'text-caution-600' : 'text-stop-600'))">
+                                        <span th:class="'h-2 w-2 rounded-full ' + 
+                                                       (${user.status.name() == 'ACTIVE'} ? 'bg-go-500' : 
+                                                       (${user.status.name() == 'INACTIVE'} ? 'bg-caution-500' : 'bg-stop-500'))"></span>
+                                        <span th:text="${user.status}">ACTIVE</span>
+                                    </span>
+                                </td>
+
+                                <!-- Actions -->
+                                <td class="px-5 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <!-- Toggle Status Button -->
+                                        <form th:action="@{/admin/user/{id}/toggle-status(id=${user.id})}" method="post" class="inline">
+                                            <button type="submit" class="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 border border-line-200 text-slate-500 hover:text-caution-600 flex items-center justify-center transition" 
+                                                    th:title="${user.status.name() == 'ACTIVE' ? 'Deactivate User' : 'Activate User'}">
+                                                <i th:class="${user.status.name() == 'ACTIVE' ? 'fa-solid fa-user-slash text-xs' : 'fa-solid fa-user-check text-xs'}"></i>
+                                            </button>
+                                        </form>
+
+                                        <!-- Edit User -->
+                                        <a th:href="@{/admin/user/edit/{id}(id=${user.id})}" class="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 border border-line-200 text-slate-500 hover:text-asphalt flex items-center justify-center transition" title="Edit User">
+                                            <i class="fa-solid fa-pen text-xs"></i>
+                                        </a>
+
+                                        <!-- Delete User -->
+                                        <form th:action="@{/admin/user/delete/{id}(id=${user.id})}" method="post" class="inline"
+                                              data-confirm="Are you sure you want to delete this user account?"
+                                              data-confirm-btn="Delete User"
+                                              data-confirm-tone="danger">
+                                            <button type="submit" class="w-8 h-8 rounded-lg bg-white hover:bg-stop-50 border border-line-100 hover:border-stop-200 text-slate-400 hover:text-stop-600 flex items-center justify-center transition" title="Delete User">
+                                                <i class="fa-solid fa-trash-can text-xs"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Empty State -->
+                <div th:if="${#lists.isEmpty(users)}" class="p-12 text-center bg-white">
+                    <div class="w-16 h-16 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center text-3xl mx-auto mb-4 border border-line-100">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-asphalt font-heading mb-1">No Users Found</h3>
+                    <p class="text-sm text-slate-500 mb-6 max-w-md mx-auto">There are no users registered in the system matching the criteria.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function filterRole(role, btnElement) {
+            const rows = document.querySelectorAll('.user-row');
+            document.querySelectorAll('.user-filter').forEach(btn => {
+                btn.className = 'user-filter px-4 py-2 rounded-lg bg-white border border-line-200 text-slate-600 hover:bg-slate-50 transition';
+            });
+            if (btnElement) {
+                btnElement.className = 'user-filter active px-4 py-2 rounded-lg bg-asphalt text-white transition';
+            }
+
+            rows.forEach(r => {
+                if (role === 'ALL' || r.getAttribute('data-role') === role) {
+                    r.style.display = '';
+                } else {
+                    r.style.display = 'none';
+                }
+            });
+        }
+
+        function searchUsers() {
+            const query = document.getElementById('userSearch').value.toLowerCase();
+            document.querySelectorAll('.user-row').forEach(r => {
+                r.style.display = r.textContent.toLowerCase().includes(query) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

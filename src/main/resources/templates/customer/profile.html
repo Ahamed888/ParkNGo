@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Profile & Security')}">
+    <title>Profile &amp; Security &mdash; ParkNGo</title>
+</head>
+<body class="bg-mist text-asphalt min-h-screen flex flex-col font-sans antialiased">
+    <div class="flex flex-1 min-h-screen">
+        <!-- Unified Master Sidebar -->
+        <div th:replace="~{layout/app :: sidebar('CUSTOMER', 'profile')}"></div>
+
+        <!-- Main Layout -->
+        <div class="flex-1 md:pl-64 flex flex-col min-w-0 min-h-screen">
+            <div th:replace="~{layout/app :: topbar('Profile & Security', 'CUSTOMER')}"></div>
+
+            <main class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div th:replace="~{ui/flash :: flash}"></div>
+
+                <!-- Page Title Bar -->
+                <div class="bg-white p-6 rounded-2xl border border-line-200 shadow-1">
+                    <h1 class="text-2xl font-bold font-heading text-asphalt">Profile &amp; Security Settings</h1>
+                    <p class="text-xs text-slate-500 mt-0.5">Manage your personal details, profile photo, and password credentials.</p>
+                </div>
+
+                <!-- Personal Contact Details Card -->
+                <div class="bg-white p-6 sm:p-8 rounded-2xl border border-line-200 shadow-1 space-y-6">
+                    <!-- User Identity Badge & Photo Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-line-100 pb-6">
+                        <div class="flex items-center gap-4">
+                            <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center overflow-hidden border-2 border-primary shadow-xs shrink-0">
+                                <img id="profileHeaderImg" 
+                                     th:if="${user.profilePicture != null and !user.profilePicture.isEmpty()}" 
+                                     th:src="${user.profilePicture}" 
+                                     alt="Profile photo" 
+                                     class="w-full h-full object-cover">
+                                <span id="profileHeaderIcon" 
+                                      th:if="${user.profilePicture == null or user.profilePicture.isEmpty()}" 
+                                      class="text-2xl sm:text-3xl text-slate-400">
+                                    <i class="fa-solid fa-user"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold font-heading text-asphalt" th:text="${user.fullName}">Alex Johnson</h2>
+                                <p class="text-xs text-slate-500" th:text="${user.email}">alex@example.com</p>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <span class="pill pill-info font-bold uppercase" th:text="${user.role != null ? user.role.name + ' ACCOUNT' : 'CUSTOMER ACCOUNT'}">CUSTOMER ACCOUNT</span>
+                                    <div th:replace="~{ui/status :: activeState(${user.status != null and user.status.name() == 'ACTIVE'})}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <label for="photoFileInput" class="btn btn-secondary btn-sm gap-2 cursor-pointer self-start sm:self-auto">
+                            <i class="fa-solid fa-camera text-xs"></i>
+                            <span>Change Photo</span>
+                        </label>
+                    </div>
+
+                    <!-- Profile Form -->
+                    <form method="post" action="/customer/profile" enctype="multipart/form-data" class="space-y-6">
+                        
+                        <!-- Profile Photo Upload Box -->
+                        <div class="p-4 sm:p-5 rounded-2xl bg-canvas border border-line-200 flex flex-col sm:flex-row items-center gap-5">
+                            <div class="relative w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border border-line-300 shrink-0">
+                                <img id="previewPhotoImg" 
+                                     th:if="${user.profilePicture != null and !user.profilePicture.isEmpty()}" 
+                                     th:src="${user.profilePicture}" 
+                                     alt="Preview" 
+                                     class="w-full h-full object-cover">
+                                <span id="previewPhotoIcon" 
+                                      th:if="${user.profilePicture == null or user.profilePicture.isEmpty()}" 
+                                      class="text-2xl text-slate-400">
+                                    <i class="fa-solid fa-user"></i>
+                                </span>
+                            </div>
+
+                            <div class="flex-1 space-y-1 text-center sm:text-left">
+                                <h4 class="text-sm font-bold text-asphalt font-heading">Profile Photo</h4>
+                                <p id="photoHelp" class="text-xs text-slate-500">Upload a profile picture (JPEG, PNG, WebP or GIF, max 5MB) or enter a photo web URL. It will be displayed on your dashboard and account menu.</p>
+                                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-2">
+                                    <label for="photoFileInput" class="btn btn-primary btn-sm gap-2 cursor-pointer">
+                                        <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
+                                        <span>Upload Photo</span>
+                                    </label>
+                                    <input type="file" id="photoFileInput" name="photoFile" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" aria-describedby="photoHelp" onchange="handlePhotoUpload(this)">
+
+                                    <button type="button" id="removePhotoBtn" onclick="handleRemovePhoto()" 
+                                            class="btn btn-ghost btn-sm text-stop-600 hover:text-stop-700" 
+                                            th:classappend="${user.profilePicture == null or user.profilePicture.isEmpty()} ? 'hidden' : ''">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                        <span>Remove Photo</span>
+                                    </button>
+                                </div>
+                                <p th:if="${profileFieldErrors != null and profileFieldErrors.containsKey('photoFile')}" class="field-error" th:text="${profileFieldErrors.get('photoFile')}"></p>
+                            </div>
+                        </div>
+
+                        <!-- Optional Photo Web URL -->
+                        <div class="field">
+                            <label for="photoUrl" class="label text-xs">Or Photo Image URL (Optional)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">
+                                    <i class="fa-solid fa-link"></i>
+                                </span>
+                                <input type="url" id="photoUrl" name="photoUrl" maxlength="2000" th:value="${submittedPhotoUrl}" placeholder="https://example.com/avatar.jpg" class="input pl-9 text-xs" oninput="handlePhotoUrlInput(this.value)">
+                            </div>
+                            <p class="hint">You may also enter a direct link to a public image.</p>
+                            <p th:if="${profileFieldErrors != null and profileFieldErrors.containsKey('photoUrl')}" class="field-error" th:text="${profileFieldErrors.get('photoUrl')}"></p>
+                        </div>
+
+                        <input type="hidden" id="removePhotoInput" name="removePhoto" value="false">
+
+                        <!-- Contact Details Inputs -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                            <div class="field">
+                                <label for="fullName" class="label label-required">Full Name</label>
+                                <input type="text" id="fullName" name="fullName" th:value="${submittedFullName != null ? submittedFullName : user.fullName}" required minlength="2" maxlength="60" autocomplete="name" class="input">
+                                <p th:if="${profileFieldErrors != null and profileFieldErrors.containsKey('fullName')}" class="field-error" th:text="${profileFieldErrors.get('fullName')}"></p>
+                            </div>
+
+                            <div class="field">
+                                <label for="email" class="label">Email Address</label>
+                                <input type="email" id="email" name="email" th:value="${user.email}" readonly class="input bg-mist text-slate-500 cursor-not-allowed">
+                                <p class="hint">Primary account identifier (read-only)</p>
+                            </div>
+
+                            <div class="field">
+                                <label for="phone" class="label label-required">Phone Number</label>
+                                <input type="tel" id="phone" name="phone" th:value="${submittedPhone != null ? submittedPhone : user.phone}" required
+                                       pattern="(?:07[0-9]{8}|\+947[0-9]{8})" maxlength="12"
+                                       title="Enter a valid Sri Lankan mobile number, such as 0771234567 or +94771234567."
+                                       class="input">
+                                <p th:if="${profileFieldErrors != null and profileFieldErrors.containsKey('phone')}" class="field-error" th:text="${profileFieldErrors.get('phone')}"></p>
+                            </div>
+
+                            <div class="field">
+                                <label class="label">Member Since</label>
+                                <input type="text" th:value="${#temporals.format(user.createdAt, 'dd MMM yyyy, HH:mm')}" readonly class="input bg-mist text-slate-500 cursor-not-allowed tnum">
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-line-100 flex justify-end">
+                            <button type="submit" class="btn btn-primary btn-md gap-2">
+                                <i class="fa-solid fa-floppy-disk text-xs"></i>
+                                <span>Save profile changes</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Password Security Card -->
+                <div class="bg-white p-6 sm:p-8 rounded-2xl border border-line-200 shadow-1 space-y-6">
+                    <div class="flex items-center gap-3 border-b border-line-100 pb-4">
+                        <div class="w-9 h-9 rounded-full bg-primary text-caution-700 flex items-center justify-center text-base font-bold">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold font-heading text-asphalt">Change Password</h3>
+                            <p class="text-xs text-slate-500">Update your account password to maintain security</p>
+                        </div>
+                    </div>
+
+                    <!-- Password Alerts -->
+                    <div th:if="${passwordSuccess}" class="callout callout-go">
+                        <i class="fa-solid fa-circle-check text-go-600"></i>
+                        <span th:text="${passwordSuccess}">Password updated</span>
+                    </div>
+                    <div th:if="${passwordError}" class="callout callout-stop">
+                        <i class="fa-solid fa-circle-exclamation text-[#C8281C]"></i>
+                        <span th:text="${passwordError}">Error updating password</span>
+                    </div>
+
+                    <form method="post" action="/customer/profile/change-password" class="space-y-4">
+                        <div class="field">
+                            <label for="currentPassword" class="label label-required">Current Password</label>
+                            <input type="password" id="currentPassword" name="currentPassword" required autocomplete="current-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" class="input">
+                            <p th:if="${passwordFieldErrors != null and passwordFieldErrors.containsKey('currentPassword')}" class="field-error" th:text="${passwordFieldErrors.get('currentPassword')}"></p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="field">
+                                <label for="newPassword" class="label label-required">New Password</label>
+                                <input type="password" id="newPassword" name="newPassword" required minlength="8" maxlength="72" autocomplete="new-password" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,72}" title="Use 8-72 characters with uppercase, lowercase, a number, and a special character." placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" class="input">
+                                <p class="form-help">Use 8–72 characters with uppercase, lowercase, a number, and a special character.</p>
+                                <p th:if="${passwordFieldErrors != null and passwordFieldErrors.containsKey('newPassword')}" class="field-error" th:text="${passwordFieldErrors.get('newPassword')}"></p>
+                            </div>
+
+                            <div class="field">
+                                <label for="confirmPassword" class="label label-required">Confirm New Password</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8" maxlength="72" autocomplete="new-password" data-match="#newPassword" data-error-match="New password and confirmation do not match." placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" class="input">
+                                <p th:if="${passwordFieldErrors != null and passwordFieldErrors.containsKey('confirmPassword')}" class="field-error" th:text="${passwordFieldErrors.get('confirmPassword')}"></p>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-line-100 flex justify-end">
+                            <button type="submit" class="btn btn-secondary btn-md gap-2">
+                                <i class="fa-solid fa-lock text-xs"></i>
+                                <span>Update password</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Client-side Profile Photo Preview & Password Validation Script -->
+    <script>
+        function handlePhotoUpload(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                if (file.size > 5 * 1024 * 1024) {
+                    input.setCustomValidity('Choose an image smaller than 5 MB.');
+                    input.reportValidity();
+                    input.value = '';
+                    return;
+                }
+                input.setCustomValidity('');
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    setAvatarSrc(e.target.result);
+                    document.getElementById('removePhotoInput').value = 'false';
+                    document.getElementById('photoUrl').value = '';
+                    const removeBtn = document.getElementById('removePhotoBtn');
+                    if (removeBtn) removeBtn.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function handlePhotoUrlInput(url) {
+            if (url && url.trim().length > 5) {
+                setAvatarSrc(url.trim());
+                document.getElementById('removePhotoInput').value = 'false';
+                const fileInput = document.getElementById('photoFileInput');
+                if (fileInput) fileInput.value = '';
+                const removeBtn = document.getElementById('removePhotoBtn');
+                if (removeBtn) removeBtn.classList.remove('hidden');
+            }
+        }
+
+        function handleRemovePhoto() {
+            document.getElementById('removePhotoInput').value = 'true';
+            document.getElementById('photoUrl').value = '';
+            const fileInput = document.getElementById('photoFileInput');
+            if (fileInput) fileInput.value = '';
+
+            ['profileHeader', 'previewPhoto'].forEach(function(prefix) {
+                let img = document.getElementById(prefix + 'Img');
+                let icon = document.getElementById(prefix + 'Icon');
+                if (img) {
+                    img.src = '';
+                    img.classList.add('hidden');
+                }
+                if (icon) {
+                    icon.classList.remove('hidden');
+                } else {
+                    let container = (img && img.parentElement);
+                    if (container && !container.querySelector('.fa-user')) {
+                        let span = document.createElement('span');
+                        span.id = prefix + 'Icon';
+                        span.className = (prefix === 'profileHeader' ? 'text-2xl sm:text-3xl' : 'text-2xl') + ' text-slate-400';
+                        span.innerHTML = '<i class="fa-solid fa-user"></i>';
+                        container.appendChild(span);
+                    }
+                }
+            });
+
+            const removeBtn = document.getElementById('removePhotoBtn');
+            if (removeBtn) removeBtn.classList.add('hidden');
+        }
+
+        function setAvatarSrc(src) {
+            ['profileHeader', 'previewPhoto'].forEach(function(prefix) {
+                let img = document.getElementById(prefix + 'Img');
+                let icon = document.getElementById(prefix + 'Icon');
+                if (!img) {
+                    let container = (icon && icon.parentElement);
+                    if (container) {
+                        img = document.createElement('img');
+                        img.id = prefix + 'Img';
+                        img.className = 'w-full h-full object-cover';
+                        img.alt = 'Profile photo';
+                        container.prepend(img);
+                    }
+                }
+                if (img) {
+                    img.src = src;
+                    img.classList.remove('hidden');
+                }
+                if (icon) {
+                    icon.classList.add('hidden');
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- VISUAL PARKING GRID COMPONENT -->
+    <!-- Usage: <div th:replace="~{ui/grid :: layout(${spaces})}"></div> -->
+    
+    <div th:fragment="layout(spaces)" class="w-full">
+        
+        <!-- Legend -->
+        <div class="flex flex-wrap items-center gap-4 mb-6 px-2 text-xs font-semibold text-ink-700">
+            <div class="flex items-center gap-1.5"><div class="w-4 h-4 rounded bg-go-50 border-2 border-go-600/30"></div> Available</div>
+            <div class="flex items-center gap-1.5"><div class="w-4 h-4 rounded bg-stop-50 border-2 border-stop-600/30"></div> Occupied</div>
+            <div class="flex items-center gap-1.5"><div class="w-4 h-4 rounded bg-info-50 border-2 border-info-600/30"></div> Reserved</div>
+            <div class="flex items-center gap-1.5"><div class="w-4 h-4 rounded bg-caution-50 border-2 border-caution-600/30"></div> Maintenance</div>
+        </div>
+
+        <!-- Grid Layout -->
+        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
+            <div th:each="space : ${spaces}" 
+                 class="relative flex flex-col items-center justify-center p-3 rounded-lg border-2 shadow-xs transition-transform hover:-translate-y-1 cursor-default group"
+                 th:classappend="${space.status.name() == 'AVAILABLE' ? 'bg-go-50 border-go-600/30 text-go-700' : (space.status.name() == 'OCCUPIED' ? 'bg-stop-50 border-stop-600/30 text-stop-700' : (space.status.name() == 'RESERVED' ? 'bg-info-50 border-info-600/30 text-info-700' : 'bg-caution-50 border-caution-600/30 text-caution-700'))}">
+                 
+                 <!-- Icon Indicator -->
+                 <i th:if="${space.status.name() == 'OCCUPIED'}" class="fa-solid fa-car text-xl mb-1 opacity-90"></i>
+                 <i th:if="${space.status.name() == 'RESERVED'}" class="fa-solid fa-lock text-xl mb-1 opacity-90"></i>
+                 <i th:if="${space.status.name() == 'MAINTENANCE'}" class="fa-solid fa-traffic-cone text-xl mb-1 opacity-90"></i>
+                 <div th:if="${space.status.name() == 'AVAILABLE'}" class="w-full border-t-2 border-dashed border-go-600/30 mb-2 mt-1"></div>
+
+                 <!-- Space Number -->
+                 <div class="font-num font-extrabold text-lg leading-none" th:text="${space.spaceNumber}">A01</div>
+                 
+                 <!-- Status Text (Optional) -->
+                 <div class="text-[9px] font-bold uppercase mt-1 tracking-wider opacity-80" th:text="${space.status.name()}">AVAILABLE</div>
+
+                 <!-- Tooltip -->
+                 <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-3 py-1.5 bg-asphalt text-mist text-xs font-bold rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 shadow-lg">
+                    <span th:text="${'Floor ' + space.floor + ' - Zone ' + space.zone}"></span>
+                 </div>
+            </div>
+        </div>
+        
+    </div>
+
+</body>
+</html>

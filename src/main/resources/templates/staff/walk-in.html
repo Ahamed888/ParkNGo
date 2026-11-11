@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Walk-In Terminal')}">
+    <title>Walk-In Ticket Terminal &mdash; ParkNGo Console</title>
+</head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex flex-col">
+
+    <div class="flex flex-1 min-h-screen">
+        <!-- Staff Operations Sidebar -->
+        <div th:replace="~{layout/app :: sidebar('STAFF', 'walk-in')}"></div>
+
+        <!-- Main Console Layout -->
+        <div class="flex-1 md:pl-64 flex flex-col min-w-0 min-h-screen">
+            <div th:replace="~{layout/app :: topbar('Walk-In Ticket Terminal', 'STAFF')}"></div>
+
+            <main class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div th:replace="~{ui/flash :: flash}"></div>
+
+                <!-- Page Header Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-line-200 shadow-1">
+                    <div>
+                        <h1 class="text-2xl font-bold font-heading text-asphalt flex items-center gap-2">
+                            <i class="fa-solid fa-car-side text-primary-hover"></i>
+                            <span>Gate Walk-In Ticket Terminal</span>
+                        </h1>
+                        <p class="text-xs text-slate-500 mt-0.5">Issue instant gate access passes for drive-up guest vehicles without prior booking.</p>
+                    </div>
+
+                    <a href="/staff/active-reservations" class="btn btn-secondary btn-md gap-2">
+                        <i class="fa-solid fa-list-check text-xs"></i>
+                        <span>Parked Queue</span>
+                    </a>
+                </div>
+
+                <div th:replace="~{ui/parking-map :: map('/staff/walk-in/slot-map', ${assignedFacility.id}, false)}"></div>
+
+                <div class="bg-white rounded-2xl border border-line-200 p-6 shadow-1">
+                    <form method="post" th:action="@{/staff/walk-in}" id="walkInForm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- 1. Essential vehicle details -->
+                            <div class="space-y-4">
+                                <h2 class="text-sm font-bold font-heading text-asphalt flex items-center gap-2 border-b border-line-100 pb-2">
+                                    <span class="w-5 h-5 rounded-full bg-primary text-asphalt inline-flex items-center justify-center text-xs">1</span>
+                                    <span>Vehicle Details</span>
+                                </h2>
+
+                                <div class="field">
+                                    <label class="label label-required">License Plate Number</label>
+                                    <div class="relative">
+                                        <input type="text" name="licensePlate" id="plateInput" required placeholder="e.g. WP CA-1234 or CAB-5678" autofocus
+                                               th:value="${prevLicensePlate}"
+                                               pattern="^(?:(?:(WP|CP|SP|NW|NC|EP|SG|VA|UW|wp|cp|sp|nw|nc|ep|sg|va|uw)[ -]*)?([A-Za-z0-9]{1,4})[ -]*)?[A-Za-z0-9 -]{2,10}$"
+                                               title="Valid Sri Lankan license plate (e.g. WP CA-1234, CAB-5678, or 19-1234)"
+                                               class="input font-mono font-bold uppercase tracking-wider text-base">
+                                        <div id="plateStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></div>
+                                    </div>
+                                    <p th:if="${fieldErrors != null and fieldErrors.containsKey('licensePlate')}" class="field-error" th:text="${fieldErrors.get('licensePlate')}"></p>
+                                    <div id="plateFeedback" class="hint">
+                                        <span>Sri Lankan plate format (e.g. WP CA-1234, CAB-5678, or 19-1234)</span>
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label label-required">Vehicle Category</label>
+                                    <select name="vehicleType" required class="select font-semibold">
+                                        <option value="" th:selected="${prevVehicleType == null}" disabled>Select Vehicle Type</option>
+                                        <option value="CAR" th:selected="${prevVehicleType == 'CAR'}">Standard Passenger Car</option>
+                                        <option value="SUV" th:selected="${prevVehicleType == 'SUV'}">SUV / Minivan</option>
+                                        <option value="ELECTRIC" th:selected="${prevVehicleType == 'ELECTRIC'}">Electric Vehicle (EV)</option>
+                                        <option value="MOTORCYCLE" th:selected="${prevVehicleType == 'MOTORCYCLE'}">Motorcycle</option>
+                                        <option value="TRUCK" th:selected="${prevVehicleType == 'TRUCK'}">Truck / Van</option>
+                                    </select>
+                                    <p th:if="${fieldErrors != null and fieldErrors.containsKey('vehicleType')}" class="field-error" th:text="${fieldErrors.get('vehicleType')}"></p>
+                                </div>
+
+                                <p class="text-xs text-slate-500">Only the plate and vehicle type are needed to issue a walk-in pass. Guest contact details are optional and can be collected outside this fast gate flow.</p>
+                            </div>
+
+                            <!-- 2. Space Allocation & Pricing -->
+                            <div class="space-y-4">
+                                <h2 class="text-sm font-bold font-heading text-asphalt flex items-center gap-2 border-b border-line-100 pb-2">
+                                    <span class="w-5 h-5 rounded-full bg-primary text-asphalt inline-flex items-center justify-center text-xs">2</span>
+                                    <span>Assign Available Parking Space</span>
+                                </h2>
+
+                                <div class="field">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <label for="spaceSelect" class="label label-required mb-0">Select Available Space</label>
+                                        <a href="/staff/parking-spaces" class="btn btn-secondary btn-sm gap-1.5">
+                                            <i class="fa-solid fa-sliders text-[10px]"></i>
+                                            <span>Change bay availability</span>
+                                        </a>
+                                    </div>
+                                    <select name="parkingSpaceId" id="spaceSelect" required onchange="calculateWalkInPrice()" class="select font-bold">
+                                        <option value="" selected disabled>Select a parking space</option>
+                                        <option th:each="sp : ${availableSpaces}" 
+                                                th:value="${sp.id}" 
+                                                th:data-rate="${sp.hourlyRate}"
+                                                th:text="${'Space ' + sp.spaceNumber + ' (Floor ' + sp.floor + ' · LKR ' + #numbers.formatDecimal(sp.hourlyRate, 1, 0) + '/hr)' + (sp.hasEVCharging != null and sp.hasEVCharging ? ' EV Charging' : '') + (sp.facility != null ? ' — ' + sp.facility.name : '')}">
+                                            Space A01 (LKR 250/hr)
+                                        </option>
+                                    </select>
+                                    <p th:if="${fieldErrors != null and fieldErrors.containsKey('parkingSpaceId')}" class="field-error" th:text="${fieldErrors.get('parkingSpaceId')}"></p>
+                                </div>
+
+                                <!-- Duration Presets -->
+                                <div class="field">
+                                    <label class="label">Duration Preset</label>
+                                    <div class="grid grid-cols-4 gap-2">
+                                        <button type="button" onclick="setDuration(1)" id="durBtn1" class="chip font-bold">1 hr</button>
+                                        <button type="button" onclick="setDuration(2)" id="durBtn2" class="chip font-bold">2 hrs</button>
+                                        <button type="button" onclick="setDuration(4)" id="durBtn4" class="chip font-bold">4 hrs</button>
+                                        <button type="button" onclick="setDuration(8)" id="durBtn8" class="chip font-bold">8 hrs</button>
+                                    </div>
+                                    <input type="hidden" name="durationHours" id="durationHoursInput" th:value="${prevDurationHours != null ? prevDurationHours : 2}">
+                                    <p th:if="${fieldErrors != null and fieldErrors.containsKey('durationHours')}" class="field-error" th:text="${fieldErrors.get('durationHours')}"></p>
+                                </div>
+
+                                <!-- Price Display Ticket Box -->
+                                <div class="bg-white text-asphalt p-5 rounded-2xl space-y-3 border border-line-200 shadow-1">
+                                    <div class="flex items-center justify-between border-b border-line-100 pb-2">
+                                        <span class="text-xs uppercase font-bold text-slate-600">Walk-In Pass Pricing</span>
+                                        <span class="pill pill-caution text-[10px]" id="rateBadge">Walk-in rate</span>
+                                    </div>
+                                    <div class="flex items-baseline justify-between">
+                                        <span class="text-xs text-slate-600">Initial Total Charge:</span>
+                                        <span class="text-2xl font-bold font-num text-asphalt tnum" id="walkInTotalDisplay">Select a space</span>
+                                    </div>
+                                    <div class="text-[11px] text-slate-600">
+                                        * Walk-in pricing includes a 10% gate premium. Online customers retain the lower registered rate.
+                                    </div>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <button type="submit" class="btn btn-primary btn-block btn-lg gap-2 mt-4">
+                                    <i class="fa-solid fa-ticket text-xs"></i>
+                                    <span>ISSUE WALK-IN PASS &amp; CHECK-IN</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        function setDuration(hours) {
+            document.querySelectorAll('[id^="durBtn"]').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById('durBtn' + hours);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            document.getElementById('durationHoursInput').value = hours;
+
+            calculateWalkInPrice();
+            document.querySelector('[data-walk-in-map]')?.refreshMap?.();
+        }
+
+        function calculateWalkInPrice() {
+            const spaceSelect = document.getElementById('spaceSelect');
+            const selectedOpt = spaceSelect ? spaceSelect.options[spaceSelect.selectedIndex] : null;
+
+            let rate = 0;
+            const hasRate = selectedOpt && selectedOpt.getAttribute('data-rate');
+            if (hasRate) {
+                rate = (parseFloat(selectedOpt.getAttribute('data-rate')) || 0) * 1.10;
+            }
+            const hours = parseInt(document.getElementById('durationHoursInput')?.value || '2', 10);
+
+            const total = Math.max(0, rate * hours);
+
+            const rateBadge = document.getElementById('rateBadge');
+            if (rateBadge) rateBadge.innerText = hasRate ? 'LKR ' + Math.round(rate) + '/hr' : 'Select a space';
+
+            const display = document.getElementById('walkInTotalDisplay');
+            if (display) display.innerText = hasRate ? 'LKR ' + total.toFixed(2) : 'Select a space';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const initialDuration = document.getElementById('durationHoursInput')?.value;
+            document.querySelectorAll('[id^="durBtn"]').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('durBtn' + initialDuration)?.classList.add('active');
+            calculateWalkInPrice();
+        });
+    </script>
+</body>
+</html>

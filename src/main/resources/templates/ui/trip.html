@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- STICKY TRIP BAR FRAGMENT -->
+    <div th:fragment="bar(locationName, arrival, departure, plate, spaceCode)" 
+         class="bg-asphalt border-b border-[#1A2B42] text-white py-3 px-4 shadow-1">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- Location -->
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-location-dot text-primary-100"></i>
+                    <span class="font-bold text-sm font-heading" th:text="${locationName != null ? locationName : 'Colombo Central Parking'}">
+                        Colombo Central Parking
+                    </span>
+                </div>
+
+                <span class="hidden sm:inline text-slate-600">|</span>
+
+                <!-- Window -->
+                <div class="flex items-center gap-2 text-slate-300">
+                    <i class="fa-regular fa-clock text-slate-400"></i>
+                    <span th:text="${arrival}">23 Sep, 10:00</span>
+                    <span class="text-slate-500 font-bold">&rarr;</span>
+                    <span th:text="${departure}">23 Sep, 14:00</span>
+                </div>
+
+                <!-- Plate (optional) -->
+                <div th:if="${plate != null}" class="flex items-center gap-2">
+                    <span class="hidden sm:inline text-slate-600">|</span>
+                    <span class="plate plate-sm" th:text="${plate}">WP CAA-1234</span>
+                </div>
+
+                <!-- Space (optional) -->
+                <div th:if="${spaceCode != null}" class="flex items-center gap-2">
+                    <span class="hidden sm:inline text-slate-600">|</span>
+                    <span class="px-2 py-0.5 rounded bg-blue-900/60 border border-info-500/40 text-line-200 font-bold font-num" th:text="${'Bay ' + spaceCode}">Bay A-12</span>
+                </div>
+            </div>
+
+            <!-- Edit Search / Window Button -->
+            <div>
+                <a href="/customer/parking-search" class="text-xs font-semibold text-primary-100 hover:text-yellow-300 transition flex items-center gap-1">
+                    <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+                    <span>Modify</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

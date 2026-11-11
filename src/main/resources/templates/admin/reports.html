@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head('Financial & Analytics Reports - ParkNGo Admin')}"></head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex">
+
+    <!-- Console Sidebar -->
+    <aside th:replace="~{layout/app :: sidebar('ADMIN', 'reports')}"></aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen bg-mist">
+        
+        <!-- Console Topbar -->
+        <header th:replace="~{layout/app :: topbar('Financial & Analytics Reports', 'ADMIN')}"></header>
+
+        <!-- Main Body -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+            
+            <!-- Flash Alerts -->
+            <div th:replace="~{ui/flash :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-line-200">
+                <div>
+                    <h2 class="text-2xl font-black text-asphalt font-heading tracking-tight">Financial &amp; Performance Audit</h2>
+                    <p class="text-sm text-slate-500 mt-1">Comprehensive revenue reconciliation, fulfillment metrics, and booking yield analysis across all facilities.</p>
+                </div>
+                <div>
+                    <button type="button" onclick="window.print()" class="px-4 py-2.5 rounded-lg text-sm font-bold bg-white border border-line-200 hover:bg-slate-50 text-asphalt transition shadow-xs flex items-center gap-2">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Export / Print Report</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3 Big Metric Highlights -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <!-- Revenue -->
+                <div class="p-6 rounded-2xl bg-white border border-line-200 shadow-xs relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Gross Revenue</span>
+                        <span class="w-10 h-10 rounded-xl bg-go-50 text-go-600 flex items-center justify-center text-lg font-bold">
+                            <i class="fa-solid fa-money-bill-wave"></i>
+                        </span>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-2xl font-black text-go-600 font-num">LKR </span>
+                        <span class="text-3xl font-black text-asphalt font-num" th:text="${#numbers.formatDecimal(totalRevenue != null ? totalRevenue : 0, 1, 2)}">0.00</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">Aggregated from completed parking stays</p>
+                </div>
+
+                <!-- Total Bookings -->
+                <div class="p-6 rounded-2xl bg-white border border-line-200 shadow-xs relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Reservations</span>
+                        <span class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-bold">
+                            <i class="fa-solid fa-ticket"></i>
+                        </span>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-3xl font-black text-asphalt font-num" th:text="${totalReservations != null ? totalReservations : 0}">0</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">All reservations created across the network</p>
+                </div>
+
+                <!-- Completed Bookings -->
+                <div class="p-6 rounded-2xl bg-white border border-line-200 shadow-xs relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Successfully Completed</span>
+                        <span class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </span>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-3xl font-black text-asphalt font-num" th:text="${completedReservations != null ? completedReservations : 0}">0</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">Fulfilled &amp; checked-out stays</p>
+                </div>
+
+            </div>
+
+            <!-- Operations Summary Card -->
+            <div class="p-6 rounded-2xl bg-white border border-line-200 shadow-xs space-y-4">
+                <div class="flex items-center justify-between border-b border-line-100 pb-4">
+                    <h3 class="text-base font-bold text-asphalt font-heading">Fulfillment &amp; Operations Audit</h3>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-go-50 text-go-700 text-xs font-bold border border-go-200">
+                        <span class="w-2 h-2 rounded-full bg-go-500 animate-pulse"></span>
+                        System Operational
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div class="bg-slate-50 p-5 rounded-xl border border-line-200">
+                        <span class="text-slate-500 block font-semibold mb-1">Fulfillment Rate</span>
+                        <span class="text-2xl font-black text-asphalt font-num" 
+                              th:text="${totalReservations != null and totalReservations > 0 ? (completedReservations * 100 / totalReservations) + '%' : '100%'}">100%</span>
+                    </div>
+                    <div class="bg-slate-50 p-5 rounded-xl border border-line-200">
+                        <span class="text-slate-500 block font-semibold mb-1">Average Booking Yield</span>
+                        <span class="text-2xl font-black text-go-600 font-num"
+                              th:text="${completedReservations != null and completedReservations > 0 ? 'LKR ' + #numbers.formatDecimal(totalRevenue / completedReservations, 1, 2) : 'LKR 0.00'}">LKR 0.00</span>
+                    </div>
+                    <div class="bg-slate-50 p-5 rounded-xl border border-line-200">
+                        <span class="text-slate-500 block font-semibold mb-1">Billing Standard</span>
+                        <span class="text-sm font-bold text-asphalt mt-1 block font-heading">Hourly Billed + Turnover Grace Period</span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>

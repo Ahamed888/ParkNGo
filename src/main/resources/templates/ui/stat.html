@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- 5-arg: subtext only, no trend inference -->
+    <div th:fragment="tile(label, value, icon, tone, subtext)"
+         th:replace="~{ui/stat :: tileTrend(${label}, ${value}, ${icon}, ${tone}, ${subtext}, null)}">
+    </div>
+
+    <!-- 6-arg: explicit trend ∈ up | down | null -->
+    <div th:fragment="tileTrend(label, value, icon, tone, subtext, trend)"
+         class="bg-white rounded-2xl border border-line-200 p-5 shadow-1 flex flex-col gap-3 transition-all hover:shadow-2 hover:border-line-100 kpi">
+
+        <div th:if="${icon != null}"
+             th:class="${tone == 'go' ? 'w-11 h-11 rounded-xl bg-go-50 text-go-600 flex items-center justify-center shadow-xs' : (tone == 'caution' ? 'w-11 h-11 rounded-xl bg-caution-50 text-caution-700 flex items-center justify-center shadow-xs' : (tone == 'stop' ? 'w-11 h-11 rounded-xl bg-stop-50 text-stop-600 flex items-center justify-center shadow-xs' : (tone == 'info' ? 'w-11 h-11 rounded-xl bg-info-50 text-info-600 flex items-center justify-center shadow-xs' : 'w-11 h-11 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center shadow-xs')))}">
+            <i th:if="${#strings.startsWith(icon, 'fa-')}" th:class="${'fa-solid ' + icon + ' text-lg'}"></i>
+            <i th:unless="${#strings.startsWith(icon, 'fa-')}" th:attr="data-lucide=${icon}" class="w-5 h-5"></i>
+        </div>
+
+        <div class="space-y-1">
+            <div class="text-[13px] font-semibold text-ink-500 tracking-wide" th:text="${label}">Label</div>
+            <div class="text-[28px] leading-none font-bold text-ink-900 tabular-nums" th:text="${value}">0</div>
+        </div>
+
+        <div th:if="${subtext != null}" class="flex items-center gap-2 text-xs font-medium pt-2 border-t border-line-100"
+             th:classappend="${trend == 'up' ? 'text-go-600' : (trend == 'down' ? 'text-stop-600' : 'text-ink-500')}">
+            <i th:if="${trend == 'up'}" data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+            <i th:if="${trend == 'down'}" data-lucide="trending-down" class="w-3.5 h-3.5"></i>
+            <span th:text="${subtext}">Caption</span>
+        </div>
+    </div>
+
+</body>
+</html>

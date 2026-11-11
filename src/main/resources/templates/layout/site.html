@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- SITE HEADER / NAVBAR -->
+    <header th:fragment="header" class="sticky top-0 z-40 bg-asphalt border-b border-line-200 text-mist">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand & Sri Lanka Network Badge -->
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="flex items-center space-x-3 group">
+                        <span th:replace="~{ui/brand :: mark('w-10 h-10 shrink-0')}"></span>
+                        <div class="flex flex-col">
+                            <span class="text-lg font-bold tracking-tight font-heading text-white group-hover:text-slate-200 transition leading-none">
+                                Park<span class="parkngo-brand-n">N</span>Go
+                            </span>
+                            <span class="text-[10px] tracking-wider text-slate-400 uppercase font-medium mt-0.5">
+                                Sri Lanka
+                            </span>
+                        </div>
+                    </a>
+
+                    <!-- Operational Hubs Stencil Badge (Desktop) -->
+                    <div class="hidden xl:flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-asphalt-800 border border-slate-700/60 text-[11px] text-slate-300 font-medium">
+                        <span class="w-1.5 h-1.5 rounded-full bg-go-400 animate-pulse"></span>
+                        <span>Colombo &bull; Kandy &bull; Galle</span>
+                    </div>
+
+                    <!-- Customer Navigation Links -->
+                    <nav class="hidden md:flex items-center space-x-1" sec:authorize="!hasAnyRole('STAFF', 'ADMIN')">
+                        <a href="/customer/parking-search" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">
+                            Find Parking
+                        </a>
+                        <a href="/customer/packages" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">
+                            Passes & Packages
+                        </a>
+                        <a sec:authorize="isAuthenticated()" href="/customer/reservations" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">
+                            My Trips
+                        </a>
+                        <a sec:authorize="isAuthenticated()" href="/customer/vehicles" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">
+                            Garage
+                        </a>
+                    </nav>
+
+                    <!-- Staff Quick Links -->
+                    <nav class="hidden md:flex items-center space-x-1" sec:authorize="hasRole('STAFF')">
+                        <a href="/staff/dashboard" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Operations</a>
+                        <a href="/staff/verify-reservation" class="px-3 py-1.5 rounded-md text-sm font-semibold bg-go-600/90 hover:bg-go-600 text-white transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-qrcode text-xs"></i>
+                            <span>Verify Arrival</span>
+                        </a>
+                        <a href="/staff/active-reservations" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Active Queue</a>
+                        <a href="/staff/occupancy" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Occupancy</a>
+                    </nav>
+
+                    <!-- Admin Quick Links -->
+                    <nav class="hidden md:flex items-center space-x-1" sec:authorize="hasRole('ADMIN')">
+                        <a href="/admin/dashboard" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Admin Dashboard</a>
+                        <a href="/admin/spaces" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Spaces</a>
+                        <a href="/admin/facilities" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Facilities</a>
+                        <a href="/admin/payments" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Payments</a>
+                        <a href="/admin/reports" class="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-asphalt-800 transition">Reports</a>
+                    </nav>
+                </div>
+
+                <!-- Right Actions: Book CTA / Account / Auth -->
+                <div class="flex items-center space-x-3">
+                    <!-- Customer Primary CTA: Reserve Parking -->
+                    <a sec:authorize="!hasAnyRole('STAFF', 'ADMIN')" href="/customer/reservation/create" class="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-primary hover:bg-primary-hover text-white font-semibold text-sm transition shadow-xs border border-info-400/20">
+                        <span>Book Space</span>
+                    </a>
+
+                    <!-- Guest Authentication Actions -->
+                    <div sec:authorize="!isAuthenticated()" class="flex items-center space-x-2">
+                        <a href="/login" class="text-sm font-medium text-slate-300 hover:text-white px-3 py-1.5 transition">
+                            Sign In
+                        </a>
+                        <a href="/register" class="bg-white hover:bg-slate-100 text-asphalt px-3.5 py-1.5 rounded-md font-semibold text-sm transition shadow-xs">
+                            Register
+                        </a>
+                    </div>
+
+                    <!-- Authenticated Dropdown Menu -->
+                    <div sec:authorize="isAuthenticated()" class="relative flex items-center space-x-2">
+                        <!-- Notifications Bell -->
+                        <a href="/customer/notifications" sec:authorize="hasRole('CUSTOMER')" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-asphalt-800 transition" title="Notifications" aria-label="Notifications">
+                            <i class="fa-regular fa-bell text-base"></i>
+                        </a>
+
+                        <!-- Account Pill / Toggle -->
+                        <button type="button" data-dropdown-toggle="userMenuDropdown" aria-expanded="false" class="flex items-center space-x-2.5 px-3 py-1.5 rounded-lg bg-asphalt-800 hover:bg-slate-800 border border-slate-700/60 text-slate-200 transition text-sm">
+                            <span class="w-6 h-6 rounded-full bg-primary text-asphalt text-xs font-bold flex items-center justify-center font-num">
+                                <i class="fa-solid fa-user text-[10px]"></i>
+                            </span>
+                            <span class="font-medium max-w-[120px] truncate" sec:authentication="name">User</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                        </button>
+
+                        <!-- User Dropdown Menu -->
+                        <div id="userMenuDropdown" data-dropdown-menu class="hidden absolute right-0 top-full mt-2 w-64 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-xl bg-white text-slate-800 shadow-xl border border-line-200 py-2 z-50">
+                            <div class="px-4 py-2 border-b border-line-100">
+                                <div class="text-xs text-slate-500 font-medium">Signed in as</div>
+                                <div class="font-semibold text-slate-900 text-sm truncate" sec:authentication="name">User</div>
+                            </div>
+
+                            <!-- Customer Menu Items -->
+                            <div sec:authorize="hasRole('CUSTOMER')">
+                                <a href="/customer/dashboard" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-gauge text-slate-400 w-4"></i> Dashboard
+                                </a>
+                                <a href="/customer/reservations" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-ticket text-slate-400 w-4"></i> My Bookings
+                                </a>
+                                <a href="/customer/vehicles" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-car text-slate-400 w-4"></i> My Vehicles
+                                </a>
+                                <a href="/customer/subscriptions" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-id-card text-slate-400 w-4"></i> My Passes
+                                </a>
+                                <a href="/customer/profile" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-user-gear text-slate-400 w-4"></i> Profile & Security
+                                </a>
+                            </div>
+
+                            <!-- Staff Menu Items -->
+                            <div sec:authorize="hasRole('STAFF')">
+                                <a href="/staff/dashboard" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-gauge text-slate-400 w-4"></i> Operations Console
+                                </a>
+                                <a href="/staff/verify-reservation" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-check-double text-slate-400 w-4"></i> Verify Arrival
+                                </a>
+                            </div>
+
+                            <!-- Admin Menu Items -->
+                            <div sec:authorize="hasRole('ADMIN')">
+                                <p class="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Administration</p>
+                                <a href="/admin/dashboard" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-toolbox text-slate-400 w-4"></i> Admin Console
+                                </a>
+                                <a href="/admin/facilities" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-building text-slate-400 w-4"></i> Facilities
+                                </a>
+                                <a href="/admin/spaces" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-square-parking text-slate-400 w-4"></i> Parking Spaces
+                                </a>
+                                <a href="/admin/reservations" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-calendar-check text-slate-400 w-4"></i> Reservations
+                                </a>
+                                <a href="/admin/services" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-briefcase text-slate-400 w-4"></i> Services
+                                </a>
+                                <p class="mt-1 px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-t border-line-100">Membership &amp; Billing</p>
+                                <a href="/admin/packages" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-id-card text-slate-400 w-4"></i> Memberships
+                                </a>
+                                <a href="/admin/discounts" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-tag text-slate-400 w-4"></i> Discounts
+                                </a>
+                                <a href="/admin/payments" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-credit-card text-slate-400 w-4"></i> Payments
+                                </a>
+                                <p class="mt-1 px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-t border-line-100">Oversight</p>
+                                <a href="/admin/users" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-users text-slate-400 w-4"></i> User Management
+                                </a>
+                                <a href="/admin/reports" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-chart-column text-slate-400 w-4"></i> Reports
+                                </a>
+                                <a href="/admin/feedback" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-message text-slate-400 w-4"></i> Feedback
+                                </a>
+                            </div>
+
+                            <div class="border-t border-line-100 mt-2 pt-2 px-2">
+                                <form th:action="@{/logout}" method="post">
+                                    <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-stop-600 hover:bg-stop-50 rounded-lg transition font-medium">
+                                        <i class="fa-solid fa-arrow-right-from-bracket text-stop-500 w-4"></i> Sign Out
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Menu Hamburger Button -->
+                    <button type="button" data-mobile-menu-toggle="siteMobileMenu" aria-expanded="false" class="md:hidden p-2 rounded-lg text-slate-300 hover:text-white hover:bg-asphalt-800 transition" aria-label="Toggle navigation">
+                        <i class="fa-solid fa-bars text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Drawer Menu -->
+        <div id="siteMobileMenu" class="hidden md:hidden bg-asphalt-800 border-t border-slate-700/60 px-4 py-3 space-y-2 text-sm">
+            <div sec:authorize="!hasAnyRole('STAFF', 'ADMIN')" class="space-y-1">
+                <a href="/customer/reservation/create" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-asphalt font-semibold">
+                    Book Space
+                </a>
+                <a href="/customer/parking-search" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Find Parking</a>
+                <a href="/customer/packages" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Passes & Packages</a>
+                <div sec:authorize="isAuthenticated()">
+                    <a href="/customer/dashboard" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Dashboard</a>
+                    <a href="/customer/reservations" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">My Bookings</a>
+                    <a href="/customer/vehicles" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">My Vehicles</a>
+                    <a href="/customer/subscriptions" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">My Passes</a>
+                    <a href="/customer/payments" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Payments</a>
+                    <a href="/customer/profile" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Profile & Security</a>
+                </div>
+            </div>
+
+            <div sec:authorize="hasRole('STAFF')" class="space-y-1">
+                <a href="/staff/dashboard" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Operations</a>
+                <a href="/staff/verify-reservation" class="block px-3 py-2 rounded-lg bg-go-600 text-white font-semibold">Verify Arrival</a>
+                <a href="/staff/active-reservations" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Active Queue</a>
+                <a href="/staff/occupancy" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Occupancy</a>
+                <a href="/staff/parking-spaces" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Spaces</a>
+            </div>
+
+            <div sec:authorize="hasRole('ADMIN')" class="space-y-1">
+                <a href="/admin/dashboard" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Dashboard</a>
+                <a href="/admin/users" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Users</a>
+                <a href="/admin/facilities" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Facilities</a>
+                <a href="/admin/spaces" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Spaces</a>
+                <a href="/admin/packages" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Packages</a>
+                <a href="/admin/discounts" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Discounts</a>
+                <a href="/admin/payments" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Payments</a>
+                <a href="/admin/feedback" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Feedback</a>
+                <a href="/admin/reports" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-asphalt">Reports</a>
+            </div>
+
+            <!-- Sign in / Sign out for mobile -->
+            <div class="pt-3 border-t border-slate-700/60">
+                <div sec:authorize="!isAuthenticated()" class="flex flex-col gap-2">
+                    <a href="/login" class="block text-center py-2 text-slate-200 bg-asphalt rounded-lg">Sign In</a>
+                    <a href="/register" class="block text-center py-2 text-asphalt bg-white font-semibold rounded-lg">Register</a>
+                </div>
+                <div sec:authorize="isAuthenticated()">
+                    <form th:action="@{/logout}" method="post">
+                        <button type="submit" class="w-full text-center py-2 text-rose-300 bg-rose-950/40 border border-rose-800/40 rounded-lg">
+                            Sign Out (<span sec:authentication="name">User</span>)
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MOBILE BOTTOM TAB BAR (Customer Authenticated Only) -->
+    <nav th:fragment="mobileTabs(active)" class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-asphalt border-t border-line-200 text-slate-400 pb-safe">
+        <div class="grid grid-cols-4 h-16 text-center text-[10px] font-medium">
+            <a href="/customer/parking-search" th:class="${active == 'find' ? 'text-primary font-bold flex flex-col items-center justify-center' : 'text-slate-400 hover:text-white flex flex-col items-center justify-center'}">
+                <i class="fa-solid fa-magnifying-glass text-base mb-1"></i>
+                <span>Find</span>
+            </a>
+            <a href="/customer/reservations" th:class="${active == 'trips' ? 'text-primary font-bold flex flex-col items-center justify-center' : 'text-slate-400 hover:text-white flex flex-col items-center justify-center'}">
+                <i class="fa-solid fa-ticket text-base mb-1"></i>
+                <span>Trips</span>
+            </a>
+            <a href="/customer/vehicles" th:class="${active == 'garage' ? 'text-primary font-bold flex flex-col items-center justify-center' : 'text-slate-400 hover:text-white flex flex-col items-center justify-center'}">
+                <i class="fa-solid fa-car text-base mb-1"></i>
+                <span>Garage</span>
+            </a>
+            <a href="/customer/dashboard" th:class="${active == 'account' ? 'text-primary font-bold flex flex-col items-center justify-center' : 'text-slate-400 hover:text-white flex flex-col items-center justify-center'}">
+                <i class="fa-solid fa-user text-base mb-1"></i>
+                <span>Account</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- SITE FOOTER -->
+    <footer th:fragment="footer" class="bg-asphalt text-slate-400 text-xs mt-20 border-t border-line-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-slate-800">
+                <!-- Column 1: Identity & Guarantee -->
+                <div class="md:col-span-2 space-y-3">
+                    <div class="flex items-center space-x-3">
+                        <span th:replace="~{ui/brand :: mark('w-10 h-10 shrink-0')}"></span>
+                        <span class="text-base font-bold text-white font-heading tracking-tight">
+                            Park<span class="parkngo-brand-n">N</span>Go Sri Lanka
+                        </span>
+                    </div>
+                    <p class="text-slate-400 text-xs max-w-md leading-relaxed">
+                        Commercial Smart Parking & Automated Bay Management Network. Real-time availability windowing with automatic 15-minute turnover buffer. Free cancellation until arrival.
+                    </p>
+                    <div class="flex items-center gap-2 pt-1 text-[11px] text-slate-300">
+                        <i class="fa-solid fa-shield-halved text-info-400"></i>
+                        <span>Active Network: Colombo Central &bull; Kandy City Center &bull; Galle Fort</span>
+                    </div>
+                </div>
+
+                <!-- Column 2: Parking Services -->
+                <div>
+                    <h4 class="text-white font-semibold text-xs uppercase tracking-wider mb-3">Parking Services</h4>
+                    <ul class="space-y-2 text-slate-400">
+                        <li><a href="/customer/parking-search" class="hover:text-white transition">Find Parking</a></li>
+                        <li><a href="/customer/reservation/create" class="hover:text-white transition">Reserve a Space</a></li>
+                        <li><a href="/customer/packages" class="hover:text-white transition">Monthly & Commuter Passes</a></li>
+                        <li><a href="/customer/reservations" class="hover:text-white transition">Active Bookings</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 3: Customer Account -->
+                <div>
+                    <h4 class="text-white font-semibold text-xs uppercase tracking-wider mb-3">Customer Account</h4>
+                    <ul class="space-y-2 text-slate-400">
+                        <li><a href="/login" class="hover:text-white transition">Sign In</a></li>
+                        <li><a href="/register" class="hover:text-white transition">Register Account</a></li>
+                        <li><a href="/customer/vehicles" class="hover:text-white transition">Registered Vehicles</a></li>
+                        <li><a href="/customer/feedback" class="hover:text-white transition">Customer Support</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Row -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
+                <div>
+                    &copy; 2026 ParkNGo Sri Lanka. All rights reserved. Built for commercial vehicle parking operations.
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span>LKR Currency (tnum)</span>
+                    <span>&bull;</span>
+                    <span>Asia/Colombo (UTC+05:30)</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('500 Server Exception - ParkNGo')}"></head>
+<body class="bg-asphalt text-slate-100 font-sans antialiased min-h-screen flex flex-col justify-between">
+    
+    <header class="p-6 border-b border-[#1A2B42]">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <a href="/" class="flex items-center space-x-3 group">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-info-600 text-white font-extrabold text-lg font-num">
+                    P
+                </span>
+                <span class="text-xl font-bold tracking-tight font-heading text-white">
+                    Park<span class="parkngo-brand-n">N</span>Go
+                </span>
+            </a>
+        </div>
+    </header>
+
+    <main class="flex-1 flex items-center justify-center p-6">
+        <div class="max-w-md w-full text-center">
+            <div class="rounded-xl bg-[#14243B] border border-[#1A2B42] p-8 shadow-2xl space-y-6">
+                <div class="w-16 h-16 rounded-full bg-stop-500/10 border border-stop-500/20 text-stop-400 flex items-center justify-center text-3xl mx-auto">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-stop-400">Error 500</span>
+                    <h1 class="text-2xl font-black text-white font-heading mt-1">Internal Server Error</h1>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+                        An unexpected server error occurred while processing your request. Please try again in a few moments.
+                    </p>
+                </div>
+                <div class="pt-2 flex flex-col gap-3">
+                    <a href="/" class="w-full py-2.5 rounded-lg text-xs font-semibold bg-info-600 hover:bg-info-600 text-white transition text-center">
+                        Return to Home Page
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="p-6 text-center text-xs text-slate-500 border-t border-[#1A2B42]">
+        &copy; 2026 ParkNGo Parking Network. All rights reserved.
+    </footer>
+</body>
+</html>

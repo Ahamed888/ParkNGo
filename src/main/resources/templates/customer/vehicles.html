@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Garage & Vehicles')}">
+    <title>Garage &amp; Vehicles &mdash; ParkNGo</title>
+</head>
+<body class="bg-mist text-asphalt min-h-screen flex flex-col font-sans antialiased">
+    <div class="flex flex-1 min-h-screen">
+        <!-- Unified Master Sidebar -->
+        <div th:replace="~{layout/app :: sidebar('CUSTOMER', 'vehicles')}"></div>
+
+        <!-- Main Layout -->
+        <div class="flex-1 md:pl-64 flex flex-col min-w-0 min-h-screen">
+            <div th:replace="~{layout/app :: topbar('', 'CUSTOMER')}"></div>
+
+            <main class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div th:replace="~{ui/flash :: flash}"></div>
+
+                <!-- Page Title Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-line-200 shadow-1">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-primary text-caution-700 flex items-center justify-center text-lg font-bold">
+                            <i class="fa-solid fa-car"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2.5">
+                                <h1 class="text-2xl font-bold font-heading text-asphalt">Garage &amp; Vehicles</h1>
+                                <span th:if="${vehicles != null}" class="pill pill-info text-xs" th:text="${vehicles.size() + ' Registered'}">0 Registered</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-0.5">Manage your vehicle profiles for fast 1-click reservations and gate attendant verification.</p>
+                        </div>
+                    </div>
+
+                    <a href="/customer/vehicles/add" class="btn btn-primary btn-md gap-2">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Register new vehicle</span>
+                    </a>
+                </div>
+
+                <!-- Empty State -->
+                <div th:if="${vehicles == null or vehicles.isEmpty()}" class="bg-white rounded-2xl border border-line-200 p-8 shadow-1">
+                    <div th:replace="~{ui/empty :: state('fa-car', 'No vehicles registered yet', 'Add your vehicle details for fast reservation checkout and automated gate entry.', 'Register first vehicle', '/customer/vehicles/add')}"></div>
+                </div>
+
+                <!-- Vehicles Grid -->
+                <div th:if="${vehicles != null and !vehicles.isEmpty()}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div th:each="vehicle : ${vehicles}" class="bg-white rounded-2xl border border-line-200 p-6 shadow-1 hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+                        <div class="space-y-4">
+                            <!-- Vehicle Header & Type Icon -->
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-[10px] bg-mist text-asphalt border border-line-100 flex items-center justify-center text-base">
+                                        <i th:class="${vehicle.getTypeIcon()}"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold font-heading text-asphalt text-base" th:text="${vehicle.brand + ' ' + vehicle.model}">Toyota Camry</h3>
+                                        <span class="text-xs text-slate-500" th:text="${vehicle.getVehicleTypeDisplay()}">Sedan / Car</span>
+                                    </div>
+                                </div>
+                                <span class="pill pill-go">Registered</span>
+                            </div>
+
+                            <!-- Sri Lankan License Plate Badge -->
+                            <div class="py-2 flex items-center justify-center bg-mist rounded-[10px] border border-line-100">
+                                <div th:replace="~{ui/plate :: plate(${vehicle.registrationNumber}, 'lg')}"></div>
+                            </div>
+
+                            <!-- Metadata List -->
+                            <div class="grid grid-cols-2 gap-2 text-xs py-3 border-t border-b border-line-100 text-slate-500">
+                                <div class="flex items-center gap-1.5">
+                                    <span>Color:</span>
+                                    <span class="font-semibold text-asphalt capitalize" th:text="${vehicle.color != null and !vehicle.color.trim().isEmpty() ? vehicle.color : 'Standard'}">Silver</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span>Added:</span>
+                                    <span class="font-medium text-asphalt tnum" th:text="${vehicle.createdAt != null ? #temporals.format(vehicle.createdAt, 'dd MMM yyyy') : 'Recent'}">Aug 20, 2026</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Bar -->
+                        <div class="pt-2 flex items-center gap-2">
+                            <a th:href="@{/customer/reservation/create(vehicleId=${vehicle.id})}" class="btn btn-primary btn-sm flex-1 justify-center gap-1.5">
+                                <span>Reserve space</span>
+                            </a>
+                            <a th:href="@{/customer/vehicles/edit/{id}(id=${vehicle.id})}" class="btn btn-secondary btn-sm" title="Edit vehicle">
+                                <i class="fa-solid fa-pen text-[10px]"></i>
+                            </a>
+                            <form th:action="@{/customer/vehicles/delete/{id}(id=${vehicle.id})}" method="post" class="inline"
+                                  data-confirm="Remove vehicle from your account?"
+                                  data-confirm-btn="Remove vehicle"
+                                  data-confirm-tone="danger">
+                                <button type="submit" class="btn btn-danger btn-sm" title="Remove vehicle">
+                                    <i class="fa-solid fa-trash-can text-[10px]"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- CUSTOMER ACCOUNT SUB-NAVIGATION (Desktop sidebar / Mobile tabs) -->
+    <nav th:fragment="subnav(active)" class="w-full lg:w-60 flex-shrink-0">
+        <!-- Desktop Vertical List -->
+        <div class="hidden lg:block bg-white rounded-xl border border-line-200 p-2 shadow-xs space-y-1">
+            <div class="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Account Portal</div>
+            
+            <a href="/customer/dashboard" 
+               th:class="${active == 'overview' ? 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-asphalt' : 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition'}">
+                <i class="fa-solid fa-gauge w-4 text-center"></i>
+                <span>Overview</span>
+            </a>
+
+            <a href="/customer/reservations" 
+               th:class="${active == 'trips' ? 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-asphalt' : 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition'}">
+                <i class="fa-solid fa-ticket w-4 text-center"></i>
+                <span>My Bookings</span>
+            </a>
+
+            <a href="/customer/vehicles" 
+               th:class="${active == 'garage' ? 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-asphalt' : 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition'}">
+                <i class="fa-solid fa-car w-4 text-center"></i>
+                <span>Garage & Vehicles</span>
+            </a>
+
+            <a href="/customer/subscriptions" 
+               th:class="${active == 'passes' ? 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-asphalt' : 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition'}">
+                <i class="fa-solid fa-id-card w-4 text-center"></i>
+                <span>My Passes</span>
+            </a>
+
+            <a href="/customer/payments" 
+               th:class="${active == 'payments' ? 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-asphalt' : 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition'}">
+                <i class="fa-solid fa-credit-card w-4 text-center"></i>
+                <span>Payment History</span>
+            </a>
+
+            <a href="/customer/feedback" 
+               th:class="${active == 'feedback' ? 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-asphalt' : 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition'}">
+                <i class="fa-solid fa-comments w-4 text-center"></i>
+                <span>Reviews & Feedback</span>
+            </a>
+
+            <a href="/customer/notifications" 
+               th:class="${active == 'notifications' ? 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-asphalt' : 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition'}">
+                <i class="fa-solid fa-bell w-4 text-center"></i>
+                <span>Notifications</span>
+            </a>
+
+            <div class="pt-2 border-t border-line-100">
+                <a href="/customer/profile" 
+                   th:class="${active == 'profile' ? 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-asphalt' : 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition'}">
+                    <i class="fa-solid fa-user-gear w-4 text-center"></i>
+                    <span>Profile & Security</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Mobile Horizontal Scroll Tabs -->
+        <div class="lg:hidden flex items-center gap-1 overflow-x-auto pb-2 scrollbar-none">
+            <a href="/customer/dashboard" 
+               th:class="${active == 'overview' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-asphalt whitespace-nowrap' : 'px-3 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-line-200 whitespace-nowrap'}">
+                Overview
+            </a>
+            <a href="/customer/reservations" 
+               th:class="${active == 'trips' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-asphalt whitespace-nowrap' : 'px-3 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-line-200 whitespace-nowrap'}">
+                Bookings
+            </a>
+            <a href="/customer/vehicles" 
+               th:class="${active == 'garage' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-asphalt whitespace-nowrap' : 'px-3 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-line-200 whitespace-nowrap'}">
+                Vehicles
+            </a>
+            <a href="/customer/subscriptions" 
+               th:class="${active == 'passes' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-asphalt whitespace-nowrap' : 'px-3 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-line-200 whitespace-nowrap'}">
+                Passes
+            </a>
+            <a href="/customer/payments" 
+               th:class="${active == 'payments' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-asphalt whitespace-nowrap' : 'px-3 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-line-200 whitespace-nowrap'}">
+                Payments
+            </a>
+            <a href="/customer/profile" 
+               th:class="${active == 'profile' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-asphalt whitespace-nowrap' : 'px-3 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-line-200 whitespace-nowrap'}">
+                Profile
+            </a>
+        </div>
+    </nav>
+
+</body>
+</html>

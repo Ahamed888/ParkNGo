@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"></head>
+<body>
+
+    <!-- SVG donut: ring(pct, tone, size, label) — pct 0-100 -->
+    <div th:fragment="ring(pct, tone, size, label)"
+         class="inline-flex flex-col items-center gap-1"
+         th:with="p=${pct != null ? pct : 0}, sz=${size != null ? size : 88}, r=${(size != null ? size : 88) / 2 - 8}, circ=${2 * 3.14159265 * ((size != null ? size : 88) / 2 - 8)}, dash=${circ * (p / 100.0)},
+                  strokeColor=${tone == 'stop' ? 'var(--stop-600)' : (tone == 'go' ? 'var(--go-600)' : (tone == 'brand' ? 'var(--brand-500)' : 'var(--info-600)'))}">
+        <svg th:attr="width=${sz},height=${sz}" class="ring-chart" role="img"
+             th:attr="aria-label=${label != null ? label + ': ' + p + ' percent' : p + ' percent'}">
+            <circle th:attr="cx=${sz/2},cy=${sz/2},r=${r}" fill="none" stroke="var(--line-100)" stroke-width="8"/>
+            <circle th:attr="cx=${sz/2},cy=${sz/2},r=${r}" fill="none"
+                    th:attr="stroke=${strokeColor},stroke-dasharray=${dash + ' ' + circ},stroke-dashoffset=${circ * 0.25}"
+                    stroke-width="8" stroke-linecap="round"
+                    transform="rotate(-90)" th:attr="transform-origin=${(sz/2) + 'px ' + (sz/2) + 'px'}"/>
+            <text th:attr="x=${sz/2},y=${sz/2 + 5}" text-anchor="middle"
+                  class="fill-ink-900 font-bold tabular-nums" style="font-size:14px;font-family:Inter,system-ui,sans-serif"
+                  th:text="${p + '%'}">75%</text>
+        </svg>
+        <span th:if="${label != null}" class="text-xs font-medium text-ink-500" th:text="${label}">Occupied</span>
+    </div>
+
+</body>
+</html>

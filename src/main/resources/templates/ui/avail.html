@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- AVAILABILITY BADGE COMPONENT -->
+    <div th:fragment="badge(freeSpaces, totalSpaces, isClosed)" class="inline-flex items-center">
+        <!-- Closed -->
+        <span th:if="${isClosed}" class="pill pill-neutral">Closed for Arrival</span>
+
+        <!-- Available (>= 5 spaces and >= 20%) -->
+        <span th:if="${!isClosed and freeSpaces != null and freeSpaces >= 5}" class="pill pill-go">
+            <span th:text="${freeSpaces + ' bays free'}">14 bays free</span>
+        </span>
+
+        <!-- Limited (< 5 spaces and > 0) -->
+        <span th:if="${!isClosed and freeSpaces != null and freeSpaces > 0 and freeSpaces < 5}" class="pill pill-caution">
+            <span th:text="${freeSpaces + ' left — filling fast'}">3 left</span>
+        </span>
+
+        <!-- Full (0 spaces) -->
+        <span th:if="${!isClosed and freeSpaces != null and freeSpaces == 0}" class="pill pill-stop">
+            <span>Full for requested window</span>
+        </span>
+
+        <!-- Unknown / Default -->
+        <span th:if="${!isClosed and freeSpaces == null}" class="pill pill-neutral">
+            <span>Checking availability...</span>
+        </span>
+    </div>
+
+    <!-- OCCUPANCY METER COMPONENT -->
+    <div th:fragment="meter(pct, free, total)" class="w-full space-y-1.5">
+        <div class="flex items-center justify-between text-xs font-medium">
+            <span class="text-slate-500 font-num">Occupancy Rate</span>
+            <span class="font-bold text-slate-800 font-num" th:text="${pct + '%'}">75%</span>
+        </div>
+        
+        <!-- 6px Meter Bar -->
+        <div class="w-full bg-mist rounded-full h-2 overflow-hidden border border-line-200">
+            <div th:class="${pct >= 90 ? 'h-full bg-stop-600 transition-all duration-300' : (pct >= 70 ? 'h-full bg-caution-600 transition-all duration-300' : 'h-full bg-go-600 transition-all duration-300')}"
+                 th:style="${'width: ' + pct + '%'}"></div>
+        </div>
+
+        <div class="flex items-center justify-between text-[11px] text-slate-400">
+            <span th:text="${free + ' available'}">15 available</span>
+            <span th:text="${total + ' total bays'}">60 total bays</span>
+        </div>
+    </div>
+
+</body>
+</html>

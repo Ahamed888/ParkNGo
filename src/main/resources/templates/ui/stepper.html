@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- CHECKOUT STEPPER COMPONENT -->
+    <!-- current: 1 to 5 -->
+    <div th:fragment="stepper(current)" class="w-full py-4">
+        
+        <!-- Desktop Stepper (>= md) -->
+        <div class="hidden md:flex items-center justify-between max-w-3xl mx-auto px-4">
+            
+            <!-- Step 1: Space & Time -->
+            <div class="flex items-center">
+                <div th:class="${current > 1 ? 'w-8 h-8 rounded-full bg-go-600 text-white flex items-center justify-center text-xs font-bold' : (current == 1 ? 'w-8 h-8 rounded-full bg-info-600 text-white flex items-center justify-center text-xs font-bold ring-4 ring-info-100 shadow-xs' : 'w-8 h-8 rounded-full bg-slate-100 border border-slate-300 text-slate-500 flex items-center justify-center text-xs font-bold')}">
+                    <i th:if="${current > 1}" class="fa-solid fa-check"></i>
+                    <span th:if="${current <= 1}">1</span>
+                </div>
+                <span th:class="${current == 1 ? 'ml-2.5 text-xs font-bold text-slate-900 uppercase tracking-wider font-[\'Barlow_Semi_Condensed\']' : 'ml-2.5 text-xs font-medium text-slate-500 uppercase tracking-wider font-[\'Barlow_Semi_Condensed\']'}">
+                    Space & Time
+                </span>
+            </div>
+
+            <!-- Connector 1-2 -->
+            <div th:class="${current > 1 ? 'flex-1 mx-3 h-0.5 bg-go-500' : 'flex-1 mx-3 border-t-2 border-dashed border-slate-300'}"></div>
+
+            <!-- Step 2: Vehicle -->
+            <div class="flex items-center">
+                <div th:class="${current > 2 ? 'w-8 h-8 rounded-full bg-go-600 text-white flex items-center justify-center text-xs font-bold' : (current == 2 ? 'w-8 h-8 rounded-full bg-info-600 text-white flex items-center justify-center text-xs font-bold ring-4 ring-info-100 shadow-xs' : 'w-8 h-8 rounded-full bg-slate-100 border border-slate-300 text-slate-500 flex items-center justify-center text-xs font-bold')}">
+                    <i th:if="${current > 2}" class="fa-solid fa-check"></i>
+                    <span th:if="${current <= 2}">2</span>
+                </div>
+                <span th:class="${current == 2 ? 'ml-2.5 text-xs font-bold text-slate-900 uppercase tracking-wider font-[\'Barlow_Semi_Condensed\']' : 'ml-2.5 text-xs font-medium text-slate-500 uppercase tracking-wider font-[\'Barlow_Semi_Condensed\']'}">
+                    Vehicle
+                </span>
+            </div>
+
+            <!-- Connector 2-3 -->
+            <div th:class="${current > 2 ? 'flex-1 mx-3 h-0.5 bg-go-500' : 'flex-1 mx-3 border-t-2 border-dashed border-slate-300'}"></div>
+
+            <!-- Step 3: Extras -->
+            <div class="flex items-center">
+                <div th:class="${current > 3 ? 'w-8 h-8 rounded-full bg-go-600 text-white flex items-center justify-center text-xs font-bold' : (current == 3 ? 'w-8 h-8 rounded-full bg-info-600 text-white flex items-center justify-center text-xs font-bold ring-4 ring-info-100 shadow-xs' : 'w-8 h-8 rounded-full bg-slate-100 border border-slate-300 text-slate-500 flex items-center justify-center text-xs font-bold')}">
+                    <i th:if="${current > 3}" class="fa-solid fa-check"></i>
+                    <span th:if="${current <= 3}">3</span>
+                </div>
+                <span th:class="${current == 3 ? 'ml-2.5 text-xs font-bold text-slate-900 uppercase tracking-wider font-[\'Barlow_Semi_Condensed\']' : 'ml-2.5 text-xs font-medium text-slate-500 uppercase tracking-wider font-[\'Barlow_Semi_Condensed\']'}">
+                    Extras
+                </span>
+            </div>
+
+            <!-- Connector 3-4 -->
+            <div th:class="${current > 3 ? 'flex-1 mx-3 h-0.5 bg-go-500' : 'flex-1 mx-3 border-t-2 border-dashed border-slate-300'}"></div>
+
+            <!-- Step 4: Review & Pay -->
+            <div class="flex items-center">
+                <div th:class="${current > 4 ? 'w-8 h-8 rounded-full bg-go-600 text-white flex items-center justify-center text-xs font-bold' : (current == 4 ? 'w-8 h-8 rounded-full bg-info-600 text-white flex items-center justify-center text-xs font-bold ring-4 ring-info-100 shadow-xs' : 'w-8 h-8 rounded-full bg-slate-100 border border-slate-300 text-slate-500 flex items-center justify-center text-xs font-bold')}">
+                    <i th:if="${current > 4}" class="fa-solid fa-check"></i>
+                    <span th:if="${current <= 4}">4</span>
+                </div>
+                <span th:class="${current == 4 ? 'ml-2.5 text-xs font-bold text-slate-900 uppercase tracking-wider font-[\'Barlow_Semi_Condensed\']' : 'ml-2.5 text-xs font-medium text-slate-500 uppercase tracking-wider font-[\'Barlow_Semi_Condensed\']'}">
+                    Review
+                </span>
+            </div>
+        </div>
+
+        <!-- Mobile Stepper (< md) -->
+        <div class="md:hidden px-4">
+            <div class="flex items-center justify-between text-xs mb-1.5 font-medium">
+                <span class="font-bold text-slate-900 font-num uppercase tracking-wider" 
+                      th:text="${'Step ' + current + ' of 4'}">
+                    Step 1 of 4
+                </span>
+                <span class="text-slate-500" th:switch="${current}">
+                    <span th:case="1">Space & Time</span>
+                    <span th:case="2">Vehicle</span>
+                    <span th:case="3">Extras & Services</span>
+                    <span th:case="4">Review & Pay</span>
+                </span>
+            </div>
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-info-600 h-full transition-all duration-300"
+                     th:style="${'width: ' + (current * 25) + '%'}"></div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

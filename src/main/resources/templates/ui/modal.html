@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- CONFIRMATION MODAL COMPONENT (Progressive enhancement & Server template) -->
+    <div th:fragment="confirm(id, title, message, formAction, isDanger)"
+         th:id="${id}"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs hidden transition-opacity"
+         role="dialog"
+         aria-modal="true"
+         th:aria-labelledby="${id + '-title'}">
+        <div class="relative w-full max-w-md bg-white rounded-xl shadow-2xl border border-line-200 overflow-hidden transform transition-all p-6">
+            <div class="flex items-start gap-4">
+                <div th:class="${isDanger ? 'flex-shrink-0 w-11 h-11 rounded-full bg-stop-50 text-stop-600 border border-stop-200 flex items-center justify-center' : 'flex-shrink-0 w-11 h-11 rounded-full bg-info-50 text-info-600 border border-line-200 flex items-center justify-center'}">
+                    <i th:class="${isDanger ? 'fa-solid fa-triangle-exclamation text-lg' : 'fa-solid fa-circle-question text-lg'}"></i>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-base font-bold text-slate-900" th:id="${id + '-title'}" th:text="${title}">Confirm Action</h3>
+                    <p class="mt-2 text-sm text-slate-600 leading-relaxed" th:text="${message}">Are you sure you want to proceed?</p>
+                </div>
+            </div>
+            <div class="mt-6 flex items-center justify-end gap-3 pt-4 border-t border-line-100">
+                <button type="button" 
+                        onclick="this.closest('[role=dialog]').classList.add('hidden')"
+                        class="btn btn-secondary px-4 py-2 text-sm font-medium">
+                    Cancel
+                </button>
+                <form th:action="${formAction}" method="post" class="inline">
+                    <button type="submit" 
+                            th:class="${isDanger ? 'btn btn-danger px-4 py-2 text-sm font-medium' : 'btn btn-primary px-4 py-2 text-sm font-medium'}">
+                        Proceed
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- GENERAL MODAL WRAPPER -->
+    <div th:fragment="dialog(id, title)"
+         th:id="${id}"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs hidden transition-opacity"
+         role="dialog"
+         aria-modal="true"
+         th:aria-labelledby="${id + '-title'}">
+        <div class="relative w-full max-w-lg bg-white rounded-xl shadow-2xl border border-line-200 overflow-hidden transform transition-all">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-line-100">
+                <h3 class="text-base font-bold text-slate-900 font-heading" th:id="${id + '-title'}" th:text="${title}">Modal Dialog</h3>
+                <button type="button" 
+                        onclick="this.closest('[role=dialog]').classList.add('hidden')"
+                        class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <!-- Content slot inserted by caller -->
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

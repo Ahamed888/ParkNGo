@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('My Bookings')}">
+    <title>My Bookings &mdash; ParkNGo</title>
+</head>
+<body class="bg-mist text-asphalt min-h-screen flex flex-col font-sans antialiased">
+    <div class="flex flex-1 min-h-screen">
+        <!-- Unified Master Sidebar -->
+        <div th:replace="~{layout/app :: sidebar('CUSTOMER', 'reservations')}"></div>
+
+        <!-- Main Layout -->
+        <div class="flex-1 md:pl-64 flex flex-col min-w-0 min-h-screen">
+            <div th:replace="~{layout/app :: topbar('', 'CUSTOMER')}"></div>
+
+            <main class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div th:replace="~{ui/flash :: flash}"></div>
+
+                <!-- Page Title Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-line-200 shadow-1">
+                    <div>
+                        <h1 class="text-2xl font-bold font-heading text-asphalt flex items-center gap-2.5">
+                            <i class="fa-solid fa-ticket text-caution-700"></i>
+                            <span>My Parking Reservations</span>
+                        </h1>
+                        <p class="text-xs text-slate-500 mt-1">Track active parking sessions, view digital passes, and manage upcoming bookings.</p>
+                    </div>
+
+                    <a href="/customer/reservation/create" class="btn btn-primary btn-md gap-2">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Reserve space</span>
+                    </a>
+                </div>
+
+                <!-- Filter & Search Toolbar -->
+                <div class="bg-white p-4 rounded-2xl border border-line-200 shadow-1 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <!-- Filter Chips -->
+                    <div class="flex flex-wrap items-center gap-1.5" id="filterContainer">
+                        <button type="button" onclick="filterReservations('ALL', this)" class="filter-btn chip active">All</button>
+                        <button type="button" onclick="filterReservations('ACTIVE', this)" class="filter-btn chip">Active (Parked)</button>
+                        <button type="button" onclick="filterReservations('PENDING', this)" class="filter-btn chip">Pending</button>
+                        <button type="button" onclick="filterReservations('CONFIRMED', this)" class="filter-btn chip">Confirmed</button>
+                        <button type="button" onclick="filterReservations('VERIFIED', this)" class="filter-btn chip">Verified</button>
+                        <button type="button" onclick="filterReservations('EXPIRED', this)" class="filter-btn chip">Expired</button>
+                        <button type="button" onclick="filterReservations('OVERSTAYING', this)" class="filter-btn chip">Overstaying</button>
+                        <button type="button" onclick="filterReservations('OVERSTAY_PAYMENT_DUE', this)" class="filter-btn chip">Payment due</button>
+                        <button type="button" onclick="filterReservations('COMPLETED', this)" class="filter-btn chip">Completed</button>
+                        <button type="button" onclick="filterReservations('CANCELLED', this)" class="filter-btn chip">Cancelled</button>
+                    </div>
+
+                    <!-- Search Field -->
+                    <div class="relative w-full sm:w-72">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                        <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search plate, facility, or space..."
+                               class="input pl-9 text-xs py-2">
+                    </div>
+                </div>
+
+                <!-- Table Card -->
+                <div class="bg-white rounded-2xl border border-line-200 shadow-1 overflow-hidden">
+                    <!-- Empty State -->
+                    <div th:if="${reservations == null or reservations.isEmpty()}" class="p-8">
+                        <div th:replace="~{ui/empty :: state('fa-calendar-xmark', 'No reservations found', 'You don\'t have any parking reservations on record.', 'Reserve parking space', '/customer/reservation/create')}"></div>
+                    </div>
+
+                    <!-- Table -->
+                    <div th:if="${reservations != null and !reservations.isEmpty()}" class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-line-100 text-left text-xs">
+                            <thead class="bg-mist text-slate-500 font-semibold uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-3.5">Vehicle</th>
+                                    <th class="px-6 py-3.5">Space &amp; Facility</th>
+                                    <th class="px-6 py-3.5">Schedule</th>
+                                    <th class="px-6 py-3.5">Total Amount</th>
+                                    <th class="px-6 py-3.5">Status</th>
+                                    <th class="px-6 py-3.5 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-line-100 text-asphalt font-medium">
+                                <tr th:each="res : ${reservations}" class="res-row hover:bg-mist/60 transition-colors" th:data-status="${res.status}">
+                                    <td class="px-6 py-4">
+                                        <div th:replace="~{ui/plate :: plate(${res.vehicle.registrationNumber}, 'sm')}"></div>
+                                        <div class="text-[11px] text-slate-500 mt-1 font-medium" th:text="${res.vehicle.brand + ' ' + res.vehicle.model}">Toyota Camry</div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-bold font-num text-sm" th:text="${'Bay ' + res.parkingSpace.spaceNumber + ' (Floor ' + res.parkingSpace.floor + ')'}">Bay A01</div>
+                                        <div class="text-[11px] text-slate-500" th:text="${res.parkingSpace.facility != null ? res.parkingSpace.facility.name : 'Central Garage'}">Downtown Garage</div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-semibold text-asphalt tnum" th:text="${#temporals.format(res.arrivalTime, 'dd MMM yyyy, HH:mm')}">28 Aug 2026, 10:00</div>
+                                        <div class="text-[11px] text-slate-500 tnum" th:text="${'Until ' + #temporals.format(res.departureTime, 'dd MMM, HH:mm')}">Until 28 Aug, 12:00</div>
+                                    </td>
+                                    <td class="px-6 py-4 font-bold text-sm">
+                                        <div th:replace="~{ui/money :: lkr(${res.totalAmount})}"></div>
+                                        <span th:if="${res.overstayCharge != null and res.overstayCharge.compareTo(T(java.math.BigDecimal).ZERO) > 0}" class="block text-[11px] text-[#C8281C] font-semibold mt-0.5">
+                                            +<span th:replace="~{ui/money :: lkr(${res.overstayCharge})}"></span> overstay
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div th:replace="~{ui/status :: reservation(${res.status}, false)}"></div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right space-x-1.5">
+                                        <a th:if="${res.status.name() == 'PENDING' or res.status.name() == 'CONFIRMED'}"
+                                           th:href="@{/customer/reservation/{id}/edit(id=${res.id})}"
+                                           class="btn btn-secondary btn-sm">
+                                            <i class="fa-solid fa-pen text-[10px]"></i><span>Edit</span>
+                                        </a>
+                                        <a th:href="@{/customer/reservation/{id}(id=${res.id})}"
+                                           class="btn btn-ghost btn-sm text-caution-700">
+                                            <span>Pass</span> &rarr;
+                                        </a>
+                                        <a th:if="${res.status.name() == 'COMPLETED'}"
+                                           th:href="@{/customer/feedback/submit/{id}(id=${res.id})}"
+                                           class="btn btn-secondary btn-sm">
+                                            <i class="fa-solid fa-star text-[10px]"></i><span>Review</span>
+                                        </a>
+                                        <form th:if="${res.status.name() == 'PENDING' or res.status.name() == 'CONFIRMED'}"
+                                              th:action="@{/customer/reservation/{id}/cancel(id=${res.id})}" method="post"
+                                              class="inline-block"
+                                              data-confirm="Cancel this parking reservation? Full refund credited if paid by card."
+                                              data-confirm-btn="Cancel booking"
+                                              data-confirm-tone="danger">
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fa-solid fa-xmark text-[10px]"></i><span>Cancel</span>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script>
+        let reservationFilter = 'ALL';
+
+        function applyReservationFilters() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            document.querySelectorAll('.res-row').forEach(function (row) {
+                const matchesStatus = reservationFilter === 'ALL' || row.dataset.status === reservationFilter;
+                const matchesQuery = query === '' || row.textContent.toLowerCase().includes(query);
+                row.hidden = !matchesStatus || !matchesQuery;
+            });
+        }
+
+        function filterReservations(status, button) {
+            reservationFilter = status;
+            document.querySelectorAll('.filter-btn').forEach(function (item) {
+                item.classList.toggle('active', item === button);
+            });
+            applyReservationFilters();
+        }
+
+        function searchTable() {
+            applyReservationFilters();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head(${isEdit ? 'Edit User - ParkNGo Admin' : 'Create User - ParkNGo Admin'})}"></head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex">
+
+    <!-- Console Sidebar -->
+    <aside th:replace="~{layout/app :: sidebar('ADMIN', 'users')}"></aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen bg-mist">
+        
+        <!-- Console Topbar -->
+        <header th:replace="~{layout/app :: topbar(${isEdit ? 'Edit User' : 'Create User'}, 'ADMIN')}"></header>
+
+        <!-- Main Body -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-3xl w-full mx-auto">
+            
+            <!-- Flash Alerts -->
+            <div th:replace="~{ui/flash :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="space-y-2 pb-4 border-b border-line-200">
+                <a href="/admin/users" class="inline-flex items-center text-xs font-bold text-info-600 hover:underline">
+                    <i class="fa-solid fa-arrow-left mr-1.5"></i>Back to User Directory
+                </a>
+                <h2 class="text-2xl font-black text-asphalt font-heading tracking-tight" th:text="${isEdit ? 'Edit User Account' : 'Create New System User'}">Create New System User</h2>
+                <p class="text-sm text-slate-500" th:text="${isEdit ? 'Modify user account parameters, role privileges, shift hours, and status.' : 'Register a new customer account, parking staff member, or platform administrator.'}">
+                    User account details.
+                </p>
+            </div>
+
+            <!-- Form Card -->
+            <div class="p-6 rounded-xl bg-white border border-line-200 shadow-1">
+                <form th:action="${isEdit ? '/admin/user/edit/' + user.id : '/admin/user/add'}" th:object="${user}" method="post" class="space-y-6">
+                    
+                    <div class="space-y-4">
+                        <div class="border-b border-line-100 pb-2 mb-4">
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-info-600 flex items-center gap-1.5 font-heading">
+                                <i class="fa-solid fa-address-card"></i> Personal Information
+                            </h3>
+                        </div>
+
+                        <div>
+                            <label for="fullName" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Full Name *</label>
+                            <input type="text" id="fullName" name="fullName" th:value="${user.fullName}" required minlength="2" maxlength="60" autocomplete="name" placeholder="Kasun Perera"
+                                   th:classappend="${fieldErrors != null and fieldErrors.containsKey('fullName')} ? 'input-error'"
+                                   class="w-full rounded-lg bg-slate-50 border border-line-200 px-4 py-3 text-sm font-bold text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                            <p th:if="${fieldErrors != null and fieldErrors.containsKey('fullName')}" class="field-error" th:text="${fieldErrors.get('fullName')}"></p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label for="email" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Email Address *</label>
+                                <input type="email" id="email" name="email" th:value="${user.email}" required maxlength="100" autocomplete="email" placeholder="kasun@example.com"
+                                       th:classappend="${fieldErrors != null and fieldErrors.containsKey('email')} ? 'input-error'"
+                                       class="w-full rounded-lg bg-slate-50 border border-line-200 px-4 py-2.5 text-sm font-bold text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                                <p th:if="${fieldErrors != null and fieldErrors.containsKey('email')}" class="field-error" th:text="${fieldErrors.get('email')}"></p>
+                            </div>
+
+                            <div>
+                                <label for="phone" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Phone Number *</label>
+                                <input type="tel" id="phone" name="phone" th:value="${user.phone}" required placeholder="+94771234567"
+                                       pattern="(?:07[0-9]{8}|\+947[0-9]{8})" minlength="10" maxlength="12" autocomplete="tel" title="Enter a valid Sri Lankan mobile number, such as 0771234567 or +94771234567."
+                                       th:classappend="${fieldErrors != null and fieldErrors.containsKey('phone')} ? 'input-error'"
+                                       class="w-full rounded-lg bg-slate-50 border border-line-200 px-4 py-2.5 text-sm font-mono font-bold text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                                <p th:if="${fieldErrors != null and fieldErrors.containsKey('phone')}" class="field-error" th:text="${fieldErrors.get('phone')}"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 pt-4">
+                        <div class="border-b border-line-100 pb-2 mb-4">
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-info-600 flex items-center gap-1.5 font-heading">
+                                <i class="fa-solid fa-shield-halved"></i> Role & Access
+                            </h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label for="roleName" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Role Permission *</label>
+                                <select id="roleName" name="roleName" required class="w-full rounded-lg bg-slate-50 border border-line-200 px-4 py-2.5 text-sm font-bold text-asphalt focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                                    <option th:each="role : ${roles}" th:value="${role.name}" th:text="${role.name}"
+                                            th:selected="${submittedRoleName != null ? submittedRoleName == role.name : (user.role != null && user.role.name == role.name)}">CUSTOMER</option>
+                                </select>
+                            </div>
+
+                            <div th:if="${isEdit}">
+                                <label for="status" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Account Status *</label>
+                                <select id="status" name="status" required class="w-full rounded-lg bg-slate-50 border border-line-200 px-4 py-2.5 text-sm font-bold text-asphalt focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                                    <option value="ACTIVE" th:selected="${user.status != null && user.status.name() == 'ACTIVE'}">ACTIVE</option>
+                                    <option value="INACTIVE" th:selected="${user.status != null && user.status.name() == 'INACTIVE'}">INACTIVE</option>
+                                    <option value="SUSPENDED" th:selected="${user.status != null && user.status.name() == 'SUSPENDED'}">SUSPENDED</option>
+                                </select>
+                            </div>
+
+                            <div th:if="${!isEdit}">
+                                <label for="password" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Initial Password *</label>
+                                <input type="password" id="password" name="password" required minlength="8" maxlength="72" autocomplete="new-password" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,72}" title="Use 8-72 characters with uppercase, lowercase, a number, and a special character." placeholder="••••••••"
+                                       th:classappend="${fieldErrors != null and fieldErrors.containsKey('password')} ? 'input-error'"
+                                       class="w-full rounded-lg bg-slate-50 border border-line-200 px-4 py-2.5 text-sm font-bold text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                                <p th:if="${fieldErrors != null and fieldErrors.containsKey('password')}" class="field-error" th:text="${fieldErrors.get('password')}"></p>
+                            </div>
+                        </div>
+
+                        <div id="staffFacilityGroup"
+                             th:classappend="${(submittedRoleName != null ? submittedRoleName : (user.role != null ? user.role.name : '')) != 'STAFF'} ? ' hidden'">
+                            <label for="facilityId" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Assigned Parking Facility *</label>
+                            <div th:if="${currentAssignedFacility != null and currentAssignedFacility.status != null and currentAssignedFacility.status.name() == 'INACTIVE'}"
+                                 id="currentInactiveFacility" class="mb-2 rounded-lg border border-caution-200 bg-caution-50 px-3 py-2 text-xs text-caution-800">
+                                Current assignment: <strong th:text="${currentAssignedFacility.name}">Facility</strong> (Inactive). Select an active facility to change this assignment.
+                            </div>
+                            <select id="facilityId" name="facilityId" aria-describedby="facilityHelp facilityError"
+                                    th:data-has-active-facilities="${activeFacilities != null and !#lists.isEmpty(activeFacilities)}"
+                                    th:disabled="${activeFacilities == null or #lists.isEmpty(activeFacilities)}"
+                                    th:classappend="${fieldErrors != null and fieldErrors.containsKey('facilityId')} ? 'input-error'"
+                                    class="w-full rounded-lg bg-slate-50 border border-line-200 px-4 py-2.5 text-sm font-bold text-asphalt focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                                <option value="">-- Select an active parking facility --</option>
+                                <option th:each="facility : ${activeFacilities}" th:value="${facility.id}" th:text="${facility.name}"
+                                        th:selected="${submittedFacilityId != null ? submittedFacilityId == facility.id : (currentAssignedFacility != null and currentAssignedFacility.id == facility.id)}">
+                                    Colombo Central
+                                </option>
+                            </select>
+                            <p id="facilityHelp" th:if="${activeFacilities == null or #lists.isEmpty(activeFacilities)}" class="mt-2 text-xs text-caution-800">
+                                No active parking facilities are available. Activate or create a facility before assigning staff.
+                            </p>
+                            <p id="facilityError" th:if="${fieldErrors != null and fieldErrors.containsKey('facilityId')}"
+                               class="field-error" th:text="${fieldErrors.get('facilityId')}"></p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label for="shiftHours" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Staff Shift Hours (Optional)</label>
+                                <input type="text" id="shiftHours" name="shiftHours" th:value="${user.shiftHours}" maxlength="50" placeholder="e.g. 08:00 - 16:00"
+                                       th:classappend="${fieldErrors != null and fieldErrors.containsKey('shiftHours')} ? 'input-error'"
+                                       class="w-full rounded-lg bg-slate-50 border border-line-200 px-4 py-2.5 text-sm font-bold text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                                <p th:if="${fieldErrors != null and fieldErrors.containsKey('shiftHours')}" class="field-error" th:text="${fieldErrors.get('shiftHours')}"></p>
+                            </div>
+
+                            <div th:if="${isEdit}">
+                                <label for="newPassword" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">New Password (Optional)</label>
+                                <input type="password" id="newPassword" name="newPassword" minlength="8" maxlength="72" autocomplete="new-password" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,72}" title="Use 8-72 characters with uppercase, lowercase, a number, and a special character." placeholder="Leave blank to keep current"
+                                       th:classappend="${fieldErrors != null and fieldErrors.containsKey('newPassword')} ? 'input-error'"
+                                       class="w-full rounded-lg bg-slate-50 border border-line-200 px-4 py-2.5 text-sm font-bold text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                                <p th:if="${fieldErrors != null and fieldErrors.containsKey('newPassword')}" class="field-error" th:text="${fieldErrors.get('newPassword')}"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-6 border-t border-line-100 flex items-center justify-end gap-3 mt-8">
+                        <a href="/admin/users" class="px-5 py-2.5 rounded-lg bg-white border border-line-200 hover:bg-slate-50 text-slate-600 font-bold text-sm transition shadow-xs">Cancel</a>
+                        <button type="submit" class="px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-hover text-asphalt font-bold text-sm transition flex items-center gap-2 shadow-xs">
+                            <i th:class="${isEdit ? 'fa-solid fa-floppy-disk' : 'fa-solid fa-user-plus'}"></i>
+                            <span th:text="${isEdit ? 'Save Changes' : 'Create User Account'}">Save Changes</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const roleSelect = document.getElementById('roleName');
+            const facilityGroup = document.getElementById('staffFacilityGroup');
+            const facilitySelect = document.getElementById('facilityId');
+            if (!roleSelect || !facilityGroup || !facilitySelect) return;
+
+            function updateFacilityField() {
+                const isStaff = roleSelect.value === 'STAFF';
+                const hasActiveFacilities = facilitySelect.dataset.hasActiveFacilities === 'true';
+                facilityGroup.classList.toggle('hidden', !isStaff);
+                facilitySelect.disabled = !isStaff || !hasActiveFacilities;
+                facilitySelect.required = isStaff && hasActiveFacilities;
+                if (!isStaff) facilitySelect.value = '';
+            }
+
+            roleSelect.addEventListener('change', updateFacilityField);
+            updateFacilityField();
+        });
+    </script>
+</body>
+</html>

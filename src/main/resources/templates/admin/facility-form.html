@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head(${isEdit} ? 'Edit Parking Complex - ParkNGo Admin' : 'Add Parking Complex - ParkNGo Admin')}"></head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex">
+
+    <!-- Console Sidebar -->
+    <aside th:replace="~{layout/app :: sidebar('ADMIN', 'facilities')}"></aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen bg-mist">
+        
+        <!-- Console Topbar -->
+        <header th:replace="~{layout/app :: topbar(${isEdit} ? 'Edit Parking Complex' : 'Add Parking Complex', 'ADMIN')}"></header>
+
+        <!-- Main Body -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-3xl w-full mx-auto">
+            
+            <!-- Flash Alerts -->
+            <div th:replace="~{ui/flash :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="space-y-2 pb-4 border-b border-line-200">
+                <a href="/admin/facilities" class="inline-flex items-center text-xs font-bold text-info-600 hover:underline">
+                    <i class="fa-solid fa-arrow-left mr-1.5"></i>Back to Parking Complexes
+                </a>
+                <h2 class="text-2xl font-black text-asphalt font-heading tracking-tight" th:text="${isEdit} ? 'Edit Parking Complex' : 'Add Parking Complex'">
+                    Add Parking Complex
+                </h2>
+                <p class="text-sm text-slate-500">Configure garage properties, multi-level layout notes, operating schedules, and capacity limits.</p>
+            </div>
+
+            <!-- Form Card -->
+            <div class="p-6 sm:p-8 rounded-xl bg-white border border-line-200 shadow-1">
+                <form th:action="${isEdit} ? @{'/admin/facilities/edit/' + ${facility.id}} : @{/admin/facilities/create}" th:object="${facility}" method="post" class="space-y-6">
+                    <input type="hidden" th:if="${isEdit}" th:field="*{id}" />
+
+                    <!-- Validation Summary -->
+                    <div th:if="${#fields.hasErrors('*')}" class="p-4 rounded-lg bg-stop-50 border border-stop-200 text-sm text-stop-700">
+                        <div class="flex items-center gap-2 font-bold text-stop-700 mb-1">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>Please review the form errors below:</span>
+                        </div>
+                        <ul class="list-disc list-inside space-y-1 text-stop-600 ml-1 text-xs">
+                            <li th:each="err : ${#fields.allErrors()}" th:text="${err}">Validation error message</li>
+                        </ul>
+                    </div>
+
+                    <!-- Complex Name -->
+                    <div>
+                        <label for="name" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Parking Complex Name *</label>
+                        <input type="text" id="name" th:field="*{name}" required minlength="2" maxlength="100"
+                               placeholder="e.g. Majestic City Multi-Story Garage"
+                               class="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-line-200 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition"
+                               th:classappend="${#fields.hasErrors('name')} ? 'border-stop-500 focus:border-stop-500 focus:ring-stop-500' : ''" />
+                        <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="mt-1 text-xs text-stop-600"></p>
+                    </div>
+
+                    <!-- Location / Address -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label for="address" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Facility Location / Address *</label>
+                            <input type="text" id="address" th:field="*{address}" required minlength="10" maxlength="255"
+                                   placeholder="e.g. 10 Station Road, Bambalapitiya (min 10 characters)"
+                                   class="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-line-200 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition"
+                                   th:classappend="${#fields.hasErrors('address')} ? 'border-stop-500 focus:border-stop-500 focus:ring-stop-500' : ''" />
+                            <p th:if="${#fields.hasErrors('address')}" th:errors="*{address}" class="mt-1 text-xs text-stop-600"></p>
+                        </div>
+                        <div>
+                            <label for="city" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">City</label>
+                            <input type="text" id="city" th:field="*{city}" maxlength="80" placeholder="e.g. Colombo, Kandy, Galle"
+                                   class="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-line-200 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition" />
+                            <p th:if="${#fields.hasErrors('city')}" th:errors="*{city}" class="field-error"></p>
+                        </div>
+                        <div>
+                            <label for="postalCode" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Postal Code</label>
+                            <input type="text" id="postalCode" th:field="*{postalCode}" maxlength="20" placeholder="e.g. 00300, 20000"
+                                   class="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-line-200 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition" />
+                            <p th:if="${#fields.hasErrors('postalCode')}" th:errors="*{postalCode}" class="field-error"></p>
+                        </div>
+                    </div>
+
+                    <!-- Contact Number -->
+                    <div>
+                        <label for="contactNumber" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Facility Contact Number (+94 mandatory) *</label>
+                        <input type="tel" id="contactNumber" th:field="*{contactNumber}" required
+                               pattern="^\+94[ -]?(?:[0-9]{9}|[0-9]{2}[ -]?[0-9]{3}[ -]?[0-9]{4}|[0-9]{2}[ -]?[0-9]{7}|[0-9]{3}[ -]?[0-9]{3}[ -]?[0-9]{3})$"
+                               data-error-pattern="Invalid contact number. Must start with +94 followed by 9 digits (e.g., +94771234567 or +94-11-2345678)."
+                               title="Invalid contact number. Must start with +94 followed by 9 digits (e.g., +94771234567 or +94-11-2345678)."
+                               placeholder="e.g. +94771234567 or +94-11-2345678"
+                               class="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-line-200 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition"
+                               th:classappend="${#fields.hasErrors('contactNumber')} ? 'border-stop-500 focus:border-stop-500 focus:ring-stop-500' : ''" />
+                        <p th:if="${#fields.hasErrors('contactNumber')}" th:errors="*{contactNumber}" class="mt-1 text-xs text-stop-600"></p>
+                    </div>
+
+                    <!-- Capacity & Floors -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="totalCapacity" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Network Capacity (Spaces) *</label>
+                            <input type="number" id="totalCapacity" th:field="*{totalCapacity}" min="1" max="5000"
+                                   class="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-line-200 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition"
+                                   th:classappend="${#fields.hasErrors('totalCapacity')} ? 'border-stop-500 focus:border-stop-500 focus:ring-stop-500' : ''" />
+                            <p th:if="${#fields.hasErrors('totalCapacity')}" th:errors="*{totalCapacity}" class="mt-1 text-xs text-stop-600"></p>
+                        </div>
+                        <div>
+                            <label for="totalFloors" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Total Floors / Levels *</label>
+                            <input type="number" id="totalFloors" th:field="*{totalFloors}" min="1" max="10" step="1"
+                                   placeholder="1 - 10"
+                                   class="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-line-200 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition"
+                                   th:classappend="${#fields.hasErrors('totalFloors')} ? 'border-stop-500 focus:border-stop-500 focus:ring-stop-500' : ''" />
+                            <p class="mt-1 text-xs text-slate-400">Whole numbers only between 1 and 10.</p>
+                            <p th:if="${#fields.hasErrors('totalFloors')}" th:errors="*{totalFloors}" class="mt-1 text-xs text-stop-600"></p>
+                        </div>
+                    </div>
+
+                    <!-- Operating Hours -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="openingTime" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Opening Time *</label>
+                            <input type="time" id="openingTime" th:field="*{openingTime}" required
+                                   class="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-line-200 text-sm text-asphalt focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition"
+                                   th:classappend="${#fields.hasErrors('openingTime')} ? 'border-stop-500 focus:border-stop-500 focus:ring-stop-500' : ''" />
+                            <p th:if="${#fields.hasErrors('openingTime')}" th:errors="*{openingTime}" class="mt-1 text-xs text-stop-600"></p>
+                        </div>
+                        <div>
+                            <label for="closingTime" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Closing Time *</label>
+                            <input type="time" id="closingTime" th:field="*{closingTime}" required
+                                   class="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-line-200 text-sm text-asphalt focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition"
+                                   th:classappend="${#fields.hasErrors('closingTime')} ? 'border-stop-500 focus:border-stop-500 focus:ring-stop-500' : ''" />
+                            <p th:if="${#fields.hasErrors('closingTime')}" th:errors="*{closingTime}" class="mt-1 text-xs text-stop-600"></p>
+                        </div>
+                        <p th:if="${#fields.hasErrors('closingTimeAfterOpeningTime')}" th:errors="*{closingTimeAfterOpeningTime}" class="field-error md:col-span-2"></p>
+                    </div>
+
+                    <!-- Facility Status -->
+                    <div>
+                        <label for="status" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Facility Operational Status *</label>
+                        <select id="status" th:field="*{status}"
+                                class="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-line-200 text-sm text-asphalt font-semibold focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition">
+                            <option value="ACTIVE">ACTIVE &mdash; Operational &amp; Available for Customer Bookings</option>
+                            <option value="INACTIVE">INACTIVE &mdash; Suspended / Hidden from Customers</option>
+                        </select>
+                        <p class="text-[11px] text-slate-400 mt-1">Note: Inactive facilities are hidden from customer booking. Facilities with upcoming reservations cannot be deactivated.</p>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="description" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Internal Operations Notes &amp; Description *</label>
+                        <textarea id="description" th:field="*{description}" required minlength="10" maxlength="1000" rows="3" placeholder="Additional directions, facility constraints, layout details, security info (min 10 characters)..."
+                                  class="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-line-200 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-[#F5B800] transition resize-y"
+                                  th:classappend="${#fields.hasErrors('description')} ? 'border-stop-500 focus:border-stop-500 focus:ring-stop-500' : ''"></textarea>
+                        <p class="mt-1 text-xs text-slate-400">Must be at least 10 characters.</p>
+                        <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="mt-1 text-xs text-stop-600"></p>
+                    </div>
+
+                    <!-- Form Action Buttons -->
+                    <div class="pt-6 border-t border-line-200 flex items-center justify-end gap-3">
+                        <a href="/admin/facilities" class="px-5 py-2.5 rounded-lg border border-line-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+                            Cancel
+                        </a>
+                        <button type="submit" class="px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-hover font-bold text-asphalt text-sm shadow-xs transition flex items-center gap-2">
+                            <i class="fa-solid fa-plus" th:if="${!isEdit}"></i>
+                            <i class="fa-solid fa-check" th:if="${isEdit}"></i>
+                            <span th:text="${isEdit} ? 'Update Parking Facility' : 'Add Parking Facility'">Add Parking Facility</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- PRICE SUMMARY COMPONENT -->
+    <div th:fragment="summary(baseAmount, discountAmount, totalAmount)" 
+         class="bg-slate-50 rounded-xl border border-line-200 p-5 space-y-4">
+        
+        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 font-num">
+            Payment Breakdown
+        </h4>
+
+        <div class="space-y-2 text-xs">
+            <!-- Base Parking Charge -->
+            <div class="flex items-center justify-between text-slate-700">
+                <span>Parking Bay Reservation</span>
+                <span class="font-semibold">
+                    <div th:replace="~{ui/money :: lkr(${baseAmount})}"></div>
+                </span>
+            </div>
+
+            <!-- Discount / Savings (if any) -->
+            <div th:if="${discountAmount != null and discountAmount > 0}" 
+                 class="flex items-center justify-between text-emerald-700 font-medium">
+                <span class="flex items-center gap-1">
+                    <i class="fa-solid fa-tag text-[10px]"></i>
+                    <span>Applied Discount</span>
+                </span>
+                <span class="font-semibold">
+                    - <div th:replace="~{ui/money :: lkr(${discountAmount})}"></div>
+                </span>
+            </div>
+        </div>
+
+        <!-- Total Divider -->
+        <div class="pt-3 border-t border-line-200 flex items-center justify-between">
+            <div>
+                <div class="text-xs font-bold text-slate-900 uppercase tracking-wider font-num">Total Due</div>
+                <div class="text-[10px] text-slate-400">Includes all taxes & turnover buffer</div>
+            </div>
+            <div class="text-xl font-extrabold text-slate-900 font-num">
+                <div th:replace="~{ui/money :: lkr(${totalAmount})}"></div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

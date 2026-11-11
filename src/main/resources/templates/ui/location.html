@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- LOCATION TILE COMPONENT (Generated Art / Stencil) -->
+    <div th:fragment="tile(facility, size)" 
+         th:class="${size == 'sm' ? 'w-14 h-14 rounded-lg bg-asphalt border border-slate-700 relative overflow-hidden flex items-center justify-center flex-shrink-0' : (size == 'lg' ? 'w-24 h-24 rounded-xl bg-asphalt border border-slate-700 relative overflow-hidden flex items-center justify-center flex-shrink-0' : 'w-20 h-20 rounded-xl bg-asphalt border border-slate-700 relative overflow-hidden flex items-center justify-center flex-shrink-0')}">
+        <!-- Bay marking lines decoration -->
+        <div class="absolute inset-0 opacity-15 pointer-events-none" style="background: repeating-linear-gradient(45deg, #FFF, #FFF 2px, transparent 2px, transparent 8px);"></div>
+        
+        <!-- Official ParkNGo mark with facility initial -->
+        <div class="relative z-10 flex flex-col items-center justify-center text-center">
+            <span th:replace="~{ui/brand :: mark('w-7 h-7')}"></span>
+            <span class="text-[9px] uppercase font-bold text-slate-300 tracking-wider mt-0.5" 
+                  th:text="${facility != null and facility.name != null ? #strings.substring(facility.name, 0, 1) : 'LK'}">
+                C
+            </span>
+        </div>
+
+        <!-- Marking Yellow Bottom Indicator -->
+        <div class="absolute bottom-0 left-0 right-0 h-1 bg-primary-100"></div>
+    </div>
+
+    <!-- LOCATION CARD COMPONENT -->
+    <div th:fragment="card(facility, services)" 
+         class="bg-white rounded-xl border border-line-200 hover:border-slate-300 p-5 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+        
+        <div class="flex items-start gap-4">
+            <!-- Location Tile -->
+            <div th:replace="~{ui/location :: tile(${facility}, 'md')}"></div>
+
+            <!-- Details -->
+            <div class="space-y-1.5">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-base font-bold text-slate-900 font-heading tracking-tight" th:text="${facility.name}">
+                        Colombo Central Multi-Level
+                    </h3>
+                    <span class="pill pill-go text-[11px]" th:if="${facility.active}">Open</span>
+                    <span class="pill pill-neutral text-[11px]" th:unless="${facility.active}">Inactive</span>
+                </div>
+
+                <div class="text-xs text-slate-500 flex items-center gap-2">
+                    <i class="fa-solid fa-location-dot text-slate-400"></i>
+                    <span th:text="${facility.address}">Main Street, Colombo 01</span>
+                </div>
+
+                <div class="flex items-center gap-4 text-xs text-slate-600 pt-1">
+                    <span class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-square-parking text-primary"></i>
+                        <span class="font-semibold text-slate-800" th:text="${facility.totalCapacity != null ? facility.totalCapacity : '100'}">100</span>
+                        <span>Total Bays</span>
+                    </span>
+                    <span th:if="${facility.totalFloors != null}" class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-layer-group text-slate-400"></i>
+                        <span th:text="${facility.totalFloors + ' Levels'}">4 Levels</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Rate & Reserve Action -->
+        <div class="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-line-100 gap-3">
+            <div class="text-left sm:text-right">
+                <div class="text-[11px] text-slate-400 font-medium">Starting from</div>
+                <div class="text-lg font-bold text-slate-900 font-num">
+                    <span class="text-xs text-slate-500 font-normal">LKR</span>
+                    <span th:text="${facility.baseHourlyRate != null ? #numbers.formatDecimal(facility.baseHourlyRate, 1, 'COMMA', 0, 'POINT') : '250'}">250</span>
+                    <span class="text-xs text-slate-500 font-normal">/hr</span>
+                </div>
+            </div>
+
+            <a th:href="@{/customer/reservation/create(facilityId=${facility.id})}" 
+               class="btn btn-primary px-4 py-2 text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap">
+                <span>Reserve Bay</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
+        </div>
+
+    </div>
+
+</body>
+</html>

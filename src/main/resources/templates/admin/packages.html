@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head('Pass Packages Management - ParkNGo Admin')}"></head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex">
+
+    <!-- Console Sidebar -->
+    <aside th:replace="~{layout/app :: sidebar('ADMIN', 'packages')}"></aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen bg-mist">
+        
+        <!-- Console Topbar -->
+        <header th:replace="~{layout/app :: topbar('Membership Pass Packages', 'ADMIN')}"></header>
+
+        <!-- Main Body -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+            
+            <!-- Flash Alerts -->
+            <div th:replace="~{ui/flash :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-line-200">
+                <div>
+                    <h2 class="text-2xl font-black text-asphalt font-heading tracking-tight">Pass Packages &amp; Subscriptions</h2>
+                    <p class="text-sm text-slate-500 mt-1">Configure package prices, parking discounts, validity, and availability.</p>
+                </div>
+                <div>
+                    <a th:href="@{/admin/packages/create}" class="px-4 py-2.5 rounded-lg text-sm font-bold bg-primary hover:bg-primary-hover text-asphalt transition flex items-center gap-2 shadow-xs">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Create Pass Package</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Package Table Card -->
+            <div class="rounded-xl bg-white border border-line-200 overflow-hidden shadow-xs">
+                <div class="px-6 py-4 border-b border-line-100 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-asphalt font-heading">Configured Pass Packages</h3>
+                        <p class="text-xs text-slate-500">Packages available for customer purchase</p>
+                    </div>
+                    <span class="text-xs text-slate-500 font-semibold tnum" th:text="${(packages != null ? packages.size() : 0) + ' Packages Configured'}">0 Configured</span>
+                </div>
+
+                <!-- Empty State -->
+                <div th:if="${packages == null or packages.isEmpty()}" class="p-8">
+                    <div th:replace="~{ui/empty :: state('fa-box', 'No Packages Configured', 'No pass packages created yet. Add your first pass package to offer recurring memberships.', 'Create Package', '/admin/packages/create')}"></div>
+                </div>
+
+                <!-- Table Content -->
+                <div class="overflow-x-auto" th:if="${packages != null and !packages.isEmpty()}">
+                    <table class="min-w-full divide-y divide-line-100 text-left text-xs">
+                        <thead class="bg-mist text-slate-500 font-semibold uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-3.5">Package</th>
+                                <th class="px-6 py-3.5">Price</th>
+                                <th class="px-6 py-3.5">Membership Benefits</th>
+                                <th class="px-6 py-3.5">Validity</th>
+                                <th class="px-6 py-3.5">Availability</th>
+                                <th class="px-6 py-3.5">Status</th>
+                                <th class="px-6 py-3.5 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-line-100 text-asphalt font-medium">
+                            <tr th:each="pkg : ${packages}" class="hover:bg-mist/60 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-asphalt text-sm" th:text="${pkg.name}">Package</div>
+                                </td>
+                                <td class="px-6 py-4 font-bold text-asphalt font-num text-sm whitespace-nowrap">
+                                    <div th:replace="~{ui/money :: lkr(${pkg.price != null ? pkg.price : 0})}"></div>
+                                </td>
+                                <td class="px-6 py-4 min-w-[200px]">
+                                    <span th:if="${pkg.parkingDiscountPercentage > 0}" class="pill pill-go font-bold"
+                                          th:text="${pkg.parkingDiscountPercentage.stripTrailingZeros().toPlainString() + '% OFF'}">20% OFF</span>
+                                    <ul class="mt-1 space-y-1 text-slate-600">
+                                        <li th:each="benefit : ${pkg.benefits}" th:if="${benefit.type != T(com.example.parkngo.discount.MembershipBenefit.BenefitType).PARKING_DISCOUNT}" th:text="${benefit.displayDescription}">Benefit</li>
+                                    </ul>
+                                    <span th:if="${pkg.benefits.isEmpty() and pkg.parkingDiscountPercentage == 0}" class="text-slate-500">No benefits configured</span>
+                                </td>
+                                <td class="px-6 py-4 font-semibold text-asphalt whitespace-nowrap" 
+                                    th:text="${(pkg.durationDays != null ? pkg.durationDays : (pkg.validityDays != null ? pkg.validityDays : 30)) + ' Days'}">30 Days</td>
+                                <td class="px-6 py-4 text-slate-500 max-w-xs" th:text="${pkg.allFacilities ? 'All complexes' : #strings.listJoin(pkg.facilities.![name], ', ')}">Complexes</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div th:replace="~{ui/status :: activeState(${pkg.active})}"></div>
+                                </td>
+                                <td class="px-6 py-4 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <a th:href="@{/admin/packages/view/{id}(id=${pkg.id})}" class="px-2.5 py-1 rounded-lg bg-white border border-line-200 hover:bg-slate-50 text-asphalt font-bold text-xs transition flex items-center gap-1 shadow-xs">
+                                            <i class="fa-solid fa-eye text-[10px]"></i><span>View</span>
+                                        </a>
+                                        <a th:href="@{/admin/packages/edit/{id}(id=${pkg.id})}" class="px-2.5 py-1 rounded-lg bg-white border border-line-200 hover:bg-slate-50 text-asphalt font-bold text-xs transition flex items-center gap-1 shadow-xs">
+                                            <i class="fa-solid fa-pen text-[10px]"></i>
+                                            <span>Edit</span>
+                                        </a>
+                                        <form th:action="@{/admin/packages/toggle/{id}(id=${pkg.id})}" method="post" class="inline">
+                                            <button type="submit" th:class="'px-2.5 py-1 rounded-lg font-bold text-xs transition border shadow-xs ' + (${pkg.active} ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' : 'bg-go-50 text-go-700 border-go-200 hover:bg-go-100')">
+                                                <span th:text="${pkg.active ? 'Deactivate' : 'Activate'}">Toggle</span>
+                                            </button>
+                                        </form>
+                                        <form th:action="@{/admin/packages/delete/{id}(id=${pkg.id})}" method="post" 
+                                              data-confirm="Delete this pass package from the catalog? Existing customer memberships will be preserved."
+                                              data-confirm-btn="Delete Package"
+                                              data-confirm-tone="danger"
+                                              class="inline">
+                                            <button type="submit" class="p-1.5 rounded-lg bg-white hover:bg-stop-50 text-slate-400 hover:text-stop-600 border border-line-200 transition" title="Delete Package" aria-label="Delete package">
+                                                <i class="fa-solid fa-trash-can text-xs"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

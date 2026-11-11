@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head(${isEdit} ? 'Edit Service - ParkNGo Admin' : 'Add Service - ParkNGo Admin')}"></head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex">
+
+    <!-- Console Sidebar -->
+    <aside th:replace="~{layout/app :: sidebar('ADMIN', 'services')}"></aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen bg-mist">
+        
+        <!-- Console Topbar -->
+        <header th:replace="~{layout/app :: topbar(${isEdit} ? 'Edit Service' : 'Add Service', 'ADMIN')}"></header>
+
+        <!-- Main Body -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-3xl w-full mx-auto">
+            
+            <!-- Flash Alerts -->
+            <div th:replace="~{ui/flash :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="space-y-2 pb-4 border-b border-line-200">
+                <a href="/admin/services" class="inline-flex items-center text-xs font-bold text-blue-600 hover:text-blue-800">
+                    <i class="fa-solid fa-arrow-left mr-1.5"></i>Back to Services
+                </a>
+                <h2 class="text-2xl font-black text-asphalt font-heading tracking-tight" th:text="${isEdit} ? 'Edit Parking Service' : 'Add Parking Service'">
+                    Add Parking Service
+                </h2>
+                <p class="text-sm text-slate-500">Configure on-site premium amenities (Car Wash, EV Fast Charging, Valet, Detailing) bookable by customers.</p>
+            </div>
+
+            <!-- Form Card -->
+            <div class="p-6 sm:p-8 rounded-2xl bg-white border border-line-200 shadow-xs">
+                <form th:action="${isEdit} ? @{'/admin/services/edit/' + ${service.id}} : @{/admin/services/create}" th:object="${service}" method="post" class="space-y-5">
+                    <input type="hidden" th:if="${isEdit}" th:field="*{id}" />
+
+                    <div>
+                        <span class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Available at Facilities *</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-xl border border-line-200 bg-slate-50/50 p-3">
+                            <p th:if="${#lists.isEmpty(facilities)}" class="text-xs text-slate-500 sm:col-span-2">No active parking complexes are available.</p>
+                            <label th:each="fac : ${facilities}"
+                                   class="flex items-start gap-2.5 rounded-lg border border-line-200 bg-white p-3 text-sm text-asphalt cursor-pointer hover:border-primary transition">
+                                <input type="checkbox" name="facilityIds" th:value="${fac.id}"
+                                       th:checked="${selectedFacilityIds != null and #lists.contains(selectedFacilityIds, fac.id)}"
+                                       class="mt-0.5 h-4 w-4 rounded border-line-300 text-primary focus:ring-primary">
+                                <span>
+                                    <span class="block font-bold" th:text="${fac.name}">Colombo Central</span>
+                                    <span class="block text-xs text-slate-500 mt-0.5" th:text="${fac.address}">Facility address</span>
+                                </span>
+                            </label>
+                            <div th:each="fac : ${inactiveAssignedFacilities}"
+                                 class="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-slate-600">
+                                <input type="checkbox" checked disabled class="mt-0.5 h-4 w-4 rounded border-amber-300 text-amber-500">
+                                <span>
+                                    <span class="block font-bold" th:text="${fac.name}">Inactive complex</span>
+                                    <span class="block text-xs font-bold text-amber-700 mt-0.5">Assigned · Inactive (preserved)</span>
+                                </span>
+                            </div>
+                        </div>
+                        <p class="mt-1.5 text-[11px] text-slate-500" th:if="${isEdit and !#lists.isEmpty(inactiveAssignedFacilities)}">Inactive assignments are kept but cannot be newly selected or changed until the facility is active again.</p>
+                        <p th:if="${facilityError}" class="field-error" th:text="${facilityError}"></p>
+                    </div>
+
+                    <div>
+                        <label for="name" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Service Name *</label>
+                        <input type="text" id="name" th:field="*{name}" required minlength="2" maxlength="100" placeholder="e.g. Hand Car Wash, EV Fast Charging, Valet Parking"
+                               class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary">
+                        <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="field-error"></p>
+                    </div>
+
+                    <div>
+                        <label for="description" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Service Description *</label>
+                        <textarea id="description" th:field="*{description}" rows="3" required maxlength="1000" placeholder="e.g. Exterior foam wash, pressure rinse, wheel cleaning, and tire shine..."
+                                  class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 text-sm text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary resize-none"></textarea>
+                        <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="field-error"></p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="price" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Add-on Price (LKR) *</label>
+                            <input type="number" id="price" th:field="*{price}" required step="0.50" min="0" placeholder="1200.00"
+                                   class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 text-sm font-bold text-asphalt font-num focus:outline-none focus:border-primary">
+                            <p th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="field-error"></p>
+                        </div>
+
+                        <div>
+                            <label for="status" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Availability Status *</label>
+                            <select id="status" th:field="*{status}" required class="w-full rounded-lg bg-white border border-line-200 px-3.5 py-2 text-sm text-asphalt focus:outline-none focus:border-primary">
+                                <option value="AVAILABLE" th:selected="${service.status == null or service.status.name() == 'AVAILABLE'}">AVAILABLE</option>
+                                <option value="UNAVAILABLE" th:selected="${service.status != null and service.status.name() == 'UNAVAILABLE'}">UNAVAILABLE</option>
+                            </select>
+                            <p th:if="${#fields.hasErrors('status')}" th:errors="*{status}" class="field-error"></p>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-line-100 flex items-center justify-end gap-3">
+                        <a href="/admin/services" class="px-4 py-2 rounded-lg bg-white border border-line-200 hover:bg-slate-50 text-slate-600 font-bold text-xs transition shadow-xs">Cancel</a>
+                        <button type="submit" class="px-5 py-2 rounded-lg bg-primary hover:bg-primary-hover text-asphalt font-bold text-xs transition flex items-center gap-2 shadow-xs">
+                            <i class="fa-solid fa-wrench"></i>
+                            <span th:text="${isEdit} ? 'Update Service' : 'Save Service'">Save Service</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>

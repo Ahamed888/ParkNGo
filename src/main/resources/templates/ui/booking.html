@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- BOOKING TRIP CARD FRAGMENT -->
+    <div th:fragment="card(res)" 
+         class="bg-white rounded-xl border border-line-200 hover:border-slate-300 p-5 shadow-xs hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+        
+        <div class="flex items-start gap-4">
+            <!-- Date Block -->
+            <div class="w-14 h-16 rounded-lg bg-slate-50 border border-line-200 flex flex-col items-center justify-center flex-shrink-0 text-center">
+                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider" 
+                      th:text="${res.arrivalTime != null ? #temporals.format(res.arrivalTime, 'MMM') : 'SEP'}">
+                    SEP
+                </span>
+                <span class="text-xl font-black text-slate-900 font-num leading-none my-0.5" 
+                      th:text="${res.arrivalTime != null ? #temporals.format(res.arrivalTime, 'dd') : '23'}">
+                    23
+                </span>
+                <span class="text-[9px] uppercase font-semibold text-slate-500" 
+                      th:text="${res.arrivalTime != null ? #temporals.format(res.arrivalTime, 'EEE') : 'WED'}">
+                    WED
+                </span>
+            </div>
+
+            <!-- Trip Meta -->
+            <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-base font-bold text-slate-900 font-heading" 
+                        th:text="${res.parkingSpace != null and res.parkingSpace.facility != null ? res.parkingSpace.facility.name : 'Parking Facility'}">
+                        Colombo Central Multi-Level
+                    </h3>
+                    <div th:replace="~{ui/status :: reservation(${res.status}, false)}"></div>
+                </div>
+
+                <div class="text-xs text-slate-500 flex flex-wrap items-center gap-2">
+                    <span class="flex items-center gap-1">
+                        <i class="fa-regular fa-clock text-slate-400"></i>
+                        <span th:text="${res.arrivalTime != null ? #temporals.format(res.arrivalTime, 'HH:mm') : ''} + ' - ' + ${res.departureTime != null ? #temporals.format(res.departureTime, 'HH:mm') : ''}">
+                            10:00 - 14:00
+                        </span>
+                    </span>
+                    <span class="text-slate-300">&bull;</span>
+                    <span th:if="${res.vehicle != null}">
+                        <span class="plate plate-sm" th:text="${res.vehicle.registrationNumber}">WP CAA-1234</span>
+                    </span>
+                    <span class="text-slate-300">&bull;</span>
+                    <span class="font-bold text-slate-700 font-num" 
+                          th:text="${res.parkingSpace != null ? 'Bay ' + res.parkingSpace.spaceNumber : ''}">
+                        Bay A-12
+                    </span>
+                </div>
+
+                <div class="text-xs text-slate-400 font-mono text-[11px] pt-0.5">
+                    Ref: <span th:text="${res.reservationCode}">RES-2026-ABC1</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Total & Actions -->
+        <div class="flex items-center justify-between md:justify-end gap-4 pt-3 md:pt-0 border-t md:border-t-0 border-line-100">
+            <div class="text-left md:text-right">
+                <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total</div>
+                <div class="text-base font-bold text-slate-900">
+                    <div th:replace="~{ui/money :: lkr(${res.totalAmount})}"></div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <a th:href="@{/customer/reservation/{id}(id=${res.id})}" 
+                   class="btn btn-secondary px-3 py-1.5 text-xs font-semibold inline-flex items-center gap-1">
+                    <span>Details</span>
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- DIGITAL PARKING TICKET (Road & Marking Perforated Pass) -->
+    <div th:fragment="ticket(res)" 
+         class="ticket-card bg-asphalt border border-line-200 rounded-2xl text-white overflow-hidden shadow-xl max-w-md mx-auto">
+        
+        <!-- Header -->
+        <div class="p-6 border-b border-slate-800">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                    <span class="w-7 h-7 rounded bg-primary text-asphalt flex items-center justify-center font-bold text-sm font-num">
+                        P
+                    </span>
+                    <span class="font-bold text-white tracking-tight font-heading">Park<span class="parkngo-brand-n">N</span>Go Sri Lanka</span>
+                </div>
+                <div th:replace="~{ui/status :: reservation(${res.status}, false)}"></div>
+            </div>
+
+            <div class="mt-4">
+                <h2 class="text-xl font-extrabold text-white font-heading tracking-tight" 
+                    th:text="${res.parkingSpace != null and res.parkingSpace.facility != null ? res.parkingSpace.facility.name : 'Parking Complex'}">
+                    Colombo Central Parking
+                </h2>
+                <p class="text-xs text-slate-400 mt-0.5" 
+                   th:text="${res.parkingSpace != null and res.parkingSpace.facility != null ? res.parkingSpace.facility.address : 'Colombo, Sri Lanka'}">
+                    Main Street, Colombo 01
+                </p>
+            </div>
+        </div>
+
+        <!-- Body Details -->
+        <div class="p-6 space-y-5">
+            <!-- Bay Stencil & Floor -->
+            <div class="flex items-center justify-between p-4 rounded-xl bg-asphalt-800/70 border border-slate-700/60">
+                <div>
+                    <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Assigned Bay</div>
+                    <div class="text-3xl font-black text-primary-100 font-num tracking-wider leading-none mt-1" 
+                         th:text="${res.parkingSpace != null ? res.parkingSpace.spaceNumber : 'BAY-01'}">
+                        A-12
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Level / Zone</div>
+                    <div class="text-sm font-bold text-white font-num mt-1">
+                        <span th:text="${res.parkingSpace != null ? 'Floor ' + res.parkingSpace.floor : 'Floor 1'}">Floor 1</span>
+                        <span th:if="${res.parkingSpace != null and res.parkingSpace.zone != null}" th:text="${' &bull; Zone ' + res.parkingSpace.zone}"> &bull; Zone A</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicle Plate -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Vehicle Plate</div>
+                    <div class="mt-1">
+                        <span class="plate plate-lg" th:text="${res.vehicle != null ? res.vehicle.registrationNumber : 'WP CAA-1234'}">
+                            WP CAA-1234
+                        </span>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Vehicle Type</div>
+                    <div class="text-xs font-semibold text-slate-200 mt-1 capitalize" 
+                         th:text="${res.vehicle != null ? res.vehicle.vehicleType : 'CAR'}">
+                        Car
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Window with Lane Connector -->
+            <div class="pt-2">
+                <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2">Reserved Time Window</div>
+                <div class="flex items-center justify-between text-xs p-3 rounded-lg bg-asphalt-800/40 border border-slate-800">
+                    <div>
+                        <div class="text-slate-400 text-[10px]">ARRIVAL</div>
+                        <div class="font-bold text-white text-sm font-num" 
+                             th:text="${res.arrivalTime != null ? #temporals.format(res.arrivalTime, 'dd MMM, HH:mm') : '--'}">
+                            23 Sep, 10:00
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 mx-3 border-t-2 border-dashed border-slate-600 text-center">
+                        <i class="fa-solid fa-arrow-right text-[10px] text-slate-500"></i>
+                    </div>
+
+                    <div class="text-right">
+                        <div class="text-slate-400 text-[10px]">DEPARTURE</div>
+                        <div class="font-bold text-white text-sm font-num" 
+                             th:text="${res.departureTime != null ? #temporals.format(res.departureTime, 'dd MMM, HH:mm') : '--'}">
+                            23 Sep, 14:00
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Perforated Tear Line with Yellow Dash -->
+        <div class="relative py-2 border-t-2 border-dashed border-[#FFD23F]/40 flex items-center justify-between px-3">
+            <span class="w-4 h-8 bg-slate-100 rounded-r-full -ml-5"></span>
+            <span class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">GATE ENTRY PASS</span>
+            <span class="w-4 h-8 bg-slate-100 rounded-l-full -mr-5"></span>
+        </div>
+
+        <!-- Stub / Confirmation Barcode & Code -->
+        <div class="p-6 bg-[#0A0F15] space-y-4 text-center">
+            <div>
+                <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Reservation Gate Code</div>
+                <div class="flex items-center justify-center gap-2">
+                    <span class="font-mono text-xl font-bold text-white tracking-widest" 
+                          th:text="${res.reservationCode}">
+                        RES-2026-ABC1
+                    </span>
+                    <button type="button" 
+                            th:data-copy="${res.reservationCode}" 
+                            class="text-xs text-slate-400 hover:text-white p-1 rounded transition" 
+                            title="Copy Code" 
+                            aria-label="Copy Reservation Code">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-[11px] text-slate-400">
+                Present this code or your license plate at the boom gate scanner for automated check-in.
+            </p>
+        </div>
+
+    </div>
+
+</body>
+</html>

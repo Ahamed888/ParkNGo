@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Find Parking Complexes')}">
+    <title>Find Parking Complexes - ParkNGo</title>
+</head>
+<body class="bg-mist text-asphalt min-h-screen flex flex-col font-sans antialiased">
+    <div class="flex flex-1 min-h-screen">
+        <!-- Unified Master Sidebar -->
+        <div th:replace="~{layout/app :: sidebar('CUSTOMER', 'search')}"></div>
+
+        <!-- Main Layout -->
+        <div class="flex-1 md:pl-64 flex flex-col min-w-0 min-h-screen">
+            <div th:replace="~{layout/app :: topbar('', 'CUSTOMER')}"></div>
+
+            <main class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div th:replace="~{ui/flash :: flash}"></div>
+
+                <!-- Header -->
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2 text-[11px] font-bold text-caution-700 uppercase tracking-wider font-num mb-1">
+                    <i class="fa-solid fa-square-parking"></i>
+                    <span>Real-Time Facility Directory</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-heading">
+                    Find Parking Complexes
+                </h1>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                    Check bay capacity, transparent hourly LKR rates, on-site services, and reserve in advance.
+                </p>
+            </div>
+
+            <a href="/customer/reservation/create" class="btn btn-primary px-4 py-2 text-xs font-semibold self-start sm:self-auto inline-flex items-center gap-2 shadow-xs">
+                <span>Reserve Now</span>
+            </a>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-8">
+            <div th:replace="~{ui/search :: widget('bar')}"></div>
+        </div>
+
+        <!-- Active Filter Indicator (if keyword present) -->
+        <div th:if="${keyword != null and !keyword.isEmpty()}" class="mb-6 flex items-center gap-2 text-xs text-slate-600 bg-white px-4 py-2.5 rounded-lg border border-line-200">
+            <span>Filtering by keyword:</span>
+            <span class="font-bold text-slate-900 font-mono" th:text="${keyword}">Colombo</span>
+            <a th:href="@{/customer/parking-search}" class="text-stop-600 hover:text-rose-800 ml-2 font-bold flex items-center gap-1 text-[11px]">
+                <i class="fa-solid fa-xmark"></i> Clear filter
+            </a>
+        </div>
+
+        <!-- Facilities Inventory Cards -->
+        <div th:if="${facilities != null and !facilities.isEmpty()}" class="space-y-4">
+            <div th:each="facility : ${facilities}">
+                <div th:replace="~{ui/location :: card(${facility}, null)}"></div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${facilities == null or facilities.isEmpty()}" class="bg-white rounded-2xl border border-line-200 shadow-xs">
+            <div th:replace="~{ui/empty :: state('fa-solid fa-building-circle-exclamation', 'No Parking Complexes Found', 'No parking facilities matched your search keyword. Please try another search term or browse all locations.', 'View All Locations', '/customer/parking-search')}"></div>
+        </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

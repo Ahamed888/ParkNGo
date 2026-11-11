@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head('Customer Feedback - ParkNGo Admin')}"></head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex">
+
+    <!-- Console Sidebar -->
+    <aside th:replace="~{layout/app :: sidebar('ADMIN', 'feedback')}"></aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen bg-mist">
+        
+        <!-- Console Topbar -->
+        <header th:replace="~{layout/app :: topbar('Customer Feedback & Reviews', 'ADMIN')}"></header>
+
+        <!-- Main Body -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-5xl w-full mx-auto">
+            
+            <!-- Flash Alerts -->
+            <div th:replace="~{ui/flash :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="space-y-2 pb-4 border-b border-line-200">
+                <h2 class="text-2xl font-black text-asphalt font-heading tracking-tight">Customer Reviews &amp; Operational Feedback</h2>
+                <p class="text-sm text-slate-500">Review customer star ratings, inspect feedback remarks, and publish official administrative replies.</p>
+            </div>
+
+            <!-- Feedback Empty State -->
+            <div th:if="${feedback == null or feedback.isEmpty()}" class="p-12 rounded-2xl bg-white border border-line-200 text-center shadow-xs">
+                <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mx-auto mb-3">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <h3 class="text-base font-bold text-asphalt font-heading">No Customer Feedback Yet</h3>
+                <p class="text-xs text-slate-500 mt-1">Customer reviews and facility ratings will appear here after completed stays.</p>
+            </div>
+
+            <!-- Feedback List -->
+            <div th:if="${feedback != null and !feedback.isEmpty()}" class="space-y-4">
+                <article th:each="item : ${feedback}" class="p-6 rounded-2xl bg-white border border-line-200 shadow-xs space-y-4">
+                    
+                    <!-- Header -->
+                    <div class="flex flex-wrap items-start justify-between gap-4 border-b border-line-100 pb-3">
+                        <div>
+                            <h3 class="text-base font-bold text-asphalt font-heading" th:text="${item.customer != null ? item.customer.fullName : 'Customer'}">Customer Name</h3>
+                            <span class="text-xs text-slate-500 font-mono" th:text="${(item.customer != null ? item.customer.email : 'Unknown customer') + (item.reservation != null ? ' &bull; Reservation #' + item.reservation.id : '')}">email@example.com</span>
+                        </div>
+
+                        <!-- Star Rating -->
+                        <div class="flex items-center gap-1 text-amber-500 text-sm">
+                            <span th:each="i : ${#numbers.sequence(1, item.rating != null ? item.rating : 5)}"><i class="fa-solid fa-star"></i></span>
+                            <span th:if="${item.rating != null and item.rating < 5}" th:each="i : ${#numbers.sequence(item.rating + 1, 5)}"><i class="fa-regular fa-star text-slate-300"></i></span>
+                            <span class="text-xs font-bold text-asphalt font-mono ml-1.5" th:text="${(item.rating != null ? item.rating : 5) + ' / 5'}">5 / 5</span>
+                        </div>
+                    </div>
+
+                    <!-- Customer Comment -->
+                    <p class="text-xs text-asphalt leading-relaxed bg-slate-50 p-4 rounded-xl border border-line-200" th:text="${item.comment}">
+                        Review comment from customer.
+                    </p>
+
+                    <!-- Official Admin Response Box (If Exists) -->
+                    <div th:if="${item.adminResponse != null && !item.adminResponse.isEmpty()}" class="p-4 rounded-xl bg-blue-50 border border-blue-200 space-y-1">
+                        <span class="text-[11px] font-bold text-blue-700 uppercase tracking-wider block">Official Management Reply:</span>
+                        <p class="text-xs text-slate-700" th:text="${item.adminResponse}">Admin reply text</p>
+                    </div>
+
+                    <!-- Reply Form (New) -->
+                    <div th:if="${item.adminResponse == null || item.adminResponse.isEmpty()}">
+                        <form th:action="@{/admin/feedback/{id}/respond(id=${item.id})}" method="post" class="space-y-1">
+                            <div class="flex gap-2">
+                            <input type="text" name="response" required maxlength="2000" placeholder="Type an official response to this review..."
+                                   th:value="${responseErrorId == item.id ? submittedResponse : ''}"
+                                   class="flex-1 rounded-lg bg-white border border-line-200 px-3.5 py-2 text-xs text-asphalt placeholder-slate-400 focus:outline-none focus:border-primary">
+                            <button type="submit" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-asphalt font-bold text-xs transition shadow-xs whitespace-nowrap">
+                                Send Reply
+                            </button>
+                            </div>
+                            <p th:if="${responseErrorId == item.id}" class="field-error" th:text="${responseError}"></p>
+                        </form>
+                    </div>
+                    
+                    <!-- Update Reply Form (Existing) -->
+                    <div th:if="${item.adminResponse != null && !item.adminResponse.isEmpty()}">
+                        <form th:action="@{/admin/feedback/{id}/respond(id=${item.id})}" method="post" class="space-y-1 w-full">
+                            <div class="flex gap-2">
+                            <input type="text" name="response" th:value="${responseErrorId == item.id ? submittedResponse : item.adminResponse}" required maxlength="2000"
+                                   class="flex-1 rounded-lg bg-white border border-line-200 px-3.5 py-2 text-xs text-asphalt focus:outline-none focus:border-primary">
+                            <button type="submit" class="px-4 py-2 rounded-lg bg-white border border-line-200 hover:bg-slate-50 text-asphalt font-bold text-xs transition shadow-xs whitespace-nowrap">
+                                Update Reply
+                            </button>
+                            </div>
+                            <p th:if="${responseErrorId == item.id}" class="field-error" th:text="${responseError}"></p>
+                        </form>
+                    </div>
+
+                </article>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>

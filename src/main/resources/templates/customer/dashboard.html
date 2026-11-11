@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head('Customer Dashboard - ParkNGo')}">
+    <title>Customer Dashboard &mdash; ParkNGo</title>
+</head>
+<body class="bg-mist text-asphalt font-sans antialiased min-h-screen flex">
+
+    <!-- Unified Master Sidebar -->
+    <aside th:replace="~{layout/app :: sidebar('CUSTOMER', 'dashboard')}"></aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen bg-mist">
+        
+        <!-- Unified Topbar -->
+        <header th:replace="~{layout/app :: topbar('Customer Dashboard', 'CUSTOMER')}"></header>
+
+        <!-- Main Body -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+            
+            <!-- Flash Alerts -->
+            <div th:replace="~{ui/flash :: alerts}"></div>
+
+            <!-- Top Title & Quick Actions -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-line-200">
+                <div>
+                    <h2 class="text-2xl font-black text-asphalt font-heading tracking-tight">
+                        Welcome back, <span th:text="${user != null ? user.fullName : 'Valued Customer'}">Customer</span>
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">Manage your parking reservations, registered vehicles, and digital parking passes.</p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <a href="/customer/reservation/create" class="px-4 py-2.5 rounded-lg text-sm font-bold bg-primary hover:bg-primary-hover text-asphalt transition shadow-xs flex items-center gap-2">
+                        <span>Book Parking Space</span>
+                    </a>
+                    <a href="/customer/vehicle/add" class="px-4 py-2.5 rounded-lg text-sm font-bold bg-white border border-line-200 hover:bg-slate-50 text-asphalt transition shadow-xs flex items-center gap-2">
+                        <span>Add Vehicle</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 4 Stat Boxes -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <div class="p-5 rounded-xl bg-white border border-line-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-1">Available Spaces</span>
+                        <h3 class="text-3xl font-black text-go-600 font-num" th:text="${availableSpaces != null ? availableSpaces : 0}">0</h3>
+                        <a href="/customer/reservation/create" class="text-xs text-go-600 font-bold hover:underline mt-1 inline-block">Book space now &rarr;</a>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-go-50 text-go-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-square-parking"></i>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-xl bg-white border border-line-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-1">Total Bookings</span>
+                        <h3 class="text-3xl font-black text-asphalt font-num" th:text="${reservations != null ? reservations.size() : 0}">0</h3>
+                        <a href="/customer/reservations" class="text-xs text-blue-600 font-bold hover:underline mt-1 inline-block">View all bookings &rarr;</a>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-xl bg-white border border-line-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-1">Registered Cars</span>
+                        <h3 class="text-3xl font-black text-asphalt font-num" th:text="${vehicleCount != null ? vehicleCount : 0}">0</h3>
+                        <a href="/customer/vehicles" class="text-xs text-slate-600 font-bold hover:underline mt-1 inline-block">Manage vehicles &rarr;</a>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-car"></i>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-xl bg-white border border-line-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-1">Unread Alerts</span>
+                        <h3 class="text-3xl font-black text-asphalt font-num" th:text="${unreadNotifications != null ? unreadNotifications.size() : 0}">0</h3>
+                        <a href="/customer/notifications" class="text-xs text-amber-600 font-bold hover:underline mt-1 inline-block">Check notifications &rarr;</a>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Recent Reservations Table Card -->
+            <div class="bg-white rounded-2xl border border-line-200 shadow-1 overflow-hidden">
+                <div class="px-6 py-4 border-b border-line-100 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-asphalt font-heading">Recent Parking Reservations</h3>
+                        <p class="text-xs text-slate-500">Your latest parking sessions and active gate passes</p>
+                    </div>
+                    <a href="/customer/reservations" class="text-xs font-bold text-blue-600 hover:underline">View All &rarr;</a>
+                </div>
+
+                <!-- Empty State -->
+                <div th:if="${reservations == null or reservations.isEmpty()}" class="p-10 text-center">
+                    <div class="w-12 h-12 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center text-2xl mx-auto mb-3">
+                        <i class="fa-regular fa-calendar-xmark"></i>
+                    </div>
+                    <h4 class="text-sm font-bold text-asphalt font-heading">No Reservations Found</h4>
+                    <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">You haven't made any parking reservations yet. Reserve a space in advance to guarantee your parking.</p>
+                    <a href="/customer/reservation/create" class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-asphalt font-bold text-xs rounded-lg transition shadow-xs">
+                        <i class="fa-solid fa-plus text-[10px]"></i>
+                        <span>Book Parking Space</span>
+                    </a>
+                </div>
+
+                <!-- Table -->
+                <div th:if="${reservations != null and !reservations.isEmpty()}" class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-line-100 text-left text-xs">
+                        <thead class="bg-mist text-slate-500 font-semibold uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-3.5">Space &amp; Facility</th>
+                                <th class="px-6 py-3.5">Vehicle</th>
+                                <th class="px-6 py-3.5">Schedule</th>
+                                <th class="px-6 py-3.5">Total Amount</th>
+                                <th class="px-6 py-3.5">Status</th>
+                                <th class="px-6 py-3.5 text-right">Pass</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-line-100 text-asphalt font-medium">
+                            <tr th:each="res : ${reservations}" class="hover:bg-mist/60 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="font-bold font-num text-sm text-asphalt" 
+                                         th:text="${res.parkingSpace != null ? 'Bay ' + res.parkingSpace.spaceNumber + (res.parkingSpace.floor != null ? ' (Floor ' + res.parkingSpace.floor + ')' : '') : 'Bay Pending'}">
+                                        Bay A01
+                                    </div>
+                                    <div class="text-[11px] text-slate-500" 
+                                         th:text="${res.parkingSpace != null and res.parkingSpace.facility != null ? res.parkingSpace.facility.name : 'Parking Complex'}">
+                                        Central Garage
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div th:if="${res.vehicle != null}">
+                                        <div th:replace="~{ui/plate :: plate(${res.vehicle.registrationNumber}, 'sm')}"></div>
+                                        <div class="text-[11px] text-slate-500 mt-1" th:text="${(res.vehicle.brand != null ? res.vehicle.brand : '') + ' ' + (res.vehicle.model != null ? res.vehicle.model : '')}">Vehicle</div>
+                                    </div>
+                                    <span th:if="${res.vehicle == null}" class="text-slate-400 italic">Unassigned</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="font-semibold text-asphalt tnum" th:text="${res.arrivalTime != null ? #temporals.format(res.arrivalTime, 'dd MMM, HH:mm') : '--'}">28 Aug, 10:00</div>
+                                    <div class="text-[11px] text-slate-500 tnum" th:text="${res.departureTime != null ? 'Until ' + #temporals.format(res.departureTime, 'dd MMM, HH:mm') : '--'}">Until 28 Aug, 12:00</div>
+                                </td>
+                                <td class="px-6 py-4 font-bold text-sm">
+                                    <div th:replace="~{ui/money :: lkr(${res.totalAmount})}"></div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div th:replace="~{ui/status :: reservation(${res.status}, false)}"></div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <a th:href="@{/customer/reservation/{id}(id=${res.id})}" class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition">
+                                        <span>View Pass</span>
+                                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>

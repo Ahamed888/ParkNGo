@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- UNIVERSAL FLASH NOTIFICATIONS FRAGMENT -->
+    <th:block th:fragment="alerts">
+        <div th:replace="~{ui/flash :: flash}"></div>
+    </th:block>
+
+    <div th:fragment="flash" class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 space-y-3" id="parkngo-flash-container">
+        
+        <!-- SUCCESS TOAST (Auto-dismisses in 5s) -->
+        <div th:if="${success != null or successMessage != null or passwordSuccess != null or param.success != null or param.registered != null or (param.code != null and param.code[0] != 'toggle_failed')}"
+             class="toast-auto rounded-lg bg-go-50 border border-go-200 p-4 text-emerald-900 shadow-1 flex items-start justify-between gap-3 transition-all"
+             data-toast
+             data-duration="5000"
+             role="alert"
+             aria-live="polite">
+            <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-full bg-go-100 text-emerald-700 flex items-center justify-center flex-shrink-0 text-sm">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div class="text-sm font-medium">
+                    <span th:if="${success != null}" th:text="${success}">Success</span>
+                    <span th:if="${successMessage != null}" th:text="${successMessage}">Success</span>
+                    <span th:if="${passwordSuccess != null}" th:text="${passwordSuccess}">Password updated successfully.</span>
+                    <span th:if="${param.registered != null}">Account registered successfully. Please sign in with your credentials.</span>
+                    <span th:if="${param.success != null and success == null and successMessage == null}" th:text="${param.success[0] != null and !param.success[0].isEmpty() and param.success[0] != 'true' ? param.success[0] : 'Operation successful.'}">Operation successful.</span>
+                    
+                    <!-- Query Code Mappings -->
+                    <span th:if="${param.code != null and param.code[0] == 'added'}">Record created successfully.</span>
+                    <span th:if="${param.code != null and param.code[0] == 'updated'}">Changes saved successfully.</span>
+                    <span th:if="${param.code != null and param.code[0] == 'status_updated'}">Status updated successfully.</span>
+                    <span th:if="${param.code != null and param.code[0] == 'deleted'}">Record deleted successfully.</span>
+                    <span th:if="${param.code != null and param.code[0] == 'responded'}">Response submitted successfully.</span>
+                    <span th:if="${param.code != null and param.code[0] == 'submitted'}">Feedback submitted successfully.</span>
+                    <span th:if="${param.code != null and param.code[0] == 'cancelled'}">Reservation cancelled successfully.</span>
+                </div>
+            </div>
+            <button type="button" data-dismiss="toast" class="text-emerald-700 hover:text-emerald-900 p-1 text-sm font-bold leading-none cursor-pointer" aria-label="Close notification">
+                &times;
+            </button>
+        </div>
+
+        <!-- ERROR CALLOUT (Persistent until dismissed) -->
+        <div th:if="${error != null or errorMessage != null or passwordError != null or param.error != null or (param.code != null and param.code[0] == 'toggle_failed')}"
+             class="rounded-lg bg-stop-50 border border-stop-200 p-4 text-rose-900 shadow-1 flex items-start justify-between gap-3"
+             role="alert"
+             aria-live="assertive">
+            <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-full bg-stop-100 text-stop-700 flex items-center justify-center flex-shrink-0 text-sm">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+                <div class="text-sm font-medium">
+                    <span th:if="${error != null}" th:text="${error}">An error occurred.</span>
+                    <span th:if="${errorMessage != null}" th:text="${errorMessage}">An error occurred.</span>
+                    <span th:if="${passwordError != null}" th:text="${passwordError}">Password operation failed.</span>
+                    <span th:if="${param.code != null and param.code[0] == 'toggle_failed'}">Could not update status. Please check constraints.</span>
+                    <span th:if="${param.error != null and error == null and errorMessage == null}" th:text="${param.error[0] != null and !param.error[0].isEmpty() and param.error[0] != 'true' ? param.error[0] : 'An error occurred. Please try again.'}">An error occurred.</span>
+                </div>
+            </div>
+            <button type="button" onclick="this.closest('[role=alert]').remove()" class="text-stop-700 hover:text-rose-900 p-1 text-sm font-bold leading-none cursor-pointer" aria-label="Close error alert">
+                &times;
+            </button>
+        </div>
+
+        <!-- LOGOUT NOTICE (Neutral) -->
+        <div th:if="${param.logout != null}"
+             class="toast-auto rounded-lg bg-slate-100 border border-slate-300 p-4 text-slate-800 shadow-1 flex items-center justify-between gap-3"
+             data-toast
+             data-duration="4000"
+             role="status">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-arrow-right-from-bracket text-slate-500"></i>
+                <span class="text-sm font-medium">You have been signed out safely.</span>
+            </div>
+            <button type="button" data-dismiss="toast" class="text-slate-500 hover:text-slate-800 p-1 text-sm font-bold leading-none cursor-pointer">&times;</button>
+        </div>
+
+    </div>
+
+</body>
+</html>

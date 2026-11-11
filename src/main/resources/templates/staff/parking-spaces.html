@@ -1,0 +1,36 @@
+<!DOCTYPE html><html xmlns:th="http://www.thymeleaf.org"><head th:replace="~{layout/head :: head('Space explorer')}"><title>Space explorer · ParkNGo</title></head><body class="font-sans min-h-screen"><div th:replace="~{layout/app :: sidebar('STAFF', 'spaces')}"></div><div class="md:pl-64 min-h-screen"><div th:replace="~{layout/app :: topbar('Space explorer', 'STAFF')}"></div><main class="pg-page"><div th:replace="~{ui/flash :: flash}"></div><div class="pg-heading"><div><span class="eyebrow">OPERATIONS / PARKING FLOORS</span><h1>See every space.</h1><p>Recorded occupancy, scheduled departures, and the details that matter.</p></div><div class="flex items-center gap-3"><form method="get"><label class="sr-only" for="mapFacility">Parking complex</label><select id="mapFacility" name="facilityId" class="select" onchange="this.form.submit()"><option th:each="f : ${facilities}" th:value="${f.id}" th:text="${f.name}" th:selected="${facility != null and f.id == facility.id}"></option></select></form><a th:if="${facility != null}" href="#availability-controls" class="btn btn-primary btn-sm gap-2"><i class="fa-solid fa-sliders"></i><span>Manage availability</span></a></div></div><div th:if="${facility != null}" th:replace="~{ui/parking-map :: map('/staff/slot-map', ${facility != null ? facility.id : null}, false)}"></div>
+<section id="availability-controls" th:if="${facility != null}" class="mt-6 bg-white rounded-2xl border border-line-200 shadow-1 overflow-hidden scroll-mt-6">
+    <div class="px-6 py-4 border-b border-line-100">
+        <h2 class="text-base font-bold font-heading text-asphalt">Operational availability controls</h2>
+        <p class="text-xs text-slate-500 mt-1">Temporarily block an available bay for maintenance or operational reasons. Occupied and reserved bays must be released through the normal reservation workflow.</p>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-left text-sm">
+            <thead class="bg-mist text-xs uppercase tracking-wider text-slate-500">
+                <tr><th class="px-6 py-3">Bay</th><th class="px-6 py-3">Current status</th><th class="px-6 py-3 text-right">Action</th></tr>
+            </thead>
+            <tbody class="divide-y divide-line-100">
+                <tr th:each="space : ${spaces}">
+                    <td class="px-6 py-3 font-bold" th:text="${'Bay ' + space.spaceNumber}">Bay A01</td>
+                    <td class="px-6 py-3"><span th:replace="~{ui/status :: space(${space.status})}"></span></td>
+                    <td class="px-6 py-3 text-right">
+                        <form th:if="${space.status.name() == 'AVAILABLE'}" method="post" th:action="@{/staff/parking-space/{id}/status(id=${space.id},facilityId=${facility.id})}" class="inline-flex gap-2">
+                            <input type="hidden" name="status" value="MAINTENANCE">
+                            <button class="btn btn-secondary btn-sm" type="submit">Maintenance</button>
+                        </form>
+                        <form th:if="${space.status.name() == 'AVAILABLE'}" method="post" th:action="@{/staff/parking-space/{id}/status(id=${space.id},facilityId=${facility.id})}" class="inline-flex gap-2">
+                            <input type="hidden" name="status" value="OUT_OF_SERVICE">
+                            <button class="btn btn-danger btn-sm" type="submit">Take offline</button>
+                        </form>
+                        <form th:if="${space.status.name() == 'MAINTENANCE' or space.status.name() == 'OUT_OF_SERVICE'}" method="post" th:action="@{/staff/parking-space/{id}/status(id=${space.id},facilityId=${facility.id})}">
+                            <input type="hidden" name="status" value="AVAILABLE">
+                            <button class="btn btn-primary btn-sm" type="submit">Restore availability</button>
+                        </form>
+                        <span th:if="${space.status.name() == 'OCCUPIED' or space.status.name() == 'RESERVED'}" class="text-xs text-slate-500">Controlled by reservation flow</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+<p th:if="${facility == null}" class="pg-empty">No parking complex is configured yet.</p></main></div></body></html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"><body>
+<section th:fragment="map(endpoint, facilityId, booking)" class="garage" data-slot-map
+         th:attr="data-endpoint=${endpoint},data-facility=${facilityId},data-booking=${booking},data-admin-map=${endpoint == '/admin/slot-map'},data-all-floors=${allFloors == true},data-walk-in-map=${walkInMap == true},data-exclude=${reservation != null ? reservation.id : ''}">
+  <header class="garage-heading">
+    <div><span class="eyebrow">PARKNGO / LIVE SPACE EXPLORER</span><h2 th:text="${walkInMap == true ? 'Choose a walk-in space' : (allFloors == true ? 'Facility vehicle map' : 'Garage availability')}">Garage availability</h2><p th:text="${walkInMap == true ? 'Select an available bay on the map to assign it to this vehicle.' : (allFloors == true ? 'Live space status across every level of your assigned facility.' : 'Inspect a bay, its live state, and the details that affect your visit.')}">Inspect a bay, its live state, and the details that affect your visit.</p></div>
+    <span class="garage-live" data-map-live aria-live="polite">Connecting…</span>
+  </header>
+  <div class="garage-toolbar">
+    <label>Level <select data-map-floor aria-label="Parking floor"></select></label>
+    <label>Zone <select data-map-zone aria-label="Parking zone"><option value="">All zones</option></select></label>
+    <label class="garage-filter"><input type="checkbox" data-map-ev> EV charging</label>
+    <label class="garage-filter"><input type="checkbox" data-map-accessible> Accessible</label>
+    <button type="button" data-map-refresh><i class="fa-solid fa-rotate" aria-hidden="true"></i> Refresh</button>
+    <div class="garage-map-stats" aria-label="Garage capacity summary">
+      <span>Floors <b data-map-floor-count>0</b></span>
+      <span><span data-map-floor-slots-label>Slots on this floor</span> <b data-map-floor-slots>0</b></span>
+      <span>Total slots in complex <b data-map-total-slots>0</b></span>
+    </div>
+  </div>
+  <div class="garage-layout">
+    <div class="garage-plan">
+      <div class="garage-legend" aria-label="Parking space legend">
+        <span><i class="free"></i>Available</span><span><i class="taken"></i>Occupied</span><span><i class="held"></i>Reserved</span>
+        <span><i class="service"></i>Maintenance</span><span><i class="accessible"></i>Accessible</span><span><i class="ev"></i>EV charging</span><span><i class="selected"></i>Selected</span>
+      </div>
+      <div class="garage-scroll" tabindex="0" aria-label="Interactive parking garage. Use Tab or arrow keys to navigate bays; Enter to inspect.">
+        <div data-map-bays class="garage-bays"><p class="garage-empty">Loading live parking spaces…</p></div>
+      </div>
+      <footer class="garage-footer"><span th:text="${walkInMap == true ? 'Click an available bay to assign it' : 'Hover or click to inspect'}">Hover or click to inspect</span><span>Illustrative layout · live space data</span></footer>
+    </div>
+    <aside class="garage-detail" aria-label="Space details">
+      <span class="eyebrow">SPACE DETAILS</span>
+      <div class="garage-detail-title"><h3 data-map-name>Inspect a space</h3><span class="garage-detail-status" data-map-status>—</span></div>
+      <p data-map-state aria-live="polite">Hover for 2 seconds or click a space to inspect it.</p>
+      <div class="garage-preview" data-map-preview aria-hidden="true" hidden></div>
+      <dl>
+        <div><dt>Hourly rate</dt><dd data-map-rate>—</dd></div>
+        <div><dt>Estimated charge</dt><dd data-map-charge>—</dd></div>
+        <div><dt>Location</dt><dd data-map-location>—</dd></div>
+        <div><dt>EV charging</dt><dd data-map-ev-detail>—</dd></div>
+        <div><dt>Wheelchair access</dt><dd data-map-accessible-detail>—</dd></div>
+        <div><dt>Parking type</dt><dd data-map-type>—</dd></div>
+        <div><dt>Allocation</dt><dd data-map-allocation>—</dd></div>
+        <div><dt>Estimated release</dt><dd data-map-estimate>—</dd></div>
+      </dl>
+      <p class="garage-estimate-note" data-map-note>Inspection does not select a space.</p>
+      <a class="btn btn-secondary btn-sm" data-map-edit hidden>Edit this space</a>
+      <div class="garage-space-nav" aria-label="Inspect other spaces"><button type="button" data-map-previous disabled>← Previous</button><button type="button" data-map-next disabled>Next →</button></div>
+      <button type="button" class="garage-select" data-map-select disabled th:text="${booking or walkInMap == true ? 'Select this Space' : 'Viewing availability'}">Select this Space</button>
+      <div class="garage-totals" data-map-totals></div>
+    </aside>
+  </div>
+  <p class="garage-message" data-map-message role="status" aria-live="polite">Availability refreshes every 10 seconds.</p>
+</section></body></html>
