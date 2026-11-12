@@ -192,23 +192,7 @@ http://localhost:8080
 
 ## First-Time Login
 
-The system automatically creates demo data on first run.
-
-### Login Credentials
-
-**Customer Account:**
-- Email: `customer@example.com`
-- Password: `customer123`
-
-**Staff Account:**
-- Email: `staff@example.com`
-- Password: `staff123`
-
-**Admin Account:**
-- Email: `admin@example.com`
-- Password: `admin123`
-
-Facility-specific staff accounts may also be generated automatically. Their credentials are shown when the facility account is created.
+Create an account through the registration page, or have an administrator create the required staff and admin accounts.
 
 ## Troubleshooting
 

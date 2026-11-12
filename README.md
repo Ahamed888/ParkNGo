@@ -161,16 +161,6 @@ The application will start on: **`http://localhost:8080`**
 
 ---
 
-## 👥 Default Demo Credentials
-
-For quick evaluation and testing, the application automatically seeds initial accounts when running in development:
-
-| Role | Email | Password | Access / Purpose |
-| :--- | :--- | :--- | :--- |
-| **Admin** | `admin@example.com` | `admin123` | Full access to administrator console & settings |
-| **Staff** | `staff@example.com` | `staff123` | Assigned to downtown facility for gate operations |
-| **Customer** | `customer@example.com` | `customer123` | Search, book spaces, purchase passes, and view bookings |
-
 ---
 
 ## 🧪 Testing & Verification

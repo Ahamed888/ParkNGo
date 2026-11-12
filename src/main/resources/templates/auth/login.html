@@ -122,63 +122,10 @@
                     <a th:href="@{/register}" class="font-semibold text-primary hover:text-white transition-colors">Create an account</a>
                 </p>
 
-                <!-- Role quick selectors only prefill credentials; the user still submits the login form -->
-                <div class="mt-3 pt-2 border-t border-white/10">
-                    <div class="grid grid-cols-3 gap-2">
-                        <button type="button" onclick="quickLogin('admin@example.com', 'admin123')" 
-                                class="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 text-center transition border border-white/10 hover:border-primary group cursor-pointer"
-                                title="Fill administrator credentials">
-                            <i data-lucide="shield-check" class="w-4 h-4 text-purple-400 mb-0.5 group-hover:scale-110 transition-transform"></i>
-                            <span class="text-xs font-bold text-white block">Admin</span>
-                            <span class="text-[9px] text-slate-400 mt-0.5">Console</span>
-                        </button>
-
-                        <button type="button" onclick="quickLogin('staff@example.com', 'staff123')" 
-                                class="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 text-center transition border border-white/10 hover:border-primary group cursor-pointer"
-                                title="Fill staff credentials">
-                            <i data-lucide="badge-check" class="w-4 h-4 text-sky-400 mb-0.5 group-hover:scale-110 transition-transform"></i>
-                            <span class="text-xs font-bold text-white block">Staff</span>
-                            <span class="text-[9px] text-slate-400 mt-0.5">Console</span>
-                        </button>
-
-                        <button type="button" onclick="quickLogin('customer@example.com', 'customer123')" 
-                                class="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 text-center transition border border-white/10 hover:border-primary group cursor-pointer"
-                                title="Fill customer credentials">
-                            <i data-lucide="user" class="w-4 h-4 text-emerald-400 mb-0.5 group-hover:scale-110 transition-transform"></i>
-                            <span class="text-xs font-bold text-white block">Customer</span>
-                            <span class="text-[9px] text-slate-400 mt-0.5">Portal</span>
-                        </button>
-                    </div>
-                </div>
-
             </div>
         </div>
 
     </div>
 
-    <script>
-        function quickLogin(email, pass) {
-            const emailInput = document.getElementById('username');
-            const passInput = document.getElementById('password');
-
-            if (emailInput) {
-                emailInput.value = email;
-                emailInput.dispatchEvent(new Event('input', { bubbles: true }));
-                emailInput.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            if (passInput) {
-                passInput.value = pass;
-                passInput.dispatchEvent(new Event('input', { bubbles: true }));
-                passInput.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-
-            // Hide any lingering error alert banners
-            document.querySelectorAll('[class*="status-occupied"]').forEach(el => el.style.display = 'none');
-        }
-
-        function fillLogin(email, pass) {
-            quickLogin(email, pass);
-        }
-    </script>
 </body>
 </html>

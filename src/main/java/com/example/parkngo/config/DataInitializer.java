@@ -533,55 +533,11 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         initDatabaseSchema();
 
-        Role customerRole = ensureRole("CUSTOMER", "Regular customer who makes parking reservations");
+        ensureRole("CUSTOMER", "Regular customer who makes parking reservations");
         Role staffRole = ensureRole("STAFF", "Parking facility staff");
-        Role adminRole = ensureRole("ADMIN", "System administrator");
+        ensureRole("ADMIN", "System administrator");
         normalizeLegacyStaffRoles(staffRole);
 
-        // Seed default Admin members if not present or synchronize their credentials
-        ensureAdminAccount("admin@example.com", "System Administrator", adminRole);
-        ensureAdminAccount("adminexample@gmail.com", "Administrator", adminRole);
-        ensureAdminAccount("it25101414@my.sliit.lk", "System Administrator", adminRole);
-
-        // Seed default Customer if not present
-        if (!userEmailExists("customer@example.com")) {
-            Customer customer = new Customer();
-            customer.setFullName("John Doe");
-            customer.setEmail("customer@example.com");
-            customer.setPhone("+94772000000");
-            customer.setPassword(passwordEncoder.encode("customer123"));
-            customer.setRole(customerRole);
-            customer.setStatus(User.UserStatus.ACTIVE);
-            customerRepository.save(customer);
-        } else {
-            try {
-                jdbcTemplate.update(
-                    "UPDATE dbo.[User] SET [Password] = ? WHERE Email = 'customer@example.com'",
-                    passwordEncoder.encode("customer123")
-                );
-            } catch (Exception ignored) {}
-        }
-
-        // Seed default Staff if not present
-        if (!userEmailExists("staff@example.com")) {
-            Staff staff = new Staff();
-            staff.setFullName("Staff Operator");
-            staff.setEmail("staff@example.com");
-            staff.setPhone("+94773000000");
-            staff.setPassword(passwordEncoder.encode("staff123"));
-            staff.setRole(staffRole);
-            staff.setStatus(User.UserStatus.ACTIVE);
-            staff.setEmployeeId("EMP-001");
-            staff.setShift("DAY");
-            staffRepository.save(staff);
-        } else {
-            try {
-                jdbcTemplate.update(
-                    "UPDATE dbo.[User] SET [Password] = ? WHERE Email = 'staff@example.com'",
-                    passwordEncoder.encode("staff123")
-                );
-            } catch (Exception ignored) {}
-        }
         normalizeStaffProfiles();
         if (facilityStaffAccountService != null) {
             facilityStaffAccountService.ensureAccountsForAllFacilities();
@@ -683,29 +639,6 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private void ensureAdminAccount(String email, String fullName, Role adminRole) {
-        if (userEmailExists(email)) {
-            try {
-                jdbcTemplate.update(
-                    "UPDATE dbo.[User] SET RoleID = ?, [Status] = 'ACTIVE', [Password] = ? WHERE Email = ?",
-                    adminRole.getId(), passwordEncoder.encode("admin123"), email
-                );
-            } catch (Exception e) {
-                logger.warn("Could not synchronize admin credentials for {}: {}", email, e.getMessage());
-            }
-            return;
-        }
-
-        Admin admin = new Admin();
-        admin.setFullName(fullName);
-        admin.setEmail(email);
-        admin.setPhone("+94771000000");
-        admin.setPassword(passwordEncoder.encode("admin123"));
-        admin.setRole(adminRole);
-        admin.setStatus(User.UserStatus.ACTIVE);
-        adminRepository.save(admin);
-    }
-
     /** Older databases reject PENDING before the membership payment can be created. */
     void synchronizeSubscriptionStatusConstraint() {
         if (jdbcTemplate == null) return;
@@ -746,15 +679,6 @@ public class DataInitializer implements CommandLineRunner {
             logger.error("Unable to synchronize dbo.Subscription.Status check constraint", exception);
             throw new IllegalStateException("Database schema migration failed for dbo.Subscription.Status", exception);
         }
-    }
-
-    private boolean userEmailExists(String email) {
-        Integer count = jdbcTemplate.queryForObject(
-            "SELECT COUNT(*) FROM dbo.[User] WHERE Email = ?",
-            Integer.class,
-            email
-        );
-        return count != null && count > 0;
     }
 
     private Role ensureRole(String name, String description) {
