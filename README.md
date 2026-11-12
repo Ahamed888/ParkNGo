@@ -8,6 +8,8 @@
 
 An enterprise-grade, full-stack web application designed to modernize urban parking operations. **ParkNGo** bridges vehicle drivers, on-site facility operators, and central administrators into a coordinated ecosystem featuring dynamic visual garage slot maps, buffer-guaranteed reservations, card-only membership passes, automated loyalty discounts, and role-scoped operational consoles.
 
+[Project Demonstration](https://www.youtube.com/watch?v=ksrYJgEug-s)
+
 ---
 
 ## 🌟 Key Highlights
