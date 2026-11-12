@@ -27,9 +27,9 @@ To execute the entire test suite against the live test database:
    ```bash
    docker ps | grep sqlserver2022
    ```
-2. Verify that the `parkngo_test` database exists (credentials default to user `SA` with password `python1*`):
+2. Verify that the `parkngo_test` database exists. Set `PARKNGO_TEST_DB_USERNAME` and `PARKNGO_TEST_DB_PASSWORD` in your environment before running database-backed tests:
    ```bash
-   /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'python1*' -C -Q "SELECT name FROM sys.databases WHERE name='parkngo_test';"
+   /opt/mssql-tools18/bin/sqlcmd -S localhost -U "$PARKNGO_TEST_DB_USERNAME" -P "$PARKNGO_TEST_DB_PASSWORD" -C -Q "SELECT name FROM sys.databases WHERE name='parkngo_test';"
    ```
 3. Run Maven tests from the project root:
    ```bash
@@ -48,7 +48,7 @@ During test execution, specific failures were encountered and resolved as follow
 
 2. **Missing Test Catalog & Credentials:**
    - *Cause:* `application-test.properties` expected `databaseName=parkngo_test` with unexpanded environment variables `${PARKNGO_TEST_DB_USERNAME}` and `${PARKNGO_TEST_DB_PASSWORD}`.
-   - *Fix:* Created database `parkngo_test` in SQL Server and added default fallbacks `${PARKNGO_TEST_DB_USERNAME:SA}` and `${PARKNGO_TEST_DB_PASSWORD:python1*}`.
+   - *Fix:* Created database `parkngo_test` in SQL Server and configured the test environment with `PARKNGO_TEST_DB_USERNAME` and `PARKNGO_TEST_DB_PASSWORD`.
 
 3. **Hibernate Physical Naming Strategy Collision:**
    - *Cause:* `application-test.properties` lacked `PhysicalNamingStrategyStandardImpl`, causing Hibernate to name columns in snake_case (`role_name`) while raw SQL scripts in `DataInitializer.java` referenced PascalCase (`RoleName`).

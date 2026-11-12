@@ -53,7 +53,7 @@ Error: "Operation not permitted"
    ```properties
    spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=parkngo_test;encrypt=true;trustServerCertificate=true
    spring.datasource.username=${PARKNGO_TEST_DB_USERNAME:SA}
-   spring.datasource.password=${PARKNGO_TEST_DB_PASSWORD:python1*}
+   spring.datasource.password=${PARKNGO_TEST_DB_PASSWORD}
    ```
 
 ---
@@ -206,7 +206,7 @@ testUser = userRepository.findByEmail("test@example.com")
 
 | Modified File | Primary Change Description |
 | :--- | :--- |
-| `src/test/resources/application-test.properties` | Added default test credentials (`SA` / `python1*`) and `PhysicalNamingStrategyStandardImpl` |
+| `src/test/resources/application-test.properties` | Uses environment-provided test credentials and `PhysicalNamingStrategyStandardImpl` |
 | `src/main/java/com/example/parkngo/reservation/ReservationService.java` | Added `"Payment Received"` notification dispatch for online card payment transactions |
 | `src/test/java/com/example/parkngo/space/RedesignTemplateTest.java` | Registered `GenericWebApplicationContext` and `SpringWebMvcThymeleafRequestContext` for `#fields` |
 | `src/test/java/com/example/parkngo/vehicle/VehicleServiceTest.java` | Refactored `setUp()` to find-or-create test users instead of truncating table |

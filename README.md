@@ -171,8 +171,6 @@ For quick evaluation and testing, the application automatically seeds initial ac
 | **Staff** | `staff@example.com` | `staff123` | Assigned to downtown facility for gate operations |
 | **Customer** | `customer@example.com` | `customer123` | Search, book spaces, purchase passes, and view bookings |
 
-> *Note: In production environments, replace default initializers with secure credential provisioning.*
-
 ---
 
 ## 🧪 Testing & Verification
@@ -200,6 +198,6 @@ mvn test -Dtest=CheckoutServiceTest
 
 ---
 
-## 📄 License & Academic Note
+## 📄 Academic Project
 
-This project was developed as an academic software engineering project. Feel free to explore, clone, and use the concepts for educational and portfolio demonstration purposes.
+ParkNGo was developed as an academic software engineering project for educational and demonstration purposes.

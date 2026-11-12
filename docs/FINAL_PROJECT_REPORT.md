@@ -77,7 +77,6 @@
 10. [Section 9: Appendices](#section-9-appendices)
     - Appendix A: Test Suite Execution Report
     - Appendix B: Design Pattern Class Mapping Directory
-    - Appendix C: Deployment & Environment Configuration
 
 ---
 
@@ -85,7 +84,7 @@
 
 # Executive Summary
 
-Urban vehicle density and metropolitan commercialization have exacerbated vehicular congestion, fuel wastage, and environmental pollution resulting from uncoordinated parking searches. The **ParkNGo Automated Smart Parking Reservation and Facility Management System** is an enterprise-grade, full-stack web application designed and developed to modernize parking facility operations. Developed using **Java 17**, **Spring Boot 3.3.5**, **Thymeleaf**, **Tailwind CSS**, and **Microsoft SQL Server 2022**, ParkNGo provides an automated ecosystem connecting vehicle owners, facility staff, and administrative management.
+Urban vehicle density and metropolitan commercialization have exacerbated vehicular congestion, fuel wastage, and environmental pollution resulting from uncoordinated parking searches. The **ParkNGo Automated Smart Parking Reservation and Facility Management System** is an enterprise-grade, full-stack web application designed and developed to modernize parking facility operations. Developed using **Java 21**, **Spring Boot 3.3.5**, **Thymeleaf**, **Tailwind CSS**, and **Microsoft SQL Server 2022**, ParkNGo provides an automated ecosystem connecting vehicle owners, facility staff, and administrative management.
 
 The platform delivers comprehensive functionality across six core functional domains: role-based security with fine-grained access control, multi-floor parking facility and space configuration with dynamic allocation strategies, conflict-free reservation scheduling with interactive visual slot maps, secure multi-channel payments and billing checkout quotes, recurring subscription packages with customer loyalty programs, and real-time operational KPI analytics with event-driven audit logging.
 
@@ -246,7 +245,7 @@ The system serves three primary user personas and multiple indirect stakeholders
 ```
 
 ## 2.3 System Limitations, Constraints & Assumptions
-1. **Target Runtime Environment:** The application requires a Java 17+ Virtual Machine (JVM) and connects to a Microsoft SQL Server 2022 instance operating in standard dialect mode.
+1. **Target Runtime Environment:** The application requires a Java 21+ Virtual Machine (JVM) and connects to a Microsoft SQL Server 2022 instance operating in standard dialect mode.
 2. **Client-Side Assumptions:** Users must access the system via modern web browsers (Google Chrome 100+, Mozilla Firefox 100+, Apple Safari 15+) with JavaScript and CSS enabled.
 3. **Turnover Buffer Constraint:** Consecutive bookings on the same parking bay require a non-negotiable 15-minute gap to prevent vehicle collision and allow turnaround.
 4. **Card Gateway Emulation:** Financial card processing utilizes an integrated Luhn-verified transaction simulator adhering to PCI-DSS card structure without incurring commercial merchant charges during university evaluation.
@@ -584,7 +583,7 @@ The development process was conducted adhering to the **Agile Scrum Framework**.
 | Week    | Milestone / Key Engineering Activities                                                  |
 +---------+-----------------------------------------------------------------------------------------+
 | Week 3  | Project Proposal Presentation & Proposal Report Submission (20% Evaluation)             |
-| Week 4  | Sprint 1 Kickoff: GitHub repository setup, CI/CD pipeline, MSSQL Docker configuration   |
+| Week 4  | Sprint 1 Kickoff: GitHub repository setup, local MSSQL configuration   |
 | Week 5  | Spring Security implementation, User entity modeling, BCrypt encryption                 |
 | Week 6  | Sprint 2 Kickoff: Facility management entity, controller, and repository implementation |
 | Week 7  | Multi-floor parking bay generation, Space Allocation Strategy Pattern integration       |
@@ -605,7 +604,7 @@ The development process was conducted adhering to the **Agile Scrum Framework**.
 # Section 6: Conclusion & Future Work
 
 ## 6.1 Summary of Key Achievements
-The ParkNGo project represents a fully realized, production-ready smart parking reservation and facility management platform. Key engineering accomplishments include:
+The ParkNGo project represents a fully realized academic smart parking reservation and facility management platform. Key engineering accomplishments include:
 - **Flawless End-to-End Execution:** Seamless coordination between customer reservation scheduling, dynamic space allocation, staff gate check-in, and financial checkout quotes.
 - **Decoupled Architecture:** Successful application of the Observer, Singleton, and Strategy design patterns ensuring high modularity and fault isolation.
 - **Robust Quality Assurance:** Delivery of an exhaustive automated testing suite comprising **171 test cases across 26 test classes** executing with a **100% pass rate**.
@@ -822,27 +821,6 @@ The ParkNGo automated test suite was executed using Apache Maven surefire plugin
 ```
 
 ---
-
-## Appendix C: Deployment & Environment Configuration
-
-### Database Creation Script
-```sql
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'parkngo_test')
-BEGIN
-    CREATE DATABASE parkngo_test;
-END
-GO
-```
-
-### Application Profile Properties (`src/main/resources/application.properties`)
-```properties
-spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=parkngodb;encrypt=true;trustServerCertificate=true
-spring.datasource.username=${PARKNGO_DB_USERNAME:SA}
-spring.datasource.password=${PARKNGO_DB_PASSWORD:python1*}
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-spring.jpa.show-sql=false
-```
 
 ---
 *End of Final Project Report - SE2030 Software Engineering (SLIIT)*

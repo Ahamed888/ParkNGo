@@ -32,7 +32,7 @@ Before these fixes, running the full Maven test suite produced errors and failur
     ```properties
     spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=parkngo_test;encrypt=true;trustServerCertificate=true
     spring.datasource.username=${PARKNGO_TEST_DB_USERNAME:SA}
-    spring.datasource.password=${PARKNGO_TEST_DB_PASSWORD:python1*}
+    spring.datasource.password=${PARKNGO_TEST_DB_PASSWORD}
     ```
 
 ### 2.3 JPA Physical Naming Strategy Inconsistency

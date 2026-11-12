@@ -11,7 +11,7 @@ Before starting, ensure you have the following installed:
 
 ### Required Software
 
-1. **Java Development Kit (JDK) 17 or higher**
+1. **Java Development Kit (JDK) 21 or higher**
    ```bash
    java -version
    ```
@@ -36,10 +36,10 @@ Before starting, ensure you have the following installed:
 
 ## Installation Steps
 
-### Step 1: Install Java JDK 17
+### Step 1: Install Java JDK 21
 
 **Windows:**
-1. Download JDK 17 from Oracle website
+1. Download JDK 21 from Oracle website
 2. Run the installer
 3. Follow the installation wizard
 4. Set JAVA_HOME environment variable:
@@ -51,14 +51,13 @@ Before starting, ensure you have the following installed:
 
 **macOS (using Homebrew):**
 ```bash
-brew tap adoptopenjdk/openjdk
-brew install adoptopenjdk17
+brew install openjdk@21
 ```
 
 **Linux (Ubuntu/Debian):**
 ```bash
 sudo apt-get update
-sudo apt-get install openjdk-17-jdk
+sudo apt-get install openjdk-21-jdk
 ```
 
 ### Step 2: Install Maven
@@ -138,7 +137,7 @@ spring.jpa.database-platform=org.hibernate.dialect.SQLServerDialect
 spring.jpa.hibernate.ddl-auto=none
 ```
 
-> **Note on DDL Configuration:** `spring.jpa.hibernate.ddl-auto` is set to `none` to prevent Hibernate from conflicting with MSSQL check constraints and discriminator column definitions. Schema initialization and data seeding are managed reliably by `DataInitializer`.
+> **Note on DDL Configuration:** `spring.jpa.hibernate.ddl-auto` is set to `none` to prevent Hibernate from conflicting with SQL Server check constraints and discriminator column definitions. The application uses idempotent SQL migration scripts plus `DataInitializer` for schema synchronization and demo-data seeding.
 
 Set `DB_PASSWORD` (and optionally `MAIL_APP_PASSWORD` for email notifications) before starting the application:
 
@@ -183,7 +182,7 @@ mvn spring-boot:run
 
 The application will start and you should see:
 ```
-2026-08-20 12:00:00 - Started ParkingProApplication in X.XXX seconds
+2026-08-20 12:00:00 - Started ParkNGoApplication in X.XXX seconds
 ```
 
 Open your browser and navigate to:
@@ -199,15 +198,17 @@ The system automatically creates demo data on first run.
 
 **Customer Account:**
 - Email: `customer@example.com`
-- Password: `password`
+- Password: `customer123`
 
 **Staff Account:**
 - Email: `staff@example.com`
-- Password: `password`
+- Password: `staff123`
 
 **Admin Account:**
 - Email: `admin@example.com`
-- Password: `password`
+- Password: `admin123`
+
+Facility-specific staff accounts may also be generated automatically. Their credentials are shown when the facility account is created.
 
 ## Troubleshooting
 
@@ -237,7 +238,7 @@ The system automatically creates demo data on first run.
 
 ### Issue: Build fails with compilation errors
 **Solutions:**
-1. Ensure JDK 17 is installed: `java -version`
+1. Ensure JDK 21 is installed: `java -version`
 2. Clear Maven cache: `mvn clean`
 3. Delete target folder: `rm -rf target/`
 4. Rebuild: `mvn clean install`
@@ -272,7 +273,7 @@ ParkNGo/
 │   │
 │   └── resources/
 │       ├── application.properties    # Application configuration
-│       └── templates/               # Thymeleaf HTML templates (43 templates)
+│       └── templates/               # Thymeleaf HTML templates
 │           ├── fragments/           # Reusable template fragments (Tailwind/FontAwesome CDN)
 │           ├── auth/                # Authentication pages
 │           ├── customer/            # Customer pages
@@ -322,57 +323,6 @@ Run specific test class:
 mvn test -Dtest=ReservationServiceTest
 ```
 
-## Production Deployment
-
-Before deploying to production:
-
-1. **Database:**
-   - Use strong MySQL root password
-   - Create dedicated database user with limited privileges
-   - Enable SSL for MySQL connections
-   - Regular backups
-
-2. **Application:**
-   - Set `spring.jpa.hibernate.ddl-auto=validate` (not `update`)
-   - Use environment variables for sensitive data:
-     ```bash
-     export DB_URL=jdbc:mysql://prod-server:3306/parking_pro
-     export DB_USERNAME=parking_user
-     export DB_PASSWORD=strong_password
-     ```
-   - Enable CSRF protection in SecurityConfig
-   - Use HTTPS/SSL
-   - Set secure passwords
-   - Configure logging to files
-
-3. **Build for Production:**
-   ```bash
-   mvn clean package -DskipTests
-   java -jar target/parkngo-1.0.0.jar
-   ```
-
-## Integration with CI/CD
-
-For GitHub Actions, create `.github/workflows/build.yml`:
-
-```yaml
-name: Build
-
-on: [push]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 17
-        uses: actions/setup-java@v2
-        with:
-          java-version: '17'
-      - name: Build with Maven
-        run: mvn clean install
-```
-
 ## Useful Commands
 
 ```bash
@@ -407,7 +357,7 @@ kill -9 $(lsof -t -i :8080)
 - **Spring Data JPA**: https://spring.io/projects/spring-data-jpa
 - **Thymeleaf**: https://www.thymeleaf.org/
 - **Tailwind CSS**: https://tailwindcss.com/
-- **MySQL**: https://dev.mysql.com/doc/
+- **Microsoft SQL Server**: https://learn.microsoft.com/en-us/sql/
 
 ## Next Steps
 
