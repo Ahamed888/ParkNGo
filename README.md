@@ -118,7 +118,7 @@ ParkNGo follows a modular, layered architecture ensuring clear separation of con
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/ParkNGo.git
+git clone https://github.com/Ahamed888/ParkNGo.git
 cd ParkNGo
 ```
 
